@@ -19,6 +19,7 @@ class Player {
 		this.x += dx;
 		this.y += dy;
 		extendPath(ox, oy, this.x, this.y, dx, dy);
+		flushDyingEnemies();
 		checkCaptures();
 		this.offsetX = -dx;
 		this.offsetY = -dy;

@@ -10,7 +10,7 @@ function gameStart() {
 }
 
 function doAnimationFrame() {
-	if (gameDirty) drawBoard();
+	drawBoard();
 	gameLoop = requestAnimationFrame(doAnimationFrame);
 }
 

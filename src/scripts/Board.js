@@ -4,7 +4,7 @@ let cellSize = 1;
 let boardOffsetX = 0;
 let boardOffsetY = 0;
 
-let enemies = [];
+let enemies = []; // 0 empty, 1 alive, 2 dying
 let pathData = [];
 let pathStep = [];
 let fillData = [];
@@ -14,8 +14,10 @@ let gameDirty = 1;
 let gameLoop;
 let pathCount = 0;
 let state = 1; // 1 play, 2 win, 3 lose
+let showEnd = 0;
+let endTimer = 0;
 
-// 0 empty, 1 enemy, 2 player — dynamic w/h from rows
+// 0 empty, 1 enemy, 2 player
 const levelData = [
 	"000000000",
 	"010001000",
@@ -38,9 +40,15 @@ function initBoard() {
 	pathData = [];
 	pathStep = [];
 	fillData = [];
+	pathTrail = [];
 	pathCount = 0;
 	state = 1;
+	showEnd = 0;
 	moving = 0;
+	if (endTimer) {
+		clearTimeout(endTimer);
+		endTimer = 0;
+	}
 
 	let startX = 0;
 	let startY = 0;
@@ -99,7 +107,7 @@ function getClusters() {
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (!enemies[y][x] || seen[y][x]) continue;
+			if (enemies[y][x] != 1 || seen[y][x]) continue;
 			const cluster = [];
 			const stack = [[x, y]];
 			seen[y][x] = 1;
@@ -112,7 +120,7 @@ function getClusters() {
 				for (let i = 0; i < 4; i++) {
 					const nx = cx + dirs[i][0];
 					const ny = cy + dirs[i][1];
-					if (inBounds(nx, ny) && enemies[ny][nx] && !seen[ny][nx]) {
+					if (inBounds(nx, ny) && enemies[ny][nx] == 1 && !seen[ny][nx]) {
 						seen[ny][nx] = 1;
 						stack.push([nx, ny]);
 					}
@@ -144,22 +152,40 @@ function isClusterSurrounded(cluster) {
 	return 1;
 }
 
-function captureCluster(cluster) {
+function markClusterDying(cluster) {
 	for (let i = 0; i < cluster.length; i++) {
-		const x = cluster[i][0];
-		const y = cluster[i][1];
-		enemies[y][x] = 0;
-		fillData[y][x] = 1;
+		enemies[cluster[i][1]][cluster[i][0]] = 2;
+	}
+}
+
+function flushDyingEnemies() {
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (enemies[y][x] == 2) {
+				enemies[y][x] = 0;
+				fillData[y][x] = 1;
+			}
+		}
 	}
 }
 
 function checkCaptures() {
 	const clusters = getClusters();
 	for (let i = 0; i < clusters.length; i++) {
-		if (isClusterSurrounded(clusters[i])) captureCluster(clusters[i]);
+		if (isClusterSurrounded(clusters[i])) markClusterDying(clusters[i]);
 	}
+	// No moves left: clear dying immediately so a final surround can still win
+	if (!hasMove()) flushDyingEnemies();
+
 	if (!enemyCount()) state = 2;
 	else if (!hasMove()) state = 3;
+	if (state > 1 && !endTimer) {
+		endTimer = setTimeout(() => {
+			showEnd = 1;
+			gameDirty = 1;
+			drawBoard();
+		}, 1000);
+	}
 }
 
 function drawBoard() {
@@ -175,15 +201,13 @@ function drawBoard() {
 			const px = boardOffsetX + x * size;
 			const py = boardOffsetY + y * size;
 
-			const purified = fillData[y][x] || (pathStep[y][x] && (x != player.x || y != player.y));
+			const onPlayer = x == player.x && y == player.y;
+			const purified = fillData[y][x]
+				|| (pathStep[y][x] && (!onPlayer || showEnd && state == 3));
 			if (purified) {
 				drawPurifiedTile(x, y);
 			} else {
 				gameContext.drawImage(offscreenBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
-			}
-
-			if (pathStep[y][x]) {
-				drawRainbowPath(x, y, pathData[y][x], pathStep[y][x]);
 			}
 
 			if (enemies[y][x]) {
@@ -192,11 +216,13 @@ function drawBoard() {
 		}
 	}
 
+	drawFlowingPath();
+
 	player.resize();
 	player.draw();
 
-	if (state > 1) {
-		gameContext.fillStyle = state == 2 ? "#ffe066cc" : "#00000099";
+	if (showEnd && state > 1) {
+		gameContext.fillStyle = state == 2 ? "#ffe06666" : "#00000099";
 		gameContext.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 		gameContext.fillStyle = "#fff";
 		gameContext.font = (size * 0.8 | 0) + "px sans-serif";
