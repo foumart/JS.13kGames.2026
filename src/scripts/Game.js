@@ -1,7 +1,9 @@
 function act(dx, dy) {
 	if (moving || state != 1 || clearTimer) return;
-	if (!isPassable(player.x + dx, player.y + dy)) return;
-	player.moveTo(dx, dy);
+	const nx = player.x + dx;
+	const ny = player.y + dy;
+	if (isPassable(nx, ny)) player.moveTo(dx, dy);
+	else if (isPrevPath(nx, ny)) player.retractTo(dx, dy);
 }
 
 function gameStart() {

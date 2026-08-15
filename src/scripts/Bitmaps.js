@@ -2,7 +2,7 @@ const tileWidth = 6;
 const unitScale = 0.665;
 const offscreenBitmaps = [];
 
-// 0 empty, 1 enemy, 2 unicorn, 3 obstacle, 4 coin, 5 unicorn jump
+// 0 empty, 1 enemy, 2 unicorn, 3 obstacle, 4 coin, 5 unicorn jump, 6 clouds
 const bitmapPixels = [
 	// empty / grass
 	[
@@ -30,9 +30,9 @@ const bitmapPixels = [
 		[0,2,2,1,1,2,2,3,0],
 		[2,2,2,2,2,2,2,2,3],
 		[2,2,2,2,2,2,2,2,3],
-		[0,0,0,0,2,2,2,2,3],
-		[0,0,2,2,2,2,2,2,3],
-		[0,0,2,2,2,2,2,2,3]
+		[0,0,0,3,2,2,2,2,3],
+		[0,3,2,2,2,2,2,2,3],
+		[0,3,2,2,2,2,2,2,3]
 	],
 	// obstacle
 	[
@@ -61,8 +61,17 @@ const bitmapPixels = [
 		[2,2,2,2,2,2,2,2,3],
 		[2,2,2,2,2,2,2,2,3],
 		[0,0,0,0,2,2,2,2,0],
-		[0,0,0,2,2,2,2,0,0],
-		[0,0,0,2,2,2,0,0,0]
+		[0,0,3,2,2,2,2,0,0],
+		[0,0,3,2,2,2,0,0,0]
+	],
+	// empty / clouds
+	[
+		[1,1,2,1,1,1],
+		[1,2,3,2,1,2],
+		[2,1,1,1,2,1],
+		[1,1,2,1,1,1],
+		[1,2,1,2,3,2],
+		[2,1,1,1,2,1]
 	]
 ];
 
@@ -72,7 +81,8 @@ const bitmapPalettes = [
 	["", "f8f4ff", "ff6eb4", "ffe066"],
 	["", "5a5048", "7a7060", "3a3530"],
 	["", "c9a000", "ffe066", "fff3a0"],
-	["", "f8f4ff", "ff6eb4", "ffe066"]
+	["", "f8f4ff", "ff6eb4", "ffe066"],
+	["", "e4e7eb", "d5dde6", "b4bec9"]
 ];
 
 for (let k = 0; k < bitmapPixels.length; k++) {

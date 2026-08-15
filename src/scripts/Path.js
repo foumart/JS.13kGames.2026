@@ -33,6 +33,30 @@ function extendPath(ox, oy, nx, ny, dx, dy) {
 	pathTrail.push([nx, ny]);
 }
 
+function canRetract() {
+	return pathTrail.length > 1;
+}
+
+function isPrevPath(x, y) {
+	if (!canRetract()) return 0;
+	const p = pathTrail[pathTrail.length - 2];
+	return p[0] == x && p[1] == y;
+}
+
+// Pull trail + tip floor off immediately so undo never flashes rainbow under the hop
+function beginRetractPath() {
+	const cur = pathTrail.pop();
+	const cx = cur[0];
+	const cy = cur[1];
+	const prev = pathTrail[pathTrail.length - 1];
+	const dx = cx - prev[0];
+	const dy = cy - prev[1];
+	pathData[prev[1]][prev[0]] &= ~dirMask(dx, dy);
+	pathData[cy][cx] = 0;
+	pathStep[cy][cx] = 0;
+	pathCount = pathTrail.length;
+}
+
 // Rainbow background: tileWidth*boardW × tileWidth*boardH, 45 degrees gradient
 function buildRainbowBackdrop() {
 	const bw = tileWidth * boardWidth;

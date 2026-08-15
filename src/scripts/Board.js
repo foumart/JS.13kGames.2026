@@ -23,6 +23,7 @@ let levelIndex = 0;
 let enemiesTotal = 0;
 let enemiesCleared = 0;
 let coinsCollected = 0;
+let moveCount = 0;
 let levelScore = 0;
 let revealPlayerTile = 0;
 let clearTimer = 0;
@@ -31,6 +32,8 @@ let endNextBtn = null;
 let endRetryBtn = null;
 
 // 0 empty, 1 enemy, 2 player, 3 obstacle, 4 coin
+// ground bitmap index per stage (0 grass, 6 clouds)
+const levelGround = [0, 6];
 const levels = [
 	// Stage 1
 	[
@@ -77,6 +80,7 @@ function initBoard() {
 	enemiesTotal = 0;
 	enemiesCleared = 0;
 	coinsCollected = 0;
+	moveCount = 0;
 	levelScore = 0;
 	revealPlayerTile = 0;
 	state = 1;
@@ -149,10 +153,19 @@ function aliveCount() {
 }
 
 function hasMove() {
-	return isPassable(player.x + 1, player.y)
+	return canRetract()
+		|| isPassable(player.x + 1, player.y)
 		|| isPassable(player.x - 1, player.y)
 		|| isPassable(player.x, player.y + 1)
 		|| isPassable(player.x, player.y - 1);
+}
+
+function reviveDyingEnemies() {
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (enemies[y][x] == 2) enemies[y][x] = 1;
+		}
+	}
 }
 
 function getClusters() {
@@ -338,13 +351,16 @@ function drawBoard() {
 			if (purified) {
 				drawPurifiedTile(x, y);
 			} else {
-				gameContext.drawImage(offscreenBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				gameContext.drawImage(
+					offscreenBitmaps[levelGround[levelIndex] || 0],
+					0, 0, tileWidth, tileWidth, px, py, size, size
+				);
 			}
 
 			if (obstacles[y][x]) {
 				gameContext.drawImage(offscreenBitmaps[3], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (coins[y][x]) {
-				const cs = size * 0.55;
+				const cs = size * 0.8;
 				const cox = px + (size - cs) / 2;
 				const coy = py + size - cs - size * 0.06;
 				gameContext.drawImage(offscreenBitmaps[4], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
@@ -382,7 +398,12 @@ function drawBoard() {
 	gameContext.font = Math.max(12, size * 0.35 | 0) + "px sans-serif";
 	gameContext.textAlign = "left";
 	gameContext.textBaseline = "top";
-	gameContext.fillText("LV " + (levelIndex + 1) + "  " + (enemiesCleared * 100 + coinsCollected * 50), 8, 8);
+	gameContext.fillText(
+		"LV " + (levelIndex + 1)
+			+ "  " + (enemiesCleared * 100 + coinsCollected * 50)
+			+ "  M" + moveCount,
+		8, 8
+	);
 
 	if (showEnd && state > 1) {
 		gameContext.fillStyle = state == 2 ? "#120028cc" : "#00000099";
@@ -397,7 +418,7 @@ function drawBoard() {
 		gameContext.fillText(state == 2 ? "STAGE CLEAR!" : "STUCK - R", cx, cy - fs * 1.8);
 
 		gameContext.font = (fs * 0.7 | 0) + "px sans-serif";
-		gameContext.fillText("SCORE " + levelScore, cx, cy - fs * 0.4);
+		gameContext.fillText("SCORE " + levelScore + "  MOVES " + moveCount, cx, cy - fs * 0.4);
 		gameContext.font = (fs * 0.45 | 0) + "px sans-serif";
 		gameContext.fillStyle = "#ffd";
 		const perfect = enemiesCleared >= enemiesTotal;

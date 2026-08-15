@@ -22,14 +22,34 @@ class Player {
 		const oy = this.y;
 		this.x += dx;
 		this.y += dy;
-		extendPath(ox, oy, this.x, this.y, dx, dy);
-		collectCoin(this.x, this.y);
-		flushDyingEnemies();
-		checkCaptures();
 		this.offsetX = -dx;
 		this.offsetY = -dy;
 		moving = 1;
 		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
+			extendPath(ox, oy, this.x, this.y, dx, dy);
+			collectCoin(this.x, this.y);
+			moveCount ++;
+			flushDyingEnemies();
+			checkCaptures();
+			moving = 0;
+			drawBoard();
+		});
+	}
+
+	retractTo(dx, dy) {
+		if (dx < 0 || dy < 0) this.face = 1;
+		if (dx > 0 || dy > 0) this.face = -1;
+
+		beginRetractPath();
+		this.x += dx;
+		this.y += dy;
+		this.offsetX = -dx;
+		this.offsetY = -dy;
+		moving = 1;
+		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
+			moveCount ++;
+			reviveDyingEnemies();
+			checkCaptures();
 			moving = 0;
 			drawBoard();
 		});
