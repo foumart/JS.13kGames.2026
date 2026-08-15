@@ -1,0 +1,20 @@
+* {
+	padding: 0;
+	margin: 0;
+	-webkit-touch-callout: none;
+}
+
+body {
+	background: #124;
+	color: #fff;
+	overflow: hidden;
+}
+
+div, canvas {
+	position: absolute;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-tap-highlight-color: transparent;
+	image-rendering: pixelated;
+}
