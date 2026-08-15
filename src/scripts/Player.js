@@ -9,13 +9,17 @@ class Player {
 	}
 
 	resize() {
-		this.width = gameCanvas.width / boardWidth;
-		this.height = this.width;
+		this.width = cellSize;
+		this.height = cellSize;
 	}
 
 	moveTo(dx, dy) {
+		const ox = this.x;
+		const oy = this.y;
 		this.x += dx;
 		this.y += dy;
+		extendPath(ox, oy, this.x, this.y, dx, dy);
+		checkCaptures();
 		this.offsetX = -dx;
 		this.offsetY = -dy;
 		moving = 1;
@@ -28,10 +32,10 @@ class Player {
 	draw() {
 		const w = this.width;
 		gameContext.drawImage(
-			offscreenBitmaps[3],
+			offscreenBitmaps[2],
 			0, 0, tileWidth, tileWidth,
-			(this.x + this.offsetX) * w,
-			(this.y + this.offsetY) * w,
+			boardOffsetX + (this.x + this.offsetX) * w,
+			boardOffsetY + (this.y + this.offsetY) * w,
 			w, w
 		);
 	}

@@ -1,4 +1,9 @@
 function onKeyDown(event) {
+	if (event.keyCode == 82) { // R reset
+		resetLevel();
+		return;
+	}
+
 	if (event.keyCode == 38 || event.keyCode == 87) { // up / W
 		act(0, -1);
 	} else

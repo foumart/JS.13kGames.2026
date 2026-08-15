@@ -14,12 +14,12 @@ function init() {
 }
 
 function resize() {
-	const size = Math.min(window.innerWidth, window.innerHeight);
-	width = height = size;
+	width = window.innerWidth;
+	height = window.innerHeight;
 	mainDiv.style.width = width + "px";
 	mainDiv.style.height = height + "px";
-	mainDiv.style.left = ((window.innerWidth - width) / 2 | 0) + "px";
-	mainDiv.style.top = ((window.innerHeight - height) / 2 | 0) + "px";
+	mainDiv.style.left = "0";
+	mainDiv.style.top = "0";
 	gameCanvas.width = width;
 	gameCanvas.height = height;
 	gameContext.imageSmoothingEnabled = false;

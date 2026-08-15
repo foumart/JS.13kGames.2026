@@ -23,7 +23,7 @@ class TweenFX {
 						_ease
 							? (1 - Math.pow(1 - count / duration, 1.675))
 							: Math.pow(count / duration, 1.675)
-					)
+					);
 					if (tweenedStart[i] > tweenedEnd[i]) {
 						element[key] = tweenedEnd[i] + (tweenedStart[i] - tweenedEnd[i]) / duration * (duration - eased);
 					} else {
@@ -35,7 +35,7 @@ class TweenFX {
 			} else if (_callback) {
 				requestAnimationFrame(_callback);
 			}
-		}
+		};
 
 		if (_update != null) _update();
 		requestAnimationFrame(tween);

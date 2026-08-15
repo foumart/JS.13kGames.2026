@@ -1,6 +1,8 @@
 # JS.13kGames.2026
 
-Minimal tile-grid engine for [JS13kGames](https://js13kgames.com/).
+Unicorn rainbow-trail puzzle for [JS13kGames](https://js13kgames.com/) (13KB zip).
+
+Leave a rainbow path (snake-style). Surround enemies on each side with rainbow to capture them. Stage can be cleared perfectly or with no moves left with enemies remaining (`R` resets).
 
 ## Install
 
@@ -18,8 +20,7 @@ npm install
 | `npm run raw` | Separate JS/CSS files for easier debugging |
 | `npm test` | Re-zip `public/` as `zip/game.zip` and report size |
 
-Zip is about **3KB** (~10KB free).
-
 ## Controls
 
-Arrow keys or WASD move the player on land tiles. Water and walls block movement.
+Arrow keys / WASD - move. `R` - reset level.
+
