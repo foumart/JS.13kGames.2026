@@ -1,6 +1,11 @@
 function onKeyDown(event) {
-	if (event.keyCode == 82) { // R reset
+	if (event.keyCode == 82) { // R reset current stage
 		resetLevel();
+		return;
+	}
+
+	if (event.keyCode == 13 || event.keyCode == 32) { // Enter / Space next
+		if (showEnd && state == 2) nextLevel();
 		return;
 	}
 

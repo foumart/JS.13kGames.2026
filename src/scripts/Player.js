@@ -5,6 +5,7 @@ class Player {
 		this.y = y;
 		this.offsetX = 0;
 		this.offsetY = 0;
+		this.face = 1; // 1 = face left, -1 = face right
 		this.resize();
 	}
 
@@ -14,11 +15,15 @@ class Player {
 	}
 
 	moveTo(dx, dy) {
+		if (dx < 0 || dy < 0) this.face = 1;
+		if (dx > 0 || dy > 0) this.face = -1;
+
 		const ox = this.x;
 		const oy = this.y;
 		this.x += dx;
 		this.y += dy;
 		extendPath(ox, oy, this.x, this.y, dx, dy);
+		collectCoin(this.x, this.y);
 		flushDyingEnemies();
 		checkCaptures();
 		this.offsetX = -dx;
@@ -31,13 +36,21 @@ class Player {
 	}
 
 	draw() {
-		const w = this.width;
-		gameContext.drawImage(
-			offscreenBitmaps[2],
-			0, 0, tileWidth, tileWidth,
-			boardOffsetX + (this.x + this.offsetX) * w,
-			boardOffsetY + (this.y + this.offsetY) * w,
-			w, w
-		);
+		const cell = this.width;
+		const bmp = offscreenBitmaps[moving ? 5 : 2];
+		const scale = cell / tileWidth * unitScale;
+		const dw = bmp.width * scale;
+		const dh = bmp.height * scale;
+		const cx = boardOffsetX + (this.x + this.offsetX) * cell + cell / 2;
+		const cy = boardOffsetY + (this.y + this.offsetY) * cell + cell / 2;
+		const hop = moving
+			? Math.sin(Math.PI * Math.max(Math.abs(this.offsetX), Math.abs(this.offsetY))) * cell * 0.22
+			: 0;
+
+		gameContext.save();
+		gameContext.translate(cx, cy - hop);
+		gameContext.scale(this.face, 1);
+		gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
+		gameContext.restore();
 	}
 }

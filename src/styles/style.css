@@ -18,3 +18,34 @@ div, canvas {
 	-webkit-tap-highlight-color: transparent;
 	image-rendering: pixelated;
 }
+
+#btnWrap {
+	display: none;
+	position: absolute;
+	left: 50%;
+	bottom: 10%;
+	transform: translateX(-50%);
+	gap: 2vmin;
+	z-index: 2;
+	align-items: center;
+	justify-content: center;
+}
+
+#nextBtn, #retryBtn {
+	position: relative;
+	padding: 1.2vmin 4vmin;
+	font: 900 3.5vmin system-ui, sans-serif;
+	border: 0.6vmin solid #fff;
+	border-radius: 1vmin;
+	cursor: pointer;
+}
+
+#nextBtn {
+	color: #120028;
+	background: #ffe066;
+}
+
+#retryBtn {
+	color: #fff;
+	background: #456;
+}
