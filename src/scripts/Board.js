@@ -7,9 +7,11 @@ let boardOffsetY = 0;
 let enemies = []; // 0 empty, 1 alive, 2 dying
 let obstacles = [];
 let coins = [];
+let clouds = []; // 1 H bridge, 2 V bridge, 3 cross
 let pathData = [];
 let pathStep = [];
 let fillData = [];
+let moveLog = []; // flushed enemy cells per forward move (for undo)
 let player;
 let moving = 0;
 let gameDirty = 1;
@@ -31,17 +33,16 @@ let endBtnWrap = null;
 let endNextBtn = null;
 let endRetryBtn = null;
 
-// 0 empty, 1 enemy, 2 player, 3 obstacle, 4 coin
-// ground bitmap index per stage (0 grass, 6 clouds)
-const levelGround = [0, 6];
+// 0 empty, 1 enemy, 2 player, 3 obstacle, 4 coin, 5 cloud H, 6 cloud V, 7 cloud cross
+const levelGround = [0, 6, 0];
 const levels = [
 	// Stage 1
 	[
-		"000000000",
+		"000000033",
 		"010001000",
 		"000010410",
 		"000000000",
-		"040200100",
+		"340200100",
 		"000000000",
 		"401100400",
 		"000000001"
@@ -58,6 +59,17 @@ const levels = [
 		"01000010000",
 		"00001000001",
 		"33100011003"
+	],
+	// Stage 3
+	[
+		"003000300",
+		"010505010",
+		"006020600",
+		"105070501",
+		"006000600",
+		"301040103",
+		"000707000",
+		"010606010"
 	]
 ];
 
@@ -72,10 +84,12 @@ function initBoard() {
 	enemies = [];
 	obstacles = [];
 	coins = [];
+	clouds = [];
 	pathData = [];
 	pathStep = [];
 	fillData = [];
 	pathTrail = [];
+	moveLog = [];
 	pathCount = 0;
 	enemiesTotal = 0;
 	enemiesCleared = 0;
@@ -103,6 +117,7 @@ function initBoard() {
 		enemies[y] = [];
 		obstacles[y] = [];
 		coins[y] = [];
+		clouds[y] = [];
 		pathData[y] = [];
 		pathStep[y] = [];
 		fillData[y] = [];
@@ -111,6 +126,7 @@ function initBoard() {
 			enemies[y][x] = c == "1" ? 1 : 0;
 			obstacles[y][x] = c == "3" ? 1 : 0;
 			coins[y][x] = c == "4" ? 1 : 0;
+			clouds[y][x] = c == "5" ? 1 : c == "6" ? 2 : c == "7" ? 3 : 0;
 			if (c == "1") enemiesTotal ++;
 			pathData[y][x] = 0;
 			pathStep[y][x] = 0;
@@ -127,9 +143,23 @@ function initBoard() {
 	buildRainbowBackdrop();
 }
 
-function isPassable(x, y) {
-	return inBounds(x, y) && !enemies[y][x] && !obstacles[y][x]
-		&& !pathStep[y][x] && !fillData[y][x];
+function isPassable(x, y, dx, dy) {
+	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || fillData[y][x]) return 0;
+	const c = clouds[y][x];
+	// 1 = H bridge, 2 = V bridge, 3 = cross
+	if (c == 1 && dy) return 0;
+	if (c == 2 && dx) return 0;
+	if (pathStep[y][x]) {
+		if (c == 3) {
+			const pd = pathData[y][x];
+			const horiz = pd & 10; // E|W
+			const vert = pd & 5; // N|S
+			if (dx && !horiz) return 1;
+			if (dy && !vert) return 1;
+		}
+		return 0;
+	}
+	return 1;
 }
 
 function enemyCount() {
@@ -154,10 +184,10 @@ function aliveCount() {
 
 function hasMove() {
 	return canRetract()
-		|| isPassable(player.x + 1, player.y)
-		|| isPassable(player.x - 1, player.y)
-		|| isPassable(player.x, player.y + 1)
-		|| isPassable(player.x, player.y - 1);
+		|| isPassable(player.x + 1, player.y, 1, 0)
+		|| isPassable(player.x - 1, player.y, -1, 0)
+		|| isPassable(player.x, player.y + 1, 0, 1)
+		|| isPassable(player.x, player.y - 1, 0, -1);
 }
 
 function reviveDyingEnemies() {
@@ -231,14 +261,27 @@ function markClusterDying(cluster) {
 }
 
 function flushDyingEnemies() {
+	const flushed = [];
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (enemies[y][x] == 2) {
 				enemies[y][x] = 0;
 				fillData[y][x] = 1;
 				enemiesCleared ++;
+				flushed.push([x, y]);
 			}
 		}
+	}
+	return flushed;
+}
+
+function restoreFlushed(flushed) {
+	for (let i = 0; i < flushed.length; i++) {
+		const x = flushed[i][0];
+		const y = flushed[i][1];
+		fillData[y][x] = 0;
+		enemies[y][x] = 1;
+		enemiesCleared --;
 	}
 }
 
@@ -268,7 +311,7 @@ function scheduleEndScreen() {
 
 function scheduleStageClear() {
 	if (clearTimer || state != 1) return;
-	state = 0; // lock input while delayed kill / reveal plays
+	state = 0; // lock input
 	clearTimer = setTimeout(() => {
 		clearTimer = 0;
 		flushDyingEnemies();
@@ -278,19 +321,26 @@ function scheduleStageClear() {
 	}, 450);
 }
 
-function checkCaptures() {
+function checkCaptures(flushAcc) {
 	const clusters = getClusters();
 	for (let i = 0; i < clusters.length; i++) {
 		if (isClusterSurrounded(clusters[i])) markClusterDying(clusters[i]);
 	}
 
-	// Last enemies just marked dying - auto play the delayed kill/reveal turn
+	// Last enemies just marked dying - autoplay the delayed kill/reveal turn
 	if (aliveCount() == 0 && enemyCount() > 0) {
 		scheduleStageClear();
 		return;
 	}
 
-	if (!hasMove()) flushDyingEnemies();
+	if (!hasMove()) {
+		if (flushAcc) {
+			const extra = flushDyingEnemies();
+			for (let i = 0; i < extra.length; i++) flushAcc.push(extra[i]);
+		} else if (!canRetract()) {
+			flushDyingEnemies();
+		}
+	}
 
 	if (!enemyCount()) {
 		revealPlayerTile = 1;
@@ -332,6 +382,23 @@ function nextLevel() {
 	resetLevel();
 }
 
+function debugClearLevel() {
+	if (state != 1 || moving || clearTimer) return;
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (enemies[y][x]) {
+				enemies[y][x] = 0;
+				fillData[y][x] = 1;
+			}
+		}
+	}
+	enemiesCleared = enemiesTotal;
+	revealPlayerTile = 1;
+	state = 2;
+	scheduleEndScreen();
+	drawBoard();
+}
+
 function drawBoard() {
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 
@@ -346,13 +413,29 @@ function drawBoard() {
 			const py = boardOffsetY + y * size;
 
 			const onPlayer = x == player.x && y == player.y;
-			const purified = fillData[y][x]
-				|| (pathStep[y][x] && (!onPlayer || revealPlayerTile || showEnd && state == 3));
+			// Hide rainbow under unicorn (on cross, only the second time)
+			let tipOnly = 0;
+			if (onPlayer && pathStep[y][x] && !revealPlayerTile && !(showEnd && state == 3)) {
+				let visits = 0;
+				for (let i = 0; i < pathTrail.length; i++) {
+					if (pathTrail[i][0] == x && pathTrail[i][1] == y) visits ++;
+				}
+				const tip = pathTrail[pathTrail.length - 1];
+				tipOnly = tip[0] == x && tip[1] == y && visits <= 1;
+			}
+			const purified = fillData[y][x] || (pathStep[y][x] && !tipOnly);
 			if (purified) {
 				drawPurifiedTile(x, y);
 			} else {
 				gameContext.drawImage(
 					offscreenBitmaps[levelGround[levelIndex] || 0],
+					0, 0, tileWidth, tileWidth, px, py, size, size
+				);
+			}
+			if (clouds[y][x]) {
+				const cb = clouds[y][x];
+				gameContext.drawImage(
+					offscreenBitmaps[cb == 1 ? 7 : cb == 2 ? 8 : 9],
 					0, 0, tileWidth, tileWidth, px, py, size, size
 				);
 			}
@@ -367,22 +450,22 @@ function drawBoard() {
 			}
 
 			if (enemies[y][x]) {
-				const s = size / tileWidth * 0.8;
-				const dw = tileWidth * s;
-				const ox = px + (size - dw) / 2;
-				const bodyH = 4;
-				const legH = 2;
+				const enemyScale = size / tileWidth * 0.8;
+				const drawWidth = tileWidth * enemyScale;
+				const drawX = px + (size - drawWidth) / 2;
+				const bodyHeight = 4;
+				const legHeight = 2;
 
-				const oy = py + size - (bodyH - 1 + legH) * s;
-				const bobSpeed = enemies[y][x] == 2 ? 0.014 : 0.004;
-				const bob = Math.sin(Date.now() * bobSpeed + x * 1.7 + y * 2.3) > 0 ? s : 0;
+				const drawY = py + size - (bodyHeight - 1 + legHeight) * enemyScale;
+				const bounceSpeed = enemies[y][x] == 2 ? 0.014 : 0.004;
+				const bodyBounce = Math.sin(Date.now() * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? enemyScale : 0;
 				gameContext.drawImage(
-					offscreenBitmaps[1], 0, 0, tileWidth, bodyH,
-					ox, oy - bob, dw, bodyH * s
+					offscreenBitmaps[1], 0, 0, tileWidth, bodyHeight,
+					drawX, drawY - bodyBounce, drawWidth, bodyHeight * enemyScale
 				);
 				gameContext.drawImage(
-					offscreenBitmaps[1], 0, bodyH, tileWidth, legH,
-					ox, oy + (bodyH - 1) * s, dw, legH * s
+					offscreenBitmaps[1], 0, bodyHeight, tileWidth, legHeight,
+					drawX, drawY + (bodyHeight - 1) * enemyScale, drawWidth, legHeight * enemyScale
 				);
 			}
 		}

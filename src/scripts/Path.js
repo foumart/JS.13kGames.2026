@@ -52,12 +52,19 @@ function beginRetractPath() {
 	const dx = cx - prev[0];
 	const dy = cy - prev[1];
 	pathData[prev[1]][prev[0]] &= ~dirMask(dx, dy);
-	pathData[cy][cx] = 0;
-	pathStep[cy][cx] = 0;
+	pathData[cy][cx] &= ~dirMask(-dx, -dy);
+	let still = 0;
+	for (let i = 0; i < pathTrail.length; i++) {
+		if (pathTrail[i][0] == cx && pathTrail[i][1] == cy) still = 1;
+	}
+	if (!still) {
+		pathData[cy][cx] = 0;
+		pathStep[cy][cx] = 0;
+	}
 	pathCount = pathTrail.length;
 }
 
-// Rainbow background: tileWidth*boardW × tileWidth*boardH, 45 degrees gradient
+// Rainbow background: tileWidth*boardW x tileWidth*boardH, 45 degrees gradient
 function buildRainbowBackdrop() {
 	const bw = tileWidth * boardWidth;
 	const bh = tileWidth * boardHeight;
@@ -97,9 +104,9 @@ function drawFlowingPath() {
 
 	const w = cellSize;
 	const thick = w * 0.33;
-	const border = w * 0.08;
+	const border = w * 0.1;
 	const band = w * 0.45;
-	const shift = Date.now() * 0.12;
+	const shift = Date.now() * 0.1;
 	const pts = [];
 
 	for (let i = 0; i < n; i++) {

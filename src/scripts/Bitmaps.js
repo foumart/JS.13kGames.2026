@@ -2,7 +2,7 @@ const tileWidth = 6;
 const unitScale = 0.665;
 const offscreenBitmaps = [];
 
-// 0 empty, 1 enemy, 2 unicorn, 3 obstacle, 4 coin, 5 unicorn jump, 6 clouds
+// 0 empty, 1 enemy, 2 unicorn, 3 obstacle, 4 coin, 5 unicorn jump, 6 clouds, 7 cloud H, 8 cloud V, 9 cloud cross
 const bitmapPixels = [
 	// empty / grass
 	[
@@ -24,8 +24,8 @@ const bitmapPixels = [
 	],
 	// unicorn idle
 	[
-		[0,1,1,0,0,0,0,0,0],
-		[0,0,1,1,3,3,0,0,0],
+		[1,1,0,0,0,0,0,0,0],
+		[0,1,1,1,3,3,0,0,0],
 		[0,0,1,2,2,2,3,0,0],
 		[0,2,2,1,1,2,2,3,0],
 		[2,2,2,2,2,2,2,2,3],
@@ -64,7 +64,7 @@ const bitmapPixels = [
 		[0,0,3,2,2,2,2,0,0],
 		[0,0,3,2,2,2,0,0,0]
 	],
-	// empty / clouds
+	// empty / clouds (stage ground)
 	[
 		[1,1,2,1,1,1],
 		[1,2,3,2,1,2],
@@ -72,6 +72,33 @@ const bitmapPixels = [
 		[1,1,2,1,1,1],
 		[1,2,1,2,3,2],
 		[2,1,1,1,2,1]
+	],
+	// cloud bridge horizontal (map 5)
+	[
+		[0,0,0,0,0,0],
+		[1,2,2,2,2,1],
+		[2,3,1,3,2,3],
+		[1,2,2,2,2,1],
+		[3,1,1,1,1,3],
+		[0,0,0,0,0,0]
+	],
+	// cloud bridge vertical (map 6)
+	[
+		[0,1,2,1,3,0],
+		[0,2,3,2,1,0],
+		[0,2,1,3,2,0],
+		[0,2,3,2,1,0],
+		[0,1,2,3,2,0],
+		[0,3,1,2,1,0]
+	],
+	// cloud cross (map 7)
+	[
+		[0,1,2,1,3,0],
+		[1,2,3,2,2,1],
+		[2,3,1,3,2,3],
+		[1,2,3,2,3,1],
+		[3,1,2,3,2,3],
+		[0,3,1,2,1,0]
 	]
 ];
 
@@ -82,7 +109,10 @@ const bitmapPalettes = [
 	["", "5a5048", "7a7060", "3a3530"],
 	["", "c9a000", "ffe066", "fff3a0"],
 	["", "f8f4ff", "ff6eb4", "ffe066"],
-	["", "e4e7eb", "d5dde6", "b4bec9"]
+	["", "e4e7eb", "d5dde6", "b4bec9"],
+	["", "f7fbff", "dbe4ee", "aebaca"],
+	["", "f7fbff", "dbe4ee", "aebaca"],
+	["", "ffffff", "e8eef6", "c5d0dc"]
 ];
 
 for (let k = 0; k < bitmapPixels.length; k++) {

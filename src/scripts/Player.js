@@ -29,8 +29,9 @@ class Player {
 			extendPath(ox, oy, this.x, this.y, dx, dy);
 			collectCoin(this.x, this.y);
 			moveCount ++;
-			flushDyingEnemies();
-			checkCaptures();
+			const flushed = flushDyingEnemies();
+			checkCaptures(flushed);
+			moveLog.push(flushed);
 			moving = 0;
 			drawBoard();
 		});
@@ -48,6 +49,7 @@ class Player {
 		moving = 1;
 		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
 			moveCount ++;
+			restoreFlushed(moveLog.pop() || []);
 			reviveDyingEnemies();
 			checkCaptures();
 			moving = 0;
