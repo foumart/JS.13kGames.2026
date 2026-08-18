@@ -1,5 +1,5 @@
 function act(dx, dy) {
-	if (moving || state != 1 || clearTimer) return;
+	if (moving || state != 1 || clearTimer || showObjective) return;
 	const nx = player.x + dx;
 	const ny = player.y + dy;
 	if (isPassable(nx, ny, dx, dy)) player.moveTo(dx, dy);
@@ -7,8 +7,9 @@ function act(dx, dy) {
 }
 
 function redraw() {
-	if (battleActive) drawBattle();
-	else drawBoard();
+	//if (battleActive) drawBattle();
+	//else
+	drawBoard();
 }
 
 function gameStart() {

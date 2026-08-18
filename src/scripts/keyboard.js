@@ -1,6 +1,16 @@
 function onKeyDown(event) {
+	if (showObjective) {
+		if (event.keyCode == 13 || event.keyCode == 32) dismissObjective();
+		else if (event.keyCode == 82) {
+			skipObjective = 1;
+			if (battleActive) resetBattle();
+			else resetLevel();
+		}
+		return;
+	}
 	if (battleActive) {
 		if (event.keyCode == 82) { // R reset battle
+			skipObjective = 1;
 			resetBattle();
 			return;
 		}
@@ -14,6 +24,7 @@ function onKeyDown(event) {
 		debugSkipToBattle();
 	}
 	else if (event.keyCode == 82) { // R reset current stage
+		skipObjective = 1;
 		resetLevel();
 	}
 	else if (event.keyCode == 13 || event.keyCode == 32) { // Enter / Space next

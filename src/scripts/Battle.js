@@ -27,6 +27,8 @@ function startBattle() {
 	}
 	hideEndButtons();
 	showEnd = 0;
+	showObjective = skipObjective ? 0 : 1;
+	skipObjective = 0;
 	state = 1;
 	battleResult = 0;
 	animating = 0;
@@ -43,6 +45,7 @@ function startBattle() {
 	if (rescuedMerlin) battleUnits.push(new Merlin(6, 7));
 	spawnEnemies();
 	beginRound();
+	if (showObjective) showObjectiveButtons();
 }
 
 function spawnEnemies() {
@@ -423,6 +426,10 @@ function getPosFromEvent(event) {
 }
 
 function battleClick(event) {
+	if (showObjective) {
+		dismissObjective();
+		return;
+	}
 	if (!battleActive || battleResult) return;
 	const edx = event.clientX - endTurnX;
 	const edy = event.clientY - endTurnY;

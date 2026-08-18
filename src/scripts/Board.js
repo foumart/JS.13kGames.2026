@@ -11,6 +11,7 @@ let coins = [];
 let clouds = []; // 1 H bridge, 2 V bridge, 3 cross
 let exits = [];
 let castle = [];
+let rescues = []; // 0 empty, 3 Corwin, 4 Merlin
 let pathData = [];
 let pathStep = [];
 let fillData = [];
@@ -21,7 +22,10 @@ let gameLoop;
 let pathCount = 0;
 let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
+let showObjective = 0;
+let skipObjective = 0;
 let endTimer = 0;
+let stageCaptive = 0;
 
 let levelIndex = 0;
 let enemiesTotal = 0;
@@ -39,50 +43,7 @@ let leftoverEnemies = 0;
 let leftoverThisStage = 0;
 let rescuedCorwin = 0;
 let rescuedMerlin = 0;
-
-const tileWidth = 6;
-const unitScale = 0.665;
-
-// 0 empty, 1 enemy, 2 player, 3 obstacle, 4 coin, 5 cloud H, 6 cloud V, 7 cloud cross, 8 exit, 9 castle
-const levelGround = [0, 0, 0, 3, 3, 3];
-const levels = [
-	// Stage 1
-	[
-		"000000033",
-		"010001000",
-		"000010410",
-		"000000000",
-		"304200100",
-		"400000000",
-		"001100800",
-		"000000001"
-	],
-	// Stage 2
-	[
-		"00000000003",
-		"03100100100",
-		"00010000010",
-		"31000313000",
-		"30002000001",
-		"30100010400",
-		"00001830010",
-		"01000010000",
-		"00001000001",
-		"33100013003"
-	],
-	// Stage 3
-	[
-		"000010000",
-		"010090010",
-		"010989000",
-		"000000001",
-		"003070070",
-		"301040100",
-		"000020000",
-		"010100010",
-		"000300000"
-	]
-];
+let rescueDying = [];
 
 function inBounds(x, y) {
 	return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
@@ -98,6 +59,9 @@ function initBoard() {
 	clouds = [];
 	exits = [];
 	castle = [];
+	rescues = [];
+	stageCaptive = 0;
+	rescueDying = [];
 	pathData = [];
 	pathStep = [];
 	fillData = [];
@@ -113,6 +77,8 @@ function initBoard() {
 	revealPlayerTile = 0;
 	state = 1;
 	showEnd = 0;
+	showObjective = skipObjective ? 0 : 1;
+	skipObjective = 0;
 	moving = 0;
 	if (endTimer) {
 		clearTimeout(endTimer);
@@ -134,6 +100,8 @@ function initBoard() {
 		clouds[y] = [];
 		exits[y] = [];
 		castle[y] = [];
+		rescues[y] = [];
+		rescueDying[y] = [];
 		pathData[y] = [];
 		pathStep[y] = [];
 		fillData[y] = [];
@@ -145,6 +113,11 @@ function initBoard() {
 			clouds[y][x] = c == "5" ? 1 : c == "6" ? 2 : c == "7" ? 3 : 0;
 			exits[y][x] = c == "8" ? 1 : 0;
 			castle[y][x] = c == "9" ? 1 : 0;
+			rescues[y][x] = c == "A" ? 3 : c == "B" ? 4 : 0;
+			rescueDying[y][x] = 0;
+			if (rescues[y][x]) stageCaptive = rescues[y][x];
+			if (c == "A") rescuedCorwin = 0;
+			if (c == "B") rescuedMerlin = 0;
 			if (c == "1") enemiesTotal ++;
 			pathData[y][x] = 0;
 			pathStep[y][x] = 0;
@@ -159,10 +132,12 @@ function initBoard() {
 	player = new Player(startX, startY);
 	placeStartPath(startX, startY);
 	buildRainbowBackdrop();
+	if (showObjective) showObjectiveButtons();
 }
 
 function isPassable(x, y, dx, dy) {
 	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || castle[y][x] || fillData[y][x]) return 0;
+	if (rescues[y][x] && !rescueDying[y][x]) return 0;
 	const c = clouds[y][x];
 	// 1 = H bridge, 2 = V bridge, 3 = cross
 	if (c == 1 && dy) return 0;
@@ -202,6 +177,7 @@ function reviveDyingEnemies() {
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (enemies[y][x] == 2) enemies[y][x] = 1;
+			rescueDying[y][x] = 0;
 		}
 	}
 }
@@ -278,6 +254,7 @@ function flushDyingEnemies() {
 				enemiesCleared ++;
 				flushed.push([x, y]);
 			}
+			if (rescueDying[y][x] && rescues[y][x]) collectRescue(x, y);
 		}
 	}
 	return flushed;
@@ -298,6 +275,34 @@ function collectCoin(x, y) {
 		coins[y][x] = 0;
 		coinsCollected ++;
 	}
+}
+
+function collectRescue(x, y) {
+	const k = rescues[y][x];
+	if (!k) return;
+	rescues[y][x] = 0;
+	rescueDying[y][x] = 0;
+	fillData[y][x] = 1;
+	if (k == 3) rescuedCorwin = 1;
+	if (k == 4) rescuedMerlin = 1;
+}
+
+function remainingRescue() {
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (rescues[y][x]) return 1;
+		}
+	}
+	return 0;
+}
+
+function worldNumber() {
+	const i = battleActive ? levels.length - 1 : levelIndex;
+	return (i / 3 | 0) + 1;
+}
+
+function stageNumber() {
+	return (levelIndex % 3) + 1;
 }
 
 function calcLevelScore() {
@@ -336,13 +341,82 @@ function drawUnitIcon(bmpIndex, cx, cy, size) {
 	gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }
 
+function drawObjectiveScreen() {
+	if (!showObjective) return;
+	const size = cellSize || Math.min(width, height) / 12;
+	const fs = Math.max(18, size * 0.48 | 0);
+	const icon = Math.max(32, size * 0.9 | 0);
+	const cx = width / 2;
+	const cy = height / 2;
+	gameContext.fillStyle = "#103c";
+	gameContext.fillRect(0, 0, width, height);
+	gameContext.fillStyle = "#fff";
+	gameContext.textAlign = "center";
+	gameContext.textBaseline = "middle";
+	gameContext.font = "bold " + fs + "px sans-serif";
+	if (battleActive) {
+		gameContext.fillText("World " + worldNumber() + " - Boss", cx, cy - fs * 1.3);
+		gameContext.font = "bold " + (fs * 0.72 | 0) + "px sans-serif";
+		gameContext.fillText("Destroy all enemies", cx, cy + fs * 0.35);
+	} else {
+		gameContext.fillText("World " + worldNumber() + ", Level " + stageNumber(), cx, cy - fs * 1.6);
+		drawObjectiveLine(cx, cy + fs * 0.25, fs * 0.72 | 0, icon);
+	}
+}
+
+function drawObjectiveLine(cx, cy, fs, icon) {
+	const parts = [];
+	if (stageCaptive) {
+		parts.push({ text: "Rescue " });
+		parts.push({ bmp: stageCaptive });
+		parts.push({ text: " and proceed to " });
+		parts.push({ sparkle: 1 });
+	} else {
+		parts.push({ text: "Proceed to " });
+		parts.push({ sparkle: 1 });
+	}
+	gameContext.font = "bold " + fs + "px sans-serif";
+	const gap = icon * 0.15;
+	let total = 0;
+	const widths = [];
+	for (let i = 0; i < parts.length; i++) {
+		const w = parts[i].text ? gameContext.measureText(parts[i].text).width : icon + gap;
+		widths.push(w);
+		total += w;
+	}
+	let x = cx - total / 2;
+	gameContext.textAlign = "left";
+	gameContext.textBaseline = "middle";
+	gameContext.fillStyle = "#fff";
+	for (let i = 0; i < parts.length; i++) {
+		const p = parts[i];
+		if (p.text) {
+			gameContext.fillText(p.text, x, cy);
+		} else if (p.sparkle) {
+			const sp = 7 + ((Date.now() / 180 | 0) % 2);
+			gameContext.drawImage(
+				offscreenBitmaps[sp], 0, 0, tileWidth, tileWidth,
+				x + gap / 2, cy - icon / 2, icon, icon
+			);
+		} else {
+			drawUnitIcon(p.bmp, x + (icon + gap) / 2, cy, icon);
+		}
+		x += widths[i];
+	}
+}
+
 function checkCaptures(flushAcc) {
 	const clusters = getClusters();
 	for (let i = 0; i < clusters.length; i++) {
 		if (isClusterSurrounded(clusters[i])) markClusterDying(clusters[i]);
 	}
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (rescues[y][x] && isClusterSurrounded([[x, y]])) rescueDying[y][x] = 1;
+		}
+	}
 
-	if (exits[player.y][player.x]) {
+	if (exits[player.y][player.x] && !remainingRescue()) {
 		if (flushAcc) {
 			const extra = flushDyingEnemies();
 			for (let i = 0; i < extra.length; i++) flushAcc.push(extra[i]);
@@ -375,22 +449,24 @@ function hideEndButtons() {
 	if (endBtnWrap) endBtnWrap.style.display = "none";
 }
 
+function ensureEndButtons() {
+	if (endBtnWrap) return;
+	endBtnWrap = document.createElement("div");
+	endBtnWrap.id = "btnWrap";
+	endRetryBtn = document.createElement("button");
+	endRetryBtn.id = "retryBtn";
+	endRetryBtn.textContent = "RETRY";
+	endBtnWrap.appendChild(endRetryBtn);
+	endNextBtn = document.createElement("button");
+	endNextBtn.id = "nextBtn";
+	endBtnWrap.appendChild(endNextBtn);
+	mainDiv.appendChild(endBtnWrap);
+}
+
 function showEndButtons() {
-	if (!endBtnWrap) {
-		endBtnWrap = document.createElement("div");
-		endBtnWrap.id = "btnWrap";
-		endRetryBtn = document.createElement("button");
-		endRetryBtn.id = "retryBtn";
-		endRetryBtn.textContent = "RETRY";
-		endRetryBtn.onclick = resetLevel;
-		endNextBtn = document.createElement("button");
-		endNextBtn.id = "nextBtn";
-		endNextBtn.onclick = nextLevel;
-		endBtnWrap.appendChild(endRetryBtn);
-		endBtnWrap.appendChild(endNextBtn);
-		mainDiv.appendChild(endBtnWrap);
-	}
-	endRetryBtn.onclick = battleActive ? resetBattle : resetLevel;
+	ensureEndButtons();
+	endRetryBtn.style.display = "block";
+	endRetryBtn.onclick = () => { skipObjective = 1; battleActive ? resetBattle() : resetLevel(); };
 	endNextBtn.onclick = battleActive ? restartCampaign : nextLevel;
 	endNextBtn.textContent = battleActive
 		? "REPLAY"
@@ -399,10 +475,24 @@ function showEndButtons() {
 	endBtnWrap.style.display = "flex";
 }
 
+function showObjectiveButtons() {
+	ensureEndButtons();
+	endRetryBtn.style.display = "none";
+	endNextBtn.textContent = "START";
+	endNextBtn.onclick = dismissObjective;
+	endNextBtn.style.display = "block";
+	endBtnWrap.style.display = "flex";
+}
+
+function dismissObjective() {
+	if (!showObjective) return;
+	showObjective = 0;
+	hideEndButtons();
+	redraw();
+}
+
 function nextLevel() {
 	leftoverEnemies += leftoverThisStage;
-	if (levelIndex == 0) rescuedCorwin = 1;
-	if (levelIndex == 1) rescuedMerlin = 1;
 	if (levelIndex < levels.length - 1) {
 		levelIndex ++;
 		resetLevel();
@@ -422,7 +512,7 @@ function restartCampaign() {
 }
 
 function debugClearLevel() {
-	if (state != 1 || moving || clearTimer) return;
+	if (state != 1 || moving || clearTimer || showObjective) return;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (enemies[y][x]) {
@@ -508,6 +598,11 @@ function drawBoard() {
 				const cox = px + (size - cs) / 2;
 				const coy = py + size - cs - size * 0.06;
 				gameContext.drawImage(offscreenBitmaps[2], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
+			} else if (rescues[y][x]) {
+				gameContext.drawImage(offscreenBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				const bounce = rescueDying[y][x] && Math.sin(Date.now() * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
+				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2 - bounce, size * 0.9);
+				gameContext.drawImage(offscreenBitmaps[10], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			}
 
 			if (enemies[y][x]) {
@@ -553,8 +648,8 @@ function drawBoard() {
 			gameContext.fillStyle = "#ffd";
 			gameContext.fillText("SCORE " + levelScore, cx, cy - fs * 0.15);
 
-			const showG = rescuedCorwin || levelIndex >= 0;
-			const showT = rescuedMerlin || levelIndex >= 1;
+			const showG = rescuedCorwin;
+			const showT = rescuedMerlin;
 			let n = 1 + (showG ? 1 : 0) + (showT ? 1 : 0);
 			let ix = cx - (n - 1) * icon * 0.7;
 			const by = cy + fs * 0.55;
@@ -571,4 +666,5 @@ function drawBoard() {
 		}
 	}
 
+	drawObjectiveScreen();
 }

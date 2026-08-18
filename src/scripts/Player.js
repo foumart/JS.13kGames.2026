@@ -25,6 +25,7 @@ class Player {
 		this.offsetX = -dx;
 		this.offsetY = -dy;
 		moving = 1;
+		collectRescue(this.x, this.y);
 		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
 			extendPath(ox, oy, this.x, this.y, dx, dy);
 			collectCoin(this.x, this.y);
@@ -41,6 +42,8 @@ class Player {
 		if (dx < 0 || dy < 0) this.face = 1;
 		if (dx > 0 || dy > 0) this.face = -1;
 
+		const ox = this.x;
+		const oy = this.y;
 		beginRetractPath();
 		this.x += dx;
 		this.y += dy;

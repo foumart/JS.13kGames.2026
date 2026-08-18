@@ -1,7 +1,7 @@
-class Corwin extends Unit {
+class Fiona extends Unit {
 
 	constructor(x, y) {
-		super(x, y, 1, 0, 8, 2, 3);
+		super(x, y, 1, 0, 3, 3, 8);
 	}
 
 	moves() {
@@ -9,6 +9,6 @@ class Corwin extends Unit {
 	}
 
 	attackRays() {
-		return Unit.KNIGHT;
+		return Unit.DIAGONAL;
 	}
 }

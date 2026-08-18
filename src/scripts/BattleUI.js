@@ -111,6 +111,8 @@ function drawBattle() {
 		gameContext.font = "bold " + Math.max(18, tileSize * 0.5 | 0) + "px sans-serif";
 		gameContext.fillText(battleResult == 2 ? "VICTORY!" : "DEFEAT - R", width / 2, height / 2);
 	}
+
+	drawObjectiveScreen();
 }
 
 function getBattleUIAlly() {
@@ -153,6 +155,16 @@ function drawUIPlayer(x, y, w, h, fs) {
 	}
 	const pic = (portrait ? Math.min(w, h) : Math.max(w, h)) * 0.42;
 	drawUnitIcon(0, x + pic / 2, y + pic / 2, pic);
+	const sm = pic * 0.55;
+	let rx = x;
+	const ry = y + pic + 2;
+	if (rescuedCorwin) {
+		drawUnitIcon(3, rx + sm / 2, ry + sm / 2, sm);
+		rx += sm + 2;
+	}
+	if (rescuedMerlin) {
+		drawUnitIcon(4, rx + sm / 2, ry + sm / 2, sm);
+	}
 	gameContext.textAlign = "left";
 	gameContext.textBaseline = "top";
 	gameContext.font = "bold " + fs + "px sans-serif";
