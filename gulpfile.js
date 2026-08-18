@@ -130,7 +130,9 @@ function sw(callback) {
 // Compile (or copy if raw) the pwa initialization script as well as game logic scripts
 function app(callback) {
 	const scripts = [
-		'src/scripts/*.js'
+		'src/scripts/*.js',
+		'src/scripts/units/*.js',
+		'src/scripts/enemies/*.js'
 	];
 	if (pwa) {
 		scripts.unshift('resources/sw_init.js');
@@ -249,7 +251,9 @@ function pack(callback) {
 
 	if (raw) {
 		// Use glob to get all JavaScript files
-		const scriptFiles = glob.sync('src/scripts/*.js').reverse();
+		const scriptFiles = glob.sync('src/scripts/*.js').reverse()
+			.concat(glob.sync('src/scripts/units/*.js'))
+			.concat(glob.sync('src/scripts/enemies/*.js'));
 		// Add initialization scripts as well
 		if (pwa) {
 			scriptFiles.unshift('src/scripts/sw_init.js');
@@ -257,7 +261,10 @@ function pack(callback) {
 		scriptFiles.unshift('src/scripts/app_init.js');
 
 		// Create script tags for each JavaScript file in the array
-		scriptTags = scriptFiles.map(scriptFile => `<script src="${scriptFile.replace(/\\/g, '/')}"></script>`).join('\n\t');
+		scriptTags = scriptFiles.map(scriptFile => {
+			const p = scriptFile.replace(/\\/g, '/').replace(/src\/scripts\/[^/]+\//, 'src/scripts/');
+			return `<script src="${p}"></script>`;
+		}).join('\n\t');
 
 		// Use glob to get all CSS files matching the pattern
 		const cssFiles = glob.sync('src/styles/*.css');

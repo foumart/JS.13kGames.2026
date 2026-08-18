@@ -59,7 +59,7 @@ class Player {
 
 	draw() {
 		const cell = this.width;
-		const bmp = offscreenBitmaps[moving ? 5 : 2];
+		const bmp = unitBitmaps[moving ? 1 : 0];
 		const scale = cell / tileWidth * unitScale;
 		const dw = bmp.width * scale;
 		const dh = bmp.height * scale;

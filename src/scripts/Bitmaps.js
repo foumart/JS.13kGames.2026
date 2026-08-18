@@ -1,38 +1,17 @@
 const tileWidth = 6;
 const unitScale = 0.665;
 const offscreenBitmaps = [];
+const unitBitmaps = [];
 
-// 0 empty, 1 enemy, 2 unicorn, 3 obstacle, 4 coin, 5 unicorn jump, 6 clouds, 7 cloud H, 8 cloud V, 9 cloud cross
-const bitmapPixels = [
-	// empty / grass
+const backgroundPixels = [
+	// grass
 	[
 		[1,1,1,1,1,2],
-		[1,1,2,1,2,1],
+		[1,2,1,1,2,1],
 		[1,1,1,1,1,2],
 		[1,1,2,1,1,1],
 		[2,1,1,1,2,1],
 		[1,2,1,2,1,1]
-	],
-	// enemy
-	[
-		[0,1,1,1,1,0],
-		[1,2,1,1,2,1],
-		[1,1,3,3,1,1],
-		[1,1,1,1,1,1],
-		[0,1,0,0,1,0],
-		[0,1,0,0,1,0]
-	],
-	// unicorn idle
-	[
-		[1,1,0,0,0,0,0,0,0],
-		[0,1,1,1,3,3,0,0,0],
-		[0,0,1,2,2,2,3,0,0],
-		[0,2,2,1,1,2,2,3,0],
-		[2,2,2,2,2,2,2,2,3],
-		[2,2,2,2,2,2,2,2,3],
-		[0,0,0,3,2,2,2,2,3],
-		[0,3,2,2,2,2,2,2,3],
-		[0,3,2,2,2,2,2,2,3]
 	],
 	// obstacle
 	[
@@ -52,6 +31,98 @@ const bitmapPixels = [
 		[0,1,3,2,3,1],
 		[0,0,1,1,1,0]
 	],
+	// snow
+	[
+		[1,1,2,1,1,1],
+		[1,2,3,2,1,2],
+		[2,1,1,1,2,1],
+		[1,1,2,1,1,1],
+		[1,2,1,2,3,2],
+		[2,1,1,1,2,1]
+	],
+	// cloud bridge horizontal
+	[
+		[0,0,0,0,0,0],
+		[1,0,0,0,0,1],
+		[2,3,1,3,2,3],
+		[1,2,2,2,2,1],
+		[3,0,0,0,0,3],
+		[0,0,0,0,0,0]
+	],
+	// cloud bridge vertical
+	[
+		[0,1,2,1,3,0],
+		[0,0,3,2,0,0],
+		[0,0,1,3,0,0],
+		[0,0,3,2,0,0],
+		[0,0,2,3,0,0],
+		[0,3,1,2,1,0]
+	],
+	// cloud cross
+	[
+		[0,0,2,1,0,0],
+		[0,0,3,2,0,0],
+		[2,3,1,3,2,3],
+		[1,2,3,2,3,1],
+		[0,0,2,3,0,0],
+		[0,0,1,2,0,0]
+	],
+	// sparkle A
+	[
+		[0,0,0,1,0,0],
+		[0,0,2,2,0,0],
+		[1,2,3,3,1,0],
+		[0,2,3,3,2,1],
+		[0,0,1,2,0,0],
+		[0,0,0,1,0,0]
+	],
+	// sparkle B
+	[
+		[0,0,0,0,0,0],
+		[0,1,0,0,0,1],
+		[0,0,2,3,2,0],
+		[0,0,3,3,3,0],
+		[0,0,2,3,2,0],
+		[0,1,0,0,0,1]
+	],
+	// castle
+	[
+		[0,1,0,0,1,0],
+		[1,2,1,1,2,1],
+		[1,2,3,3,2,1],
+		[1,2,2,2,2,1],
+		[1,3,2,2,3,1],
+		[1,1,1,1,1,1]
+	]
+];
+
+const backgroundPalettes = [
+	["", "3d8c40", "4aa34e", "2e7032"],
+	["", "5a5048", "7a7060", "3a3530"],
+	["", "c9a000", "ffe066", "fff3a0"],
+	["", "e4e7eb", "d5dde6", "b4bec9"],
+	["", "f7fbff", "dbe4ee", "aebaca"],
+	["", "f7fbff", "dbe4ee", "aebaca"],
+	["", "ffffff", "e8eef6", "c5d0dc"],
+	["", "fff3a0", "ffe066", "ffffff"],
+	["", "ffe066", "fff3a0", "ffffff"],
+	["", "5a5048", "7a7060", "ffe066"]
+];
+
+// 0 unicorn idle, 1 unicorn jump, 2 leprechaun, 3 corwin, 4 merlin, 5 hydra
+const unitPixels = [
+	// unicorn idle
+	[
+		[1,1,0,0,0,0,0,0,0],
+		[0,1,1,1,3,3,0,0,0],
+		[0,0,1,2,2,2,3,0,0],
+		[0,2,2,1,0,2,2,3,0],
+		[2,2,2,2,2,2,2,2,3],
+		[2,2,2,2,2,2,2,2,3],
+		[0,0,4,4,2,2,2,2,3],
+		[0,3,2,2,2,2,2,2,3],
+		[0,3,2,2,2,2,2,2,3]
+	],
 	// unicorn jump
 	[
 		[1,1,0,0,0,0,0,0,0],
@@ -64,74 +135,75 @@ const bitmapPixels = [
 		[0,0,3,2,2,2,2,0,0],
 		[0,0,3,2,2,2,0,0,0]
 	],
-	// empty / clouds (stage ground)
+	// leprechaun
 	[
-		[1,1,2,1,1,1],
-		[1,2,3,2,1,2],
-		[2,1,1,1,2,1],
-		[1,1,2,1,1,1],
-		[1,2,1,2,3,2],
-		[2,1,1,1,2,1]
+		[0,1,1,1,1,0],
+		[1,2,1,1,2,1],
+		[1,1,3,3,1,1],
+		[1,1,1,1,1,1],
+		[0,1,0,0,1,0],
+		[0,1,0,0,1,0]
 	],
-	// cloud bridge horizontal (map 5)
+	// corwin
 	[
-		[0,0,0,0,0,0],
+		[0,1,1,0,0,0],
+		[1,2,2,1,3,0],
+		[0,1,1,1,0,0],
+		[0,2,2,2,0,0],
+		[0,1,0,1,0,0],
+		[0,1,0,1,0,0]
+	],
+	// merlin
+	[
+		[0,1,1,1,1,0],
+		[1,2,3,3,2,1],
 		[1,2,2,2,2,1],
-		[2,3,1,3,2,3],
-		[1,2,2,2,2,1],
-		[3,1,1,1,1,3],
-		[0,0,0,0,0,0]
+		[2,2,2,2,2,2],
+		[0,1,0,0,1,0],
+		[1,1,0,0,1,1]
 	],
-	// cloud bridge vertical (map 6)
+	// hydra
 	[
-		[0,1,2,1,3,0],
-		[0,2,3,2,1,0],
-		[0,2,1,3,2,0],
-		[0,2,3,2,1,0],
-		[0,1,2,3,2,0],
-		[0,3,1,2,1,0]
-	],
-	// cloud cross (map 7)
-	[
-		[0,1,2,1,3,0],
-		[1,2,3,2,2,1],
-		[2,3,1,3,2,3],
-		[1,2,3,2,3,1],
-		[3,1,2,3,2,3],
-		[0,3,1,2,1,0]
+		[1,0,0,0,0,1],
+		[1,2,1,1,2,1],
+		[2,3,2,2,3,2],
+		[1,2,3,3,2,1],
+		[0,1,2,2,1,0],
+		[1,1,0,0,1,1]
 	]
 ];
 
-const bitmapPalettes = [
-	["", "3d8c40", "4aa34e", "2e7032"],
+const unitPalettes = [
+	["", "f8f4ff", "ff6eb4", "ffe066"],
+	["", "f8f4ff", "ff6eb4", "ffe066"],
 	["", "4a2060", "7b3fa0", "e8d4ff"],
 	["", "f8f4ff", "ff6eb4", "ffe066"],
-	["", "5a5048", "7a7060", "3a3530"],
-	["", "c9a000", "ffe066", "fff3a0"],
-	["", "f8f4ff", "ff6eb4", "ffe066"],
-	["", "e4e7eb", "d5dde6", "b4bec9"],
-	["", "f7fbff", "dbe4ee", "aebaca"],
-	["", "f7fbff", "dbe4ee", "aebaca"],
-	["", "ffffff", "e8eef6", "c5d0dc"]
+	["", "c9a000", "ffe066", "5a5048"],
+	["", "2c1838", "8a3048", "e8a060"]
 ];
 
-for (let k = 0; k < bitmapPixels.length; k++) {
-	const pix = bitmapPixels[k];
-	const w = pix[0].length;
-	const h = pix.length;
-	const c = document.createElement("canvas");
-	c.width = w;
-	c.height = h;
-	const ctx = c.getContext("2d");
-	const pal = bitmapPalettes[k];
-	for (let y = 0; y < h; y++) {
-		for (let x = 0; x < w; x++) {
-			const p = pix[y][x];
-			if (p) {
-				ctx.fillStyle = "#" + pal[p];
-				ctx.fillRect(x, y, 1, 1);
+function bakeBitmaps(pixels, palettes, dest) {
+	for (let k = 0; k < pixels.length; k++) {
+		const pix = pixels[k];
+		const w = pix[0].length;
+		const h = pix.length;
+		const c = document.createElement("canvas");
+		c.width = w;
+		c.height = h;
+		const ctx = c.getContext("2d");
+		const pal = palettes[k];
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				const p = pix[y][x];
+				if (p) {
+					ctx.fillStyle = "#" + pal[p];
+					ctx.fillRect(x, y, 1, 1);
+				}
 			}
 		}
+		dest.push(c);
 	}
-	offscreenBitmaps.push(c);
 }
+
+bakeBitmaps(backgroundPixels, backgroundPalettes, offscreenBitmaps);
+bakeBitmaps(unitPixels, unitPalettes, unitBitmaps);

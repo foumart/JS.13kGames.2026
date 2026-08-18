@@ -103,7 +103,7 @@ function drawFlowingPath() {
 	if (!n) return;
 
 	const w = cellSize;
-	const thick = w * 0.33;
+	const thick = w * 0.38;
 	const border = w * 0.1;
 	const band = w * 0.45;
 	const shift = Date.now() * 0.1;

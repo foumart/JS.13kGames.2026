@@ -6,18 +6,22 @@ function act(dx, dy) {
 	else if (isPrevPath(nx, ny)) player.retractTo(dx, dy);
 }
 
+function redraw() {
+	if (battleActive) drawBattle();
+	else drawBoard();
+}
+
 function gameStart() {
 	cancelAnimationFrame(gameLoop);
 	doAnimationFrame();
 }
 
 function doAnimationFrame() {
-	drawBoard();
+	redraw();
 	gameLoop = requestAnimationFrame(doAnimationFrame);
 }
 
 function resetLevel() {
 	initBoard();
-	gameDirty = 1;
 	drawBoard();
 }

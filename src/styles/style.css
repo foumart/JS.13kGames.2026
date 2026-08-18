@@ -22,13 +22,14 @@ div, canvas {
 #btnWrap {
 	display: none;
 	position: absolute;
-	left: 50%;
-	bottom: 10%;
-	transform: translateX(-50%);
+	right: 5vmin;
+	bottom: 5vmin;
+	left: auto;
+	transform: none;
 	gap: 2vmin;
 	z-index: 2;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-end;
 }
 
 #nextBtn, #retryBtn {

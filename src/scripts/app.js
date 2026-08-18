@@ -6,6 +6,9 @@ let height;
 function init() {
 	window.addEventListener("resize", resize);
 	document.addEventListener("keydown", onKeyDown);
+	gameCanvas.addEventListener("pointerdown", battleClick);
+	gameCanvas.addEventListener("pointermove", battleHover);
+	gameCanvas.addEventListener("pointerleave", battleHover);
 	document.oncontextmenu = e => { e.preventDefault(); };
 
 	initBoard();
@@ -23,6 +26,5 @@ function resize() {
 	gameCanvas.width = width;
 	gameCanvas.height = height;
 	gameContext.imageSmoothingEnabled = false;
-	gameDirty = 1;
-	drawBoard();
+	redraw();
 }
