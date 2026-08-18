@@ -170,7 +170,7 @@ function drawUIEnemy(x, y, w, h, fs) {
 		return;
 	}
 	const pic = Math.min(w, h) * 0.42;
-	drawLeprechaunSprite(x + w - pic, y, pic, 0, 0, 0);
+	drawUnitIcon(2, x + w - pic / 2, y + pic / 2, pic);
 	gameContext.textAlign = "right";
 	gameContext.textBaseline = "top";
 	gameContext.font = "bold " + fs + "px sans-serif";

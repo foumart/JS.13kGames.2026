@@ -1,202 +1,29 @@
-const tileWidth = 6;
-const unitScale = 0.665;
 const offscreenBitmaps = [];
 const unitBitmaps = [];
 
-const backgroundPixels = [
-	// grass
-	[
-		[1,1,1,1,1,2],
-		[1,2,1,1,2,1],
-		[1,1,1,1,1,2],
-		[1,1,2,1,1,1],
-		[2,1,1,1,2,1],
-		[1,2,1,2,1,1]
-	],
-	// obstacle
-	[
-		[0,1,1,1,1,0],
-		[1,2,2,2,2,1],
-		[1,2,3,3,2,1],
-		[1,2,3,3,2,1],
-		[1,2,2,2,2,1],
-		[0,1,1,1,1,0]
-	],
-	// coin pile
-	[
-		[0,0,0,0,0,0],
-		[0,1,2,1,0,0],
-		[1,2,3,2,1,0],
-		[0,1,2,3,2,1],
-		[0,1,3,2,3,1],
-		[0,0,1,1,1,0]
-	],
-	// snow
-	[
-		[1,1,2,1,1,1],
-		[1,2,3,2,1,2],
-		[2,1,1,1,2,1],
-		[1,1,2,1,1,1],
-		[1,2,1,2,3,2],
-		[2,1,1,1,2,1]
-	],
-	// cloud bridge horizontal
-	[
-		[0,0,0,0,0,0],
-		[1,0,0,0,0,1],
-		[2,3,1,3,2,3],
-		[1,2,2,2,2,1],
-		[3,0,0,0,0,3],
-		[0,0,0,0,0,0]
-	],
-	// cloud bridge vertical
-	[
-		[0,1,2,1,3,0],
-		[0,0,3,2,0,0],
-		[0,0,1,3,0,0],
-		[0,0,3,2,0,0],
-		[0,0,2,3,0,0],
-		[0,3,1,2,1,0]
-	],
-	// cloud cross
-	[
-		[0,0,2,1,0,0],
-		[0,0,3,2,0,0],
-		[2,3,1,3,2,3],
-		[1,2,3,2,3,1],
-		[0,0,2,3,0,0],
-		[0,0,1,2,0,0]
-	],
-	// sparkle A
-	[
-		[0,0,0,1,0,0],
-		[0,0,2,2,0,0],
-		[1,2,3,3,1,0],
-		[0,2,3,3,2,1],
-		[0,0,1,2,0,0],
-		[0,0,0,1,0,0]
-	],
-	// sparkle B
-	[
-		[0,0,0,0,0,0],
-		[0,1,0,0,0,1],
-		[0,0,2,3,2,0],
-		[0,0,3,3,3,0],
-		[0,0,2,3,2,0],
-		[0,1,0,0,0,1]
-	],
-	// castle
-	[
-		[0,1,0,0,1,0],
-		[1,2,1,1,2,1],
-		[1,2,3,3,2,1],
-		[1,2,2,2,2,1],
-		[1,3,2,2,3,1],
-		[1,1,1,1,1,1]
-	]
-];
-
-const backgroundPalettes = [
-	["", "3d8c40", "4aa34e", "2e7032"],
-	["", "5a5048", "7a7060", "3a3530"],
-	["", "c9a000", "ffe066", "fff3a0"],
-	["", "e4e7eb", "d5dde6", "b4bec9"],
-	["", "f7fbff", "dbe4ee", "aebaca"],
-	["", "f7fbff", "dbe4ee", "aebaca"],
-	["", "ffffff", "e8eef6", "c5d0dc"],
-	["", "fff3a0", "ffe066", "ffffff"],
-	["", "ffe066", "fff3a0", "ffffff"],
-	["", "5a5048", "7a7060", "ffe066"]
-];
-
-// 0 unicorn idle, 1 unicorn jump, 2 leprechaun, 3 corwin, 4 merlin, 5 hydra
-const unitPixels = [
-	// unicorn idle
-	[
-		[1,1,0,0,0,0,0,0,0],
-		[0,1,1,1,3,3,0,0,0],
-		[0,0,1,2,2,2,3,0,0],
-		[0,2,2,1,0,2,2,3,0],
-		[2,2,2,2,2,2,2,2,3],
-		[2,2,2,2,2,2,2,2,3],
-		[0,0,4,4,2,2,2,2,3],
-		[0,3,2,2,2,2,2,2,3],
-		[0,3,2,2,2,2,2,2,3]
-	],
-	// unicorn jump
-	[
-		[1,1,0,0,0,0,0,0,0],
-		[0,1,1,1,3,3,0,0,0],
-		[0,0,1,2,2,2,2,3,0],
-		[0,2,2,1,1,2,2,2,3],
-		[2,2,2,2,2,2,2,2,3],
-		[2,2,2,2,2,2,2,2,3],
-		[0,0,0,0,2,2,2,2,0],
-		[0,0,3,2,2,2,2,0,0],
-		[0,0,3,2,2,2,0,0,0]
-	],
-	// leprechaun
-	[
-		[0,1,1,1,1,0],
-		[1,2,1,1,2,1],
-		[1,1,3,3,1,1],
-		[1,1,1,1,1,1],
-		[0,1,0,0,1,0],
-		[0,1,0,0,1,0]
-	],
-	// corwin
-	[
-		[0,1,1,0,0,0],
-		[1,2,2,1,3,0],
-		[0,1,1,1,0,0],
-		[0,2,2,2,0,0],
-		[0,1,0,1,0,0],
-		[0,1,0,1,0,0]
-	],
-	// merlin
-	[
-		[0,1,1,1,1,0],
-		[1,2,3,3,2,1],
-		[1,2,2,2,2,1],
-		[2,2,2,2,2,2],
-		[0,1,0,0,1,0],
-		[1,1,0,0,1,1]
-	],
-	// hydra
-	[
-		[1,0,0,0,0,1],
-		[1,2,1,1,2,1],
-		[2,3,2,2,3,2],
-		[1,2,3,3,2,1],
-		[0,1,2,2,1,0],
-		[1,1,0,0,1,1]
-	]
-];
-
-const unitPalettes = [
-	["", "f8f4ff", "ff6eb4", "ffe066"],
-	["", "f8f4ff", "ff6eb4", "ffe066"],
-	["", "4a2060", "7b3fa0", "e8d4ff"],
-	["", "f8f4ff", "ff6eb4", "ffe066"],
-	["", "c9a000", "ffe066", "5a5048"],
-	["", "2c1838", "8a3048", "e8a060"]
-];
-
-function bakeBitmaps(pixels, palettes, dest) {
-	for (let k = 0; k < pixels.length; k++) {
-		const pix = pixels[k];
-		const w = pix[0].length;
-		const h = pix.length;
+// ImageEncryptor: 3 pixels per ANSI char, 3-char colors (3 + transparency)
+function encode(group, dest) {
+	const packed = group[group.length - 1];
+	const n = group.length - 1;
+	const step = packed.length / n | 0;
+	const size = Math.sqrt(step * 3) | 0;
+	for (let k = 0; k < n; k++) {
+		const pal = group[k];
+		const enc = packed.substr(k * step, step);
+		const px = [];
+		for (let i = 0; i < enc.length; i++) {
+			const z = enc.charCodeAt(i);
+			px.push(z & 3, (z >> 2) & 3, (z >> 4) & 3);
+		}
 		const c = document.createElement("canvas");
-		c.width = w;
-		c.height = h;
+		c.width = size;
+		c.height = size;
 		const ctx = c.getContext("2d");
-		const pal = palettes[k];
-		for (let y = 0; y < h; y++) {
-			for (let x = 0; x < w; x++) {
-				const p = pix[y][x];
+		for (let y = 0; y < size; y++) {
+			for (let x = 0; x < size; x++) {
+				const p = px[y * size + x];
 				if (p) {
-					ctx.fillStyle = "#" + pal[p];
+					ctx.fillStyle = "#" + pal.substr(3 * (p - 1), 3);
 					ctx.fillRect(x, y, 1, 1);
 				}
 			}
@@ -205,5 +32,37 @@ function bakeBitmaps(pixels, palettes, dest) {
 	}
 }
 
-bakeBitmaps(backgroundPixels, backgroundPalettes, offscreenBitmaps);
-bakeBitmaps(unitPixels, unitPalettes, unitBitmaps);
+const backgroundData = [
+	"3844a4273", // grass
+	"554776333", // obstacle
+	"c90fe6ffa", // coin
+	"eeeddebbc", // snow
+	"fffdeeabc", // cloudH
+	"8bddeeabc", // cloudV
+	"fffeefcdd", // cloudX
+	"ffafe6fff", // sparkleA
+	"fe6ffafff", // sparkleB
+	"554776fe6", // castle
+	"UeYYUeeUVYYVTEiZy[y[iZTE@@dAyFd[t^PEeUyfVYeUYnVY@@AP^{iZCp@@dMpBPCpB`C\\F`ApB^{y^`CPB@A`ByGx[PB@A@@DP`KpO`KDPDDYYy[iZm^UU"
+];
+
+const unitData = [
+	"ec0feff8b", // unicorn idle
+	"ec0feff8b", // unicorn jump
+	"31073aedf", // leprechaun
+	"111899ec7", // corwin
+	"333c90fe6", // merlin
+	"213834e80", // hydra
+	"200752c82", // brand
+	"333776ccb", // benedict
+	"410c46fdd", // fiona
+	"333554eda", // random
+	"300c44eaa", // bleys
+	"131384eda", // julian
+	"111954cbc", // caine
+	"210359eda", // gerard
+	"J@@hV@`A|rG__`~_t_t_J@@hV@`G|r___@|OPCP@@@@PfAdYFdjFdFdjFP@AP@A@@@PU`T_at{`ppkonkjJ`jBhV@TTA@UpPnqPqdjpx]rjjLZZLTPMD@MAEEEG^[[[izZTnF@^@PjIdnfIUX@U@P}APoc@~`dkVujF`kBPQATPE@jB`wA`KXjff{kbnbPUAPQATQE`Z@xkAxobdZJiZCkjM`IF`H@TT@@Y@`BPAlnNkjzBY`PfAPbAXbI@z@P_CPsdfr^ZzdiaPfBPQAPP@`F@x_@x_Ch[BijFki[XfjPDHXd@@U@P_AP@`jAkjGhjZPQAPQAPP@@U@PApCXIk]zcjrPZBd@IT@E"
+];
+
+encode(backgroundData, offscreenBitmaps);
+encode(unitData, unitBitmaps);

@@ -40,6 +40,9 @@ let leftoverThisStage = 0;
 let rescuedCorwin = 0;
 let rescuedMerlin = 0;
 
+const tileWidth = 6;
+const unitScale = 0.665;
+
 // 0 empty, 1 enemy, 2 player, 3 obstacle, 4 coin, 5 cloud H, 6 cloud V, 7 cloud cross, 8 exit, 9 castle
 const levelGround = [0, 0, 0, 3, 3, 3];
 const levels = [
@@ -49,23 +52,23 @@ const levels = [
 		"010001000",
 		"000010410",
 		"000000000",
-		"340200100",
-		"000000000",
-		"401100800",
+		"304200100",
+		"400000000",
+		"001100800",
 		"000000001"
 	],
 	// Stage 2
 	[
 		"00000000003",
-		"01100100100",
+		"03100100100",
 		"00010000010",
-		"31000111000",
+		"31000313000",
 		"30002000001",
 		"30100010400",
-		"00001810010",
+		"00001830010",
 		"01000010000",
 		"00001000001",
-		"33100011003"
+		"33100013003"
 	],
 	// Stage 3
 	[
@@ -314,20 +317,14 @@ function scheduleEndScreen() {
 }
 
 function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y) {
-	const enemyScale = size / tileWidth * 0.8;
-	const drawWidth = tileWidth * enemyScale;
-	const drawX = px + (size - drawWidth) / 2;
-	const bodyHeight = 4;
-	const legHeight = 2;
-	const drawY = py + size - (bodyHeight - 1 + legHeight) * enemyScale;
-	const bodyBounce = Math.sin(Date.now() * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? enemyScale : 0;
+	const bmp = unitBitmaps[2];
+	const scale = size / tileWidth * unitScale;
+	const dw = bmp.width * scale;
+	const dh = bmp.height * scale;
+	const bounce = bounceSpeed && Math.sin(Date.now() * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
 	gameContext.drawImage(
-		unitBitmaps[2], 0, 0, tileWidth, bodyHeight,
-		drawX, drawY - bodyBounce, drawWidth, bodyHeight * enemyScale
-	);
-	gameContext.drawImage(
-		unitBitmaps[2], 0, bodyHeight, tileWidth, legHeight,
-		drawX, drawY + (bodyHeight - 1) * enemyScale, drawWidth, legHeight * enemyScale
+		bmp, 0, 0, bmp.width, bmp.height,
+		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh
 	);
 }
 
