@@ -55,7 +55,7 @@ function inBounds(x, y) {
 }
 
 function initBoard() {
-	const levelData = levels[levelIndex];
+	const levelData = getLevelData(levelIndex);
 	boardHeight = levelData.length;
 	boardWidth = levelData[0].length;
 	enemies = [];
@@ -436,7 +436,7 @@ function drawObjectiveScreen() {
 	gameContext.textBaseline = "middle";
 	gameContext.font = "bold " + fs + "px sans-serif";
 	if (battleActive) {
-		gameContext.fillText("World " + worldNumber() + " - Boss", cx, cy - fs * 1.3);
+		gameContext.fillText(battleTitle(), cx, cy - fs * 1.3);
 		gameContext.font = "bold " + (fs * 0.72 | 0) + "px sans-serif";
 		gameContext.fillText("Destroy all enemies", cx, cy + fs * 0.35);
 	} else {
@@ -559,7 +559,7 @@ function showEndButtons() {
 	endNextBtn.style.opacity = "1";
 	endNextBtn.onclick = battleActive ? afterBattleWin : nextLevel;
 	endNextBtn.textContent = battleActive
-		? (levelIndex < levels.length - 1 ? "NEXT LEVEL" : "REPLAY")
+		? (levelIndex < campaignLength - 1 ? "NEXT LEVEL" : "REPLAY")
 		: (levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL");
 	endNextBtn.style.display = state == 2 ? "block" : "none";
 	endBtnWrap.style.display = "flex";
@@ -591,8 +591,10 @@ function dismissObjective() {
 function nextLevel() {
 	leftoverEnemies += leftoverThisStage;
 	leftoverThisStage = 0;
-	if (levelIndex % 3 == 2) startBattle();
-	else {
+	if (levelIndex % 3 == 2) {
+		battleKind = isBossBattle() ? 2 : 1;
+		startBattle();
+	} else {
 		levelIndex ++;
 		resetLevel();
 	}
@@ -605,10 +607,11 @@ function afterBattleWin() {
 	leftoverThisStage = 0;
 	showUpgrade = 0;
 	upgradePicks = {};
-	battleActive = 0;
 	showPick = 0;
 	hideEndButtons();
-	if (levelIndex < levels.length - 1) {
+	battleKind = 0;
+	battleActive = 0;
+	if (levelIndex < campaignLength - 1) {
 		levelIndex ++;
 		resetLevel();
 	} else {
@@ -622,9 +625,11 @@ function restartCampaign() {
 	rescuedUnits = [];
 	deadUnits = [];
 	levelCaptives = [];
+	generatedLevels = [];
 	unitMods = {};
 	uniMods = [0, 0, 0, 0];
 	battleParty = [];
+	battleKind = 0;
 	battleActive = 0;
 	showPick = 0;
 	showUpgrade = 0;
@@ -659,6 +664,7 @@ function debugSkipToBattle() {
 		rescuedUnits.push(pool.splice(j, 1)[0]);
 	}
 	if (!leftoverEnemies) leftoverEnemies = leftoverThisStage || 3;
+	battleKind = 1;
 	startBattle();
 }
 
@@ -699,7 +705,7 @@ function drawBoard() {
 				drawPurifiedTile(x, y);
 			} else {
 				gameContext.drawImage(
-					offscreenBitmaps[levelGround[levelIndex] || 0],
+					offscreenBitmaps[levelGround[predefinedIndex(levelIndex)] || 0],
 					0, 0, tileWidth, tileWidth, px, py, size, size
 				);
 			}

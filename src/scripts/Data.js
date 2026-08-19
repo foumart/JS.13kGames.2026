@@ -2,7 +2,7 @@ const tileWidth = 6;
 const unitScale = 0.665;
 
 // 0 empty, 1 enemy, 2 player, 3 obstacle, 4 coin, 5 cloud H, 6 cloud V, 7 cloud cross, 8 exit, 9 castle, A-Z imprisoned ally
-const levelGround = [0, 0, 0, 3, 3, 3];
+const levelGround = [0, 0, 0, 3, 3, 3, 0, 0, 0, 3, 3, 3, 0];
 const levels = [
 	// Stage 1
 	[
@@ -170,3 +170,4 @@ const levels = [
 	]
     // Final Boss
 ];
+const campaignLength = levels.length * 3;

@@ -1,4 +1,4 @@
-// taken from https://www.foumartgames.com/games/AnimalTactics/
+// taken from https://www.foumartgames.com/games/AnimalTactics/ (laser chess)
 let battleActive = 0;
 let battleUnits = [];
 let battleSelect = null;
@@ -17,6 +17,7 @@ let battleParty = [];
 let pickCursor = 0;
 let upgradePicks = {};
 let menuHits = [];
+let battleKind = 0; // 1 regular, 2 boss
 
 const battleWidth = 9;
 const battleHeight = 9;
@@ -203,31 +204,32 @@ function hitMenu(event) {
 	return 0;
 }
 
+function battleTitle() {
+	return "World " + worldNumber() + (battleKind == 2 ? " - Boss" : " - Battle");
+}
+
 function spawnEnemies() {
 	const cx = (battleWidth / 2) | 0;
 	const taken = {};
-	if (worldNumber() > 1) {
-		battleUnits.push(new Serpent(cx, 0));
-		battleUnits.push(new Hydra(cx - 2, 0));
-		battleUnits.push(new Hydra(cx + 2, 0));
-		taken[cx] = 1;
-		taken[cx - 2] = 1;
-		taken[cx + 2] = 1;
-	} else {
-		battleUnits.push(new Hydra(cx, 0));
-		taken[cx] = 1;
+	if (battleKind == 2) {
+		if ((predefinedIndex(levelIndex) / 3 | 0) == 0) {
+			battleUnits.push(new Hydra(cx, 0));
+			taken[cx] = 1;
+		} else {
+			battleUnits.push(new Serpent(cx, 0));
+			battleUnits.push(new Hydra(cx - 2, 0));
+			battleUnits.push(new Hydra(cx + 2, 0));
+			taken[cx] = 1;
+			taken[cx - 2] = 1;
+			taken[cx + 2] = 1;
+		}
 	}
 	let n = leftoverEnemies || 3;
 	const spots = [];
-	for (let y = 0; y < 2; y++) {
-		for (let x = 2; x < 7; x++) {
+	for (let y = 0; y < 3; y++) {
+		for (let x = 0; x < battleWidth; x++) {
 			if (!y && taken[x]) continue;
 			spots.push([x, y]);
-		}
-	}
-	if (n > spots.length) {
-		for (let y = 0; y < 2; y++) {
-			spots.push([1, y], [7, y]);
 		}
 	}
 	if (n > spots.length) n = spots.length;

@@ -240,7 +240,7 @@ function drawPickScreen() {
 	gameContext.textAlign = "center";
 	gameContext.textBaseline = "middle";
 	gameContext.font = "bold " + fs + "px sans-serif";
-	gameContext.fillText("World " + worldNumber() + " - Boss", cx, cy - icon * 2.15);
+	gameContext.fillText(battleTitle(), cx, cy - icon * 2.15);
 	gameContext.font = "bold " + (fs * 0.78 | 0) + "px sans-serif";
 	gameContext.fillText("Destroy all enemies", cx, cy - icon * 1.45);
 	const need = Math.min(2, livingRescueCount());
