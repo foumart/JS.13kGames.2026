@@ -25,12 +25,13 @@ class Player {
 		this.offsetX = -dx;
 		this.offsetY = -dy;
 		moving = 1;
-		collectRescue(this.x, this.y);
+		const hopped = collectRescue(this.x, this.y);
 		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
 			extendPath(ox, oy, this.x, this.y, dx, dy);
 			collectCoin(this.x, this.y);
 			moveCount ++;
 			const flushed = flushDyingEnemies();
+			if (hopped) flushed.push(hopped);
 			checkCaptures(flushed);
 			moveLog.push(flushed);
 			moving = 0;

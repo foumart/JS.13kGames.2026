@@ -6,11 +6,11 @@ class Leprechaun extends Unit {
 		this.strikeFirst = 1;
 	}
 
-	moves() {
-		return this.stepMoves(Unit.REAR, 1);
+	moveRays() {
+		return Unit.ROOK;
 	}
 
 	attackRays() {
-		return Unit.DIAGONAL;
+		return Unit.BISHOP;
 	}
 }

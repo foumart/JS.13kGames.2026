@@ -1,7 +1,7 @@
-class Random extends Unit {
+class Gerard extends Unit {
 
 	constructor(x, y) {
-		super(x, y, 1, 0, 8, 2, 9, 2);
+		super(x, y, 1, 0, 12, 4, 13);
 	}
 
 	moveRays() {

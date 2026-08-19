@@ -1,6 +1,6 @@
 class Unit {
 
-	constructor(x, y, type, enemy, hp, dmg, bmp) {
+	constructor(x, y, type, enemy, hp, dmg, bmp, range = 1, reach = 1) {
 		this.type = type;
 		this.enemy = enemy;
 		this.x = x;
@@ -8,6 +8,8 @@ class Unit {
 		this.hp = hp;
 		this.hpMax = hp;
 		this.dmg = dmg;
+		this.range = range;
+		this.reach = reach;
 		this.bmp = bmp;
 		this.moved = 0;
 		this.acted = 0;
@@ -16,9 +18,11 @@ class Unit {
 		this.shake = 0;
 		this.face = enemy ? 1 : -1;
 		this.advance = 0;
+		this.around = 0;
 	}
 
 	stepMoves(dirs, max) {
+		if (max == null) max = this.range;
 		const m = [];
 		for (let r = 0; r < dirs.length; r++) {
 			for (let i = 1; i <= max; i++) {
@@ -32,19 +36,39 @@ class Unit {
 	}
 
 	moves() {
-		return this.stepMoves(Unit.REAR, 1);
+		return this.stepMoves(this.moveRays());
 	}
 
 	attackRays() {
-		return Unit.DIAGONAL;
+		return Unit.QUEEN;
+	}
+
+	moveRays() {
+		return Unit.QUEEN;
 	}
 
 	hits(ox, oy) {
+		const rays = this.attackRays();
+		if (this.around) {
+			const hits = [];
+			for (let r = 0; r < rays.length; r++) {
+				for (let i = 1; i <= this.around; i++) {
+					const nx = ox + rays[r][0] * i;
+					const ny = oy + rays[r][1] * i;
+					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					const t = getUnitAt(nx, ny);
+					if (t) {
+						if (t.enemy != this.enemy) hits.push(t);
+						break;
+					}
+				}
+			}
+			return hits;
+		}
 		let best = null;
 		let bestD = 99;
-		const rays = this.attackRays();
 		for (let r = 0; r < rays.length; r++) {
-			for (let i = 1; i < 9; i++) {
+			for (let i = 1; i <= this.reach; i++) {
 				const nx = ox + rays[r][0] * i;
 				const ny = oy + rays[r][1] * i;
 				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
@@ -62,6 +86,7 @@ class Unit {
 	}
 
 	actHits(x, y) {
+		if (this.around) return this.hits(this.x, this.y);
 		const t = rayTarget(this, x, y);
 		return t ? [t] : [];
 	}
@@ -69,10 +94,28 @@ class Unit {
 	addAttackTiles(allowClick) {
 		if (allowClick == null) allowClick = 1;
 		const rays = this.attackRays();
+		if (this.around) {
+			const found = this.hits(this.x, this.y);
+			for (let r = 0; r < rays.length; r++) {
+				for (let i = 1; i <= this.around; i++) {
+					const nx = this.x + rays[r][0] * i;
+					const ny = this.y + rays[r][1] * i;
+					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					const t = getUnitAt(nx, ny);
+					if (t && t.enemy == this.enemy) break;
+					battleTiles.push({
+						x: nx, y: ny, kind: 1,
+						live: allowClick && found.length && !t ? 1 : 0
+					});
+					if (t) break;
+				}
+			}
+			return;
+		}
 		for (let r = 0; r < rays.length; r++) {
 			const cells = [];
 			let found = 0;
-			for (let i = 1; i < 9; i++) {
+			for (let i = 1; i <= this.reach; i++) {
 				const nx = this.x + rays[r][0] * i;
 				const ny = this.y + rays[r][1] * i;
 				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
@@ -122,7 +165,7 @@ class Unit {
 	}
 }
 
-Unit.REAR = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-Unit.DIAGONAL = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+Unit.ROOK = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+Unit.BISHOP = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
 Unit.QUEEN = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 Unit.KNIGHT = [[1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];

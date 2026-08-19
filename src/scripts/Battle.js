@@ -11,11 +11,19 @@ let battleAim = null; // {dx, dy} first keyboard direction
 let battleTiles = []; // {x, y, kind} kind: 0 move, 1 attack
 let battleHints = []; // currently aimed
 let battleEpoch = 0; // bumped to drop stale AI timeouts
+let showPick = 0;
+let showUpgrade = 0;
+let battleParty = [];
+let pickCursor = 0;
+let upgradePicks = {};
+let menuHits = [];
 
 const battleWidth = 9;
 const battleHeight = 9;
 
 function startBattle() {
+	const skip = skipObjective;
+	skipObjective = 0;
 	battleActive = 1;
 	if (endTimer) {
 		clearTimeout(endTimer);
@@ -27,8 +35,10 @@ function startBattle() {
 	}
 	hideEndButtons();
 	showEnd = 0;
-	showObjective = skipObjective ? 0 : 1;
-	skipObjective = 0;
+	showUpgrade = 0;
+	upgradePicks = {};
+	showPick = 0;
+	showObjective = 0;
 	state = 1;
 	battleResult = 0;
 	animating = 0;
@@ -40,22 +50,178 @@ function startBattle() {
 	battleControl = null;
 	boardWidth = battleWidth;
 	boardHeight = battleHeight;
-	battleUnits = [new Unicorn(4, 7)];
-	if (rescuedCorwin) battleUnits.push(new Corwin(2, 7));
-	if (rescuedMerlin) battleUnits.push(new Merlin(6, 7));
+	battleUnits = [];
+	if (!skip) battleParty = [];
+	else {
+		const kept = [];
+		for (let i = 0; i < battleParty.length; i++) {
+			if (deadUnits.indexOf(battleParty[i]) < 0) kept.push(battleParty[i]);
+		}
+		battleParty = kept;
+	}
+	pickCursor = firstLivingPick();
+	if (livingRescueCount() && !skip) {
+		showPick = 1;
+		showObjectiveButtons();
+		return;
+	}
+	spawnBattleParty();
+	if (!skip) {
+		showObjective = 1;
+		showObjectiveButtons();
+	}
+}
+
+function spawnBattleParty() {
+	battleUnits = [buffUnicorn(new Unicorn(4, 7))];
+	const spots = [[2, 7], [6, 7]];
+	for (let i = 0; i < battleParty.length && i < 2; i++) {
+		battleUnits.push(makeRescued(battleParty[i], spots[i][0], spots[i][1]));
+	}
 	spawnEnemies();
 	beginRound();
-	if (showObjective) showObjectiveButtons();
+}
+
+function confirmParty() {
+	if (!showPick) return;
+	const need = Math.min(2, livingRescueCount());
+	if (battleParty.length < need) return;
+	showPick = 0;
+	hideEndButtons();
+	spawnBattleParty();
+	redraw();
+}
+
+function isDeadBmp(bmp) {
+	return deadUnits.indexOf(bmp) >= 0;
+}
+
+function livingRescueCount() {
+	let n = 0;
+	for (let i = 0; i < rescuedUnits.length; i++) {
+		if (!isDeadBmp(rescuedUnits[i])) n ++;
+	}
+	return n;
+}
+
+function firstLivingPick() {
+	for (let i = 0; i < rescuedUnits.length; i++) {
+		if (!isDeadBmp(rescuedUnits[i])) return i;
+	}
+	return 0;
+}
+
+function movePickCursor(dir) {
+	const n = rescuedUnits.length;
+	if (!n) return;
+	pickCursor = (pickCursor + dir + n) % n;
+	redraw();
+}
+
+function pickPartyBmp(bmp) {
+	if (!bmp || isDeadBmp(bmp)) return;
+	const i = battleParty.indexOf(bmp);
+	if (i >= 0) battleParty.splice(i, 1);
+	else if (battleParty.length < 2) battleParty.push(bmp);
+	syncPickButton();
+	redraw();
+}
+
+function pickCursorUnit() {
+	pickPartyBmp(rescuedUnits[pickCursor]);
+}
+
+function markBattleDead() {
+	for (let i = 0; i < battleUnits.length; i++) {
+		const u = battleUnits[i];
+		if (u.enemy || u.hero || u.hp > 0) continue;
+		if (deadUnits.indexOf(u.bmp) < 0) deadUnits.push(u.bmp);
+	}
+}
+
+function toggleParty(bmp) {
+	const i = rescuedUnits.indexOf(bmp);
+	if (i >= 0) pickCursor = i;
+	pickPartyBmp(bmp);
+}
+
+function battleSurvivors() {
+	const list = [];
+	for (let i = 0; i < battleUnits.length; i++) {
+		const u = battleUnits[i];
+		if (u.hp > 0 && !u.enemy) list.push(u);
+	}
+	return list;
+}
+
+function battleRoster() {
+	const list = [];
+	for (let i = 0; i < battleUnits.length; i++) {
+		if (!battleUnits[i].enemy) list.push(battleUnits[i]);
+	}
+	return list;
+}
+
+function upgradeId(u) {
+	return u.hero ? 0 : u.bmp;
+}
+
+function setUpgrade(id, kind) {
+	upgradePicks[id] = upgradePicks[id] == kind ? 0 : kind;
+	redraw();
+}
+
+function applyUpgradePicks() {
+	const list = battleSurvivors();
+	for (let i = 0; i < list.length; i++) {
+		const u = list[i];
+		const k = upgradePicks[upgradeId(u)];
+		if (!k) continue;
+		if (u.hero) {
+			if (k == "hp") uniMods[0] += 2;
+			else if (k == "att") uniMods[1] += 1;
+		} else {
+			const m = allyMod(u.bmp);
+			if (k == "hp") m[0] += 2;
+			else if (k == "att") m[1] += 1;
+			else if (k == "range") m[2] += 1;
+			else m[3] += 1;
+		}
+	}
+}
+
+function hitMenu(event) {
+	const x = event.clientX;
+	const y = event.clientY;
+	for (let i = 0; i < menuHits.length; i++) {
+		const h = menuHits[i];
+		if (x >= h.x && y >= h.y && x < h.x + h.w && y < h.y + h.h) {
+			h.fn();
+			return 1;
+		}
+	}
+	return 0;
 }
 
 function spawnEnemies() {
 	const cx = (battleWidth / 2) | 0;
-	battleUnits.push(new Hydra(cx, 0));
+	const taken = {};
+	if (worldNumber() > 1) {
+		battleUnits.push(new Serpent(cx, 0));
+		battleUnits.push(new Hydra(cx - 2, 0));
+		battleUnits.push(new Hydra(cx + 2, 0));
+		taken[cx] = 1;
+		taken[cx - 2] = 1;
+		taken[cx + 2] = 1;
+	} else {
+		battleUnits.push(new Hydra(cx, 0));
+		taken[cx] = 1;
+	}
 	let n = leftoverEnemies || 3;
 	const spots = [];
 	for (let y = 0; y < 2; y++) {
 		for (let x = 2; x < 7; x++) {
-			if (x == cx && !y) continue;
+			if (!y && taken[x]) continue;
 			spots.push([x, y]);
 		}
 	}
@@ -123,6 +289,10 @@ function battleFinish(result) {
 	thinking = 0;
 	battleTiles = [];
 	battleHints = [];
+	if (result == 2) {
+		showUpgrade = 1;
+		upgradePicks = {};
+	}
 	scheduleEndScreen();
 }
 
@@ -272,7 +442,7 @@ function rayTarget(u, x, y) {
 	const sx = Math.sign(x - u.x);
 	const sy = Math.sign(y - u.y);
 	if (!sx && !sy) return null;
-	for (let i = 1; i < 12; i++) {
+	for (let i = 1; i <= u.reach; i++) {
 		const nx = u.x + sx * i;
 		const ny = u.y + sy * i;
 		if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) return null;
@@ -426,6 +596,10 @@ function getPosFromEvent(event) {
 }
 
 function battleClick(event) {
+	if (showPick || showUpgrade) {
+		hitMenu(event);
+		return;
+	}
 	if (showObjective) {
 		dismissObjective();
 		return;

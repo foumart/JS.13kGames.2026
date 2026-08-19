@@ -62,7 +62,8 @@ const unitData = [
 	"335384eda", // julian
 	"433954cbc", // caine
 	"215359eda", // gerard
-	"J@@hV@`A|rG__`~_t_t_J@@hV@`G|r___@|OPCP@@@@PUAdjFdYFdFdjFP@AP@A@@@PU`T_at{`ppkonkjJ`jBhV@TTA@UpPnqPqdjpx]rjjLZZLTPMD@MAEEEG^[[[izZTnF@^@PjIdnfIUX@U@P}APoc@~`dkVujF`kBPQATPE@jB`wA`KXjff{kbnbPUAPQATQE`Z@xkAxobdZJiZCkjM`IF`H@TT@@Y@`BPAlnNkjzBY`PfAPbAXbI@z@P_CPsdfr^ZzdiaPfBPQAPP@`F@x_@x_Ch[BijFki[XfjPDHXd@@U@P_AP@`jAkjGhjZPQAPQAPP@@U@PApCXIk]zcjrPZBd@IT@E"
+	"1634a3d22", // serpent
+	"J@@hV@`A|rG__`~_t_t_J@@hV@`G|r___@|OPCP@@@@PUAdjFdYFdFdjFP@AP@A@@@PU`T_at{`ppkonkjJ`jBhV@TTA@UpPnqPqdjpx]rjjLZZLTPMD@M`EEuG^{[[izZTnF@^@PjIdnfYpY@U@P}APoc@~`dkVujF`kBPQATPE@jB`wA`CXjFf{kbnbPUApbCdQF`Z@xkAxobdZJiZCkjM`IF`H@TT@@Y@`BPAlnNkjzBY`PfA`bBXbI@z@P_CPsdfr^ZzdiaPfBPQAPP@PE@x_@x_Ch[BijFki[XfjPDHXd@@U@P_AP@`jAkjGhjZPQAPQAPP@@U@PApCXIk]zcjrPZBd@F|@OPUAdjFYUY}~ZdUFPjA@YM@dF@PE"
 ];
 
 encode(backgroundData, offscreenBitmaps);

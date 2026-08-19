@@ -1,7 +1,7 @@
-class Benedict extends Unit {
+class Julian extends Unit {
 
 	constructor(x, y) {
-		super(x, y, 1, 0, 10, 4, 7, 1, 2);
+		super(x, y, 1, 0, 7, 3, 11, 1, 3);
 	}
 
 	moveRays() {

@@ -1,11 +1,7 @@
 class Corwin extends Unit {
 
 	constructor(x, y) {
-		super(x, y, 1, 0, 8, 2, 3);
-	}
-
-	moves() {
-		return this.stepMoves(Unit.QUEEN, 1);
+		super(x, y, 1, 0, 9, 3, 3, 2);
 	}
 
 	attackRays() {

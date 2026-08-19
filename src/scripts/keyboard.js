@@ -1,4 +1,24 @@
 function onKeyDown(event) {
+	if (showPick) {
+		const k = event.keyCode;
+		if (k == 37 || k == 65) movePickCursor(-1);
+		else if (k == 39 || k == 68) movePickCursor(1);
+		else if (k == 32) pickCursorUnit();
+		else if (k == 13) confirmParty();
+		else if (k == 82) {
+			skipObjective = 1;
+			resetBattle();
+		}
+		return;
+	}
+	if (showUpgrade) {
+		if (event.keyCode == 13 || event.keyCode == 32) afterBattleWin();
+		else if (event.keyCode == 82) {
+			skipObjective = 1;
+			resetBattle();
+		}
+		return;
+	}
 	if (showObjective) {
 		if (event.keyCode == 13 || event.keyCode == 32) dismissObjective();
 		else if (event.keyCode == 82) {
@@ -28,7 +48,10 @@ function onKeyDown(event) {
 		resetLevel();
 	}
 	else if (event.keyCode == 13 || event.keyCode == 32) { // Enter / Space next
-		if (showEnd && state == 2) nextLevel();
+		if (showEnd && state == 2) {
+			if (battleActive) afterBattleWin();
+			else nextLevel();
+		}
 	}
 	else if (event.keyCode == 38 || event.keyCode == 87) { // up / W
 		act(0, -1);

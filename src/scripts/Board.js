@@ -11,7 +11,7 @@ let coins = [];
 let clouds = []; // 1 H bridge, 2 V bridge, 3 cross
 let exits = [];
 let castle = [];
-let rescues = []; // 0 empty, 3 Corwin, 4 Merlin
+let rescues = []; // 0 empty, else unit bitmap index
 let pathData = [];
 let pathStep = [];
 let fillData = [];
@@ -41,9 +41,14 @@ let endRetryBtn = null;
 
 let leftoverEnemies = 0;
 let leftoverThisStage = 0;
-let rescuedCorwin = 0;
-let rescuedMerlin = 0;
+let rescuedUnits = [];
+let deadUnits = [];
+let levelCaptives = [];
 let rescueDying = [];
+let unitMods = {}; // bmp -> [hp, att, range, reach]
+let uniMods = [0, 0, 0, 0]; // hp, att, range, reach
+const rescueBmps = [3, 4, 7, 8, 9, 10, 11, 12, 13]; // Corwin, Merlin, Benedict, Fiona, Random, Bleys, Julian, Caine, Gerard
+const unitNames = {3:"Corwin",4:"Merlin",7:"Benedict",8:"Fiona",9:"Random",10:"Bleys",11:"Julian",12:"Caine",13:"Gerard"};
 
 function inBounds(x, y) {
 	return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
@@ -61,6 +66,7 @@ function initBoard() {
 	castle = [];
 	rescues = [];
 	stageCaptive = 0;
+	unrescueLevel(levelIndex);
 	rescueDying = [];
 	pathData = [];
 	pathStep = [];
@@ -92,6 +98,8 @@ function initBoard() {
 
 	let startX = 0;
 	let startY = 0;
+	let capIdx = 0;
+	if (!levelCaptives[levelIndex]) levelCaptives[levelIndex] = [];
 
 	for (let y = 0; y < boardHeight; y++) {
 		enemies[y] = [];
@@ -113,11 +121,18 @@ function initBoard() {
 			clouds[y][x] = c == "5" ? 1 : c == "6" ? 2 : c == "7" ? 3 : 0;
 			exits[y][x] = c == "8" ? 1 : 0;
 			castle[y][x] = c == "9" ? 1 : 0;
-			rescues[y][x] = c == "A" ? 3 : c == "B" ? 4 : 0;
+			rescues[y][x] = 0;
+			if (c >= "A" && c <= "Z") {
+				let bmp = levelCaptives[levelIndex][capIdx];
+				if (!bmp) {
+					bmp = pickRescueBmp();
+					levelCaptives[levelIndex].push(bmp);
+				}
+				capIdx ++;
+				rescues[y][x] = bmp;
+				if (!stageCaptive) stageCaptive = bmp;
+			}
 			rescueDying[y][x] = 0;
-			if (rescues[y][x]) stageCaptive = rescues[y][x];
-			if (c == "A") rescuedCorwin = 0;
-			if (c == "B") rescuedMerlin = 0;
 			if (c == "1") enemiesTotal ++;
 			pathData[y][x] = 0;
 			pathStep[y][x] = 0;
@@ -254,7 +269,8 @@ function flushDyingEnemies() {
 				enemiesCleared ++;
 				flushed.push([x, y]);
 			}
-			if (rescueDying[y][x] && rescues[y][x]) collectRescue(x, y);
+			const rescued = collectRescue(x, y);
+			if (rescued) flushed.push(rescued);
 		}
 	}
 	return flushed;
@@ -264,9 +280,17 @@ function restoreFlushed(flushed) {
 	for (let i = 0; i < flushed.length; i++) {
 		const x = flushed[i][0];
 		const y = flushed[i][1];
+		const bmp = flushed[i][2];
 		fillData[y][x] = 0;
-		enemies[y][x] = 1;
-		enemiesCleared --;
+		if (bmp) {
+			rescues[y][x] = bmp;
+			rescueDying[y][x] = 0;
+			const k = rescuedUnits.indexOf(bmp);
+			if (k >= 0) rescuedUnits.splice(k, 1);
+		} else {
+			enemies[y][x] = 1;
+			enemiesCleared --;
+		}
 	}
 }
 
@@ -277,14 +301,72 @@ function collectCoin(x, y) {
 	}
 }
 
+function pickRescueBmp() {
+	const taken = {};
+	for (let i = 0; i < rescuedUnits.length; i++) taken[rescuedUnits[i]] = 1;
+	const placed = levelCaptives[levelIndex];
+	if (placed) {
+		for (let i = 0; i < placed.length; i++) taken[placed[i]] = 1;
+	}
+	const pool = [];
+	for (let i = 0; i < rescueBmps.length; i++) {
+		if (!taken[rescueBmps[i]]) pool.push(rescueBmps[i]);
+	}
+	const list = pool.length ? pool : rescueBmps;
+	return list[Math.random() * list.length | 0];
+}
+
+function unrescueLevel(i) {
+	const list = levelCaptives[i];
+	if (!list) return;
+	for (let j = 0; j < list.length; j++) {
+		const k = rescuedUnits.indexOf(list[j]);
+		if (k >= 0) rescuedUnits.splice(k, 1);
+	}
+}
+
+function allyMod(bmp) {
+	if (!unitMods[bmp]) unitMods[bmp] = [0, 0, 0, 0];
+	return unitMods[bmp];
+}
+
+function makeRescued(bmp, x, y) {
+	let u;
+	if (bmp == 3) u = new Corwin(x, y);
+	else if (bmp == 4) u = new Merlin(x, y);
+	else if (bmp == 7) u = new Benedict(x, y);
+	else if (bmp == 8) u = new Fiona(x, y);
+	else if (bmp == 9) u = new Random(x, y);
+	else if (bmp == 10) u = new Bleys(x, y);
+	else if (bmp == 11) u = new Julian(x, y);
+	else if (bmp == 12) u = new Caine(x, y);
+	else u = new Gerard(x, y);
+	const m = allyMod(bmp);
+	u.hpMax += m[0];
+	u.hp = u.hpMax;
+	u.dmg += m[1];
+	u.range += m[2];
+	u.reach += m[3];
+	return u;
+}
+
+function buffUnicorn(u) {
+	u.hpMax += uniMods[0];
+	u.hp = u.hpMax;
+	u.dmg += uniMods[1];
+	u.range += uniMods[2];
+	u.reach += uniMods[3];
+	return u;
+}
+
 function collectRescue(x, y) {
 	const k = rescues[y][x];
-	if (!k) return;
+	if (!k || !rescueDying[y][x]) return 0;
 	rescues[y][x] = 0;
 	rescueDying[y][x] = 0;
 	fillData[y][x] = 1;
-	if (k == 3) rescuedCorwin = 1;
-	if (k == 4) rescuedMerlin = 1;
+	if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
+	return [x, y, k];
 }
 
 function remainingRescue() {
@@ -297,8 +379,7 @@ function remainingRescue() {
 }
 
 function worldNumber() {
-	const i = battleActive ? levels.length - 1 : levelIndex;
-	return (i / 3 | 0) + 1;
+	return (levelIndex / 3 | 0) + 1;
 }
 
 function stageNumber() {
@@ -359,8 +440,16 @@ function drawObjectiveScreen() {
 		gameContext.font = "bold " + (fs * 0.72 | 0) + "px sans-serif";
 		gameContext.fillText("Destroy all enemies", cx, cy + fs * 0.35);
 	} else {
-		gameContext.fillText("World " + worldNumber() + ", Level " + stageNumber(), cx, cy - fs * 1.6);
-		drawObjectiveLine(cx, cy + fs * 0.25, fs * 0.72 | 0, icon);
+		gameContext.fillText("World " + worldNumber() + ", Level " + stageNumber(), cx, cy - fs * (stageCaptive ? 2.1 : 1.6));
+		drawObjectiveLine(cx, cy + fs * (stageCaptive ? -0.1 : 0.25), fs * 0.72 | 0, icon);
+		if (stageCaptive) {
+			const ns = fs * 1.45 | 0;
+			gameContext.font = "900 " + ns + "px sans-serif";
+			gameContext.textAlign = "center";
+			gameContext.textBaseline = "middle";
+			gameContext.fillStyle = "#fff";
+			gameContext.fillText(unitNames[stageCaptive], cx, cy + fs * 2.2);
+		}
 	}
 }
 
@@ -467,10 +556,11 @@ function showEndButtons() {
 	ensureEndButtons();
 	endRetryBtn.style.display = "block";
 	endRetryBtn.onclick = () => { skipObjective = 1; battleActive ? resetBattle() : resetLevel(); };
-	endNextBtn.onclick = battleActive ? restartCampaign : nextLevel;
+	endNextBtn.style.opacity = "1";
+	endNextBtn.onclick = battleActive ? afterBattleWin : nextLevel;
 	endNextBtn.textContent = battleActive
-		? "REPLAY"
-		: (levelIndex < levels.length - 1 ? "NEXT LEVEL" : "BATTLE");
+		? (levelIndex < levels.length - 1 ? "NEXT LEVEL" : "REPLAY")
+		: (levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL");
 	endNextBtn.style.display = state == 2 ? "block" : "none";
 	endBtnWrap.style.display = "flex";
 }
@@ -479,9 +569,16 @@ function showObjectiveButtons() {
 	ensureEndButtons();
 	endRetryBtn.style.display = "none";
 	endNextBtn.textContent = "START";
-	endNextBtn.onclick = dismissObjective;
+	endNextBtn.onclick = showPick ? confirmParty : dismissObjective;
 	endNextBtn.style.display = "block";
 	endBtnWrap.style.display = "flex";
+	syncPickButton();
+}
+
+function syncPickButton() {
+	if (!showPick || !endNextBtn) return;
+	const need = Math.min(2, livingRescueCount());
+	endNextBtn.style.opacity = battleParty.length >= need ? "1" : "0.35";
 }
 
 function dismissObjective() {
@@ -493,20 +590,44 @@ function dismissObjective() {
 
 function nextLevel() {
 	leftoverEnemies += leftoverThisStage;
+	leftoverThisStage = 0;
+	if (levelIndex % 3 == 2) startBattle();
+	else {
+		levelIndex ++;
+		resetLevel();
+	}
+}
+
+function afterBattleWin() {
+	applyUpgradePicks();
+	markBattleDead();
+	leftoverEnemies = 0;
+	leftoverThisStage = 0;
+	showUpgrade = 0;
+	upgradePicks = {};
+	battleActive = 0;
+	showPick = 0;
+	hideEndButtons();
 	if (levelIndex < levels.length - 1) {
 		levelIndex ++;
 		resetLevel();
 	} else {
-		startBattle();
+		restartCampaign();
 	}
 }
 
 function restartCampaign() {
 	leftoverEnemies = 0;
 	leftoverThisStage = 0;
-	rescuedCorwin = 0;
-	rescuedMerlin = 0;
+	rescuedUnits = [];
+	deadUnits = [];
+	levelCaptives = [];
+	unitMods = {};
+	uniMods = [0, 0, 0, 0];
+	battleParty = [];
 	battleActive = 0;
+	showPick = 0;
+	showUpgrade = 0;
 	levelIndex = 0;
 	resetLevel();
 }
@@ -531,8 +652,12 @@ function debugClearLevel() {
 
 function debugSkipToBattle() {
 	if (moving || clearTimer) return;
-	rescuedCorwin = 1;
-	rescuedMerlin = 1;
+	rescuedUnits = [];
+	const pool = rescueBmps.slice();
+	for (let i = 0; i < 4 && pool.length; i++) {
+		const j = Math.random() * pool.length | 0;
+		rescuedUnits.push(pool.splice(j, 1)[0]);
+	}
 	if (!leftoverEnemies) leftoverEnemies = leftoverThisStage || 3;
 	startBattle();
 }
@@ -599,10 +724,14 @@ function drawBoard() {
 				const coy = py + size - cs - size * 0.06;
 				gameContext.drawImage(offscreenBitmaps[2], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
 			} else if (rescues[y][x]) {
-				gameContext.drawImage(offscreenBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				if (!rescueDying[y][x]) {
+					gameContext.drawImage(offscreenBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				}
 				const bounce = rescueDying[y][x] && Math.sin(Date.now() * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
 				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2 - bounce, size * 0.9);
-				gameContext.drawImage(offscreenBitmaps[10], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				if (!rescueDying[y][x]) {
+					gameContext.drawImage(offscreenBitmaps[10], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				}
 			}
 
 			if (enemies[y][x]) {
@@ -648,18 +777,14 @@ function drawBoard() {
 			gameContext.fillStyle = "#ffd";
 			gameContext.fillText("SCORE " + levelScore, cx, cy - fs * 0.15);
 
-			const showG = rescuedCorwin;
-			const showT = rescuedMerlin;
-			let n = 1 + (showG ? 1 : 0) + (showT ? 1 : 0);
+			const n = 1 + rescuedUnits.length;
 			let ix = cx - (n - 1) * icon * 0.7;
 			const by = cy + fs * 0.55;
 			drawUnitIcon(0, ix, by, icon);
-			ix += icon * 1.4;
-			if (showG) {
-				drawUnitIcon(3, ix, by, icon);
+			for (let i = 0; i < rescuedUnits.length; i++) {
 				ix += icon * 1.4;
+				drawUnitIcon(rescuedUnits[i], ix, by, icon);
 			}
-			if (showT) drawUnitIcon(4, ix, by, icon);
 		} else {
 			gameContext.font = (fs * 0.7 | 0) + "px sans-serif";
 			gameContext.fillText("SCORE " + levelScore + "  MOVES " + moveCount, cx, cy - fs * 0.4);

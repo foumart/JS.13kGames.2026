@@ -1,14 +1,10 @@
 class Fiona extends Unit {
 
 	constructor(x, y) {
-		super(x, y, 1, 0, 3, 3, 8);
-	}
-
-	moves() {
-		return this.stepMoves(Unit.QUEEN, 1);
+		super(x, y, 1, 0, 3, 2, 8, 2);
 	}
 
 	attackRays() {
-		return Unit.DIAGONAL;
+		return Unit.BISHOP;
 	}
 }
