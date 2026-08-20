@@ -15,6 +15,8 @@ let rescues = []; // 0 empty, else unit bitmap index
 let pathData = [];
 let pathStep = [];
 let fillData = [];
+let fillCharges = 3;
+let fillStart = 3;
 let moveLog = []; // flushed enemy cells per forward move (for undo)
 let player;
 let moving = 0;
@@ -33,6 +35,9 @@ let enemiesCleared = 0;
 let coinsCollected = 0;
 let moveCount = 0;
 let levelScore = 0;
+let totalScore = 0;
+let scoreStart = 0;
+let scoreBanked = 0;
 let revealPlayerTile = 0;
 let clearTimer = 0;
 let endBtnWrap = null;
@@ -79,6 +84,9 @@ function initBoard() {
 	coinsCollected = 0;
 	moveCount = 0;
 	levelScore = 0;
+	totalScore = scoreStart;
+	scoreBanked = 0;
+	fillCharges = fillStart;
 	leftoverThisStage = 0;
 	revealPlayerTile = 0;
 	state = 1;
@@ -170,6 +178,18 @@ function isPassable(x, y, dx, dy) {
 	return 1;
 }
 
+function fillNiche() {
+	if (battleActive || moving || showEnd || showObjective || state != 1) return;
+	if (fillCharges < 1) return;
+	const x = player.x;
+	const y = player.y;
+	if (!inBounds(x, y) || fillData[y][x]) return;
+	fillData[y][x] = 2;
+	fillCharges --;
+	checkCaptures();
+	redraw();
+}
+
 function aliveCount() {
 	let n = 0;
 	for (let y = 0; y < boardHeight; y++) {
@@ -247,7 +267,7 @@ function isClusterSurrounded(cluster) {
 				if (cluster[j][0] == nx && cluster[j][1] == ny) inCluster = 1;
 			}
 			if (inCluster) continue;
-			if (!isPath(nx, ny)) return 0;
+			if (!isPath(nx, ny) && !fillData[ny][nx]) return 0;
 		}
 	}
 	return 1;
@@ -386,15 +406,29 @@ function stageNumber() {
 	return (levelIndex % 3) + 1;
 }
 
+function stageScore() {
+	return enemiesCleared * 100 + coinsCollected * 50 + (enemiesCleared >= enemiesTotal ? 1000 : 0);
+}
+
+function currentScore() {
+	return totalScore + (scoreBanked ? 0 : stageScore());
+}
+
 function calcLevelScore() {
-	const perfect = enemiesCleared >= enemiesTotal;
-	levelScore = enemiesCleared * 100 + coinsCollected * 50 + (perfect ? 1000 : 0);
+	levelScore = stageScore();
 	return levelScore;
 }
 
 function scheduleEndScreen() {
 	if (endTimer) return;
 	calcLevelScore();
+	if (state == 2) {
+		fillCharges ++;
+		if (!scoreBanked) {
+			totalScore += levelScore;
+			scoreBanked = 1;
+		}
+	}
 	endTimer = setTimeout(() => {
 		showEnd = 1;
 		showEndButtons();
@@ -589,6 +623,8 @@ function dismissObjective() {
 }
 
 function nextLevel() {
+	fillStart = fillCharges;
+	scoreStart = totalScore;
 	leftoverEnemies += leftoverThisStage;
 	leftoverThisStage = 0;
 	if (levelIndex % 3 == 2) {
@@ -611,6 +647,7 @@ function afterBattleWin() {
 	hideEndButtons();
 	battleKind = 0;
 	battleActive = 0;
+	scoreStart = totalScore;
 	if (levelIndex < campaignLength - 1) {
 		levelIndex ++;
 		resetLevel();
@@ -634,6 +671,11 @@ function restartCampaign() {
 	showPick = 0;
 	showUpgrade = 0;
 	levelIndex = 0;
+	fillCharges = 3;
+	fillStart = 3;
+	totalScore = 0;
+	scoreStart = 0;
+	scoreBanked = 0;
 	resetLevel();
 }
 
@@ -686,7 +728,6 @@ function drawEdgeTiles(size, bmp) {
 	const gx1 = Math.ceil((width - ox) / size);
 	const gy1 = Math.ceil((height - oy) / size);
 	const rock = offscreenBitmaps[1];
-	gameContext.fillStyle = "#0004";
 	for (let gy = gy0; gy < gy1; gy++) {
 		for (let gx = gx0; gx < gx1; gx++) {
 			if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) continue;
@@ -696,9 +737,7 @@ function drawEdgeTiles(size, bmp) {
 			const rockHere = ((gx * 13 + gy * 7 + levelIndex * 3) % 5 + 5) % 5;
 			if (rockHere) {
 				gameContext.drawImage(rock, 0, 0, tileWidth, tileWidth, px, py, size, size);
-			}
-			gameContext.fillRect(px, py, size, size);
-			if (!rockHere) {
+			} else {
 				const period = 1400 + ((gx * 19 + gy * 11) % 10 + 10) % 10 * 180;
 				const phase = gx * 430 + gy * 710;
 				const sp = 7 + ((Date.now() + phase) / period | 0) % 2;
@@ -753,10 +792,6 @@ function drawBoard() {
 
 			if (obstacles[y][x]) {
 				gameContext.drawImage(offscreenBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, size, size);
-				if (!x || !y || x == boardWidth - 1 || y == boardHeight - 1) {
-					gameContext.fillStyle = "#0005";
-					gameContext.fillRect(px, py, size, size);
-				}
 			} else if (castle[y][x]) {
 				gameContext.drawImage(offscreenBitmaps[9], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (exits[y][x]) {
@@ -789,6 +824,7 @@ function drawBoard() {
 	}
 
 	drawFlowingPath();
+	drawFillNiches();
 
 	player.resize();
 	player.draw();
@@ -819,19 +855,24 @@ function drawBoard() {
 			gameContext.textAlign = "center";
 			gameContext.font = (fs * 0.4 | 0) + "px sans-serif";
 			gameContext.fillStyle = "#ffd";
-			gameContext.fillText("SCORE " + levelScore, cx, cy - fs * 0.15);
+			gameContext.fillText("SCORE " + currentScore(), cx, cy - fs * 0.15);
 
 			const n = 1 + rescuedUnits.length;
 			let ix = cx - (n - 1) * icon * 0.7;
 			const by = cy + fs * 0.55;
 			drawUnitIcon(0, ix, by, icon);
+			const ss = icon * 0.5;
+			gameContext.drawImage(
+				offscreenBitmaps[7], 0, 0, tileWidth, tileWidth,
+				ix + icon * 0.28, by - ss * 0.55, ss, ss
+			);
 			for (let i = 0; i < rescuedUnits.length; i++) {
 				ix += icon * 1.4;
 				drawUnitIcon(rescuedUnits[i], ix, by, icon);
 			}
 		} else {
 			gameContext.font = (fs * 0.7 | 0) + "px sans-serif";
-			gameContext.fillText("SCORE " + levelScore + "  MOVES " + moveCount, cx, cy - fs * 0.4);
+			gameContext.fillText("SCORE " + currentScore() + "  MOVES " + moveCount, cx, cy - fs * 0.4);
 		}
 	}
 

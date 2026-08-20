@@ -47,11 +47,13 @@ function onKeyDown(event) {
 		skipObjective = 1;
 		resetLevel();
 	}
-	else if (event.keyCode == 13 || event.keyCode == 32) { // Enter / Space next
-		if (showEnd && state == 2) {
-			if (battleActive) afterBattleWin();
-			else nextLevel();
-		}
+	else if (event.keyCode == 32) {
+		event.preventDefault();
+		if (showEnd && state == 2) nextLevel();
+		else fillNiche();
+	}
+	else if (event.keyCode == 13) {
+		if (showEnd && state == 2) nextLevel();
 	}
 	else if (event.keyCode == 38 || event.keyCode == 87) { // up / W
 		act(0, -1);

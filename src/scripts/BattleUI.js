@@ -145,63 +145,14 @@ function getBattleUIFoe() {
 	return fallback;
 }
 
-function drawUI(size) {
-	portrait = height > width;
-	const on = battleActive && !battlePhase && !animating && !battleResult && !thinking && !showPick && !showUpgrade;
-	const fontSize = Math.min(26, Math.max(12, size * 0.42 | 0));
-	const side = Math.max(boardOffsetX, width - boardOffsetX - (battleActive ? battleWidth : boardWidth) * size);
-	const panelW = Math.min(96, Math.min(side > 48 ? side - 12 : width * 0.42, 240));
-	const panelH = Math.min(96, Math.min(portrait ? Math.max(boardOffsetY - 12, 80) : size * 2.4, 240));
-	const uniX = 8;
-	const uniY = portrait ? 8 : Math.max(8, boardOffsetY);
-	drawUIPlayer(uniX, uniY, panelW, panelH, fontSize);
-
+function drawBattleHUD(x, y, w, h, fs, on) {
+	const u = getBattleUIAlly();
+	if (u) drawUIUnit(x, y, w, h, fs, u, 0);
 	const r = Math.max(16, Math.min(width, height) * 0.04);
 	const m = Math.max(24, Math.min(width, height) * 0.045);
-	if (battleActive && !showPick && !showUpgrade) drawEndTurn(width - r - m, height - r - m, r, on);
-
-	drawUIEnemy(width - panelW - 8, uniY, panelW, panelH, fontSize);
-}
-
-function drawUIPlayer(x, y, w, h, fs) {
-	if (battleActive) {
-		const u = getBattleUIAlly();
-		if (!u) return;
-		drawUIUnit(x, y, w, h, fs, u, 0);
-		return;
-	}
-	const pic = (portrait ? Math.min(w, h) : Math.max(w, h)) * 0.42;
-	drawUnitIcon(0, x + pic / 2, y + pic / 2, pic);
-	const sm = pic * 0.55;
-	let rx = x;
-	const ry = y + pic + 2;
-	for (let i = 0; i < rescuedUnits.length; i++) {
-		drawUnitIcon(rescuedUnits[i], rx + sm / 2, ry + sm / 2, sm);
-		rx += sm + 2;
-	}
-	gameContext.textAlign = "left";
-	gameContext.textBaseline = "top";
-	gameContext.font = "bold " + fs + "px sans-serif";
-	gameContext.fillStyle = "#fff";
-	const tx = x + pic + 8;
-	gameContext.fillText("LV " + (levelIndex + 1), tx, y);
-	gameContext.fillText("" + (enemiesCleared * 100 + coinsCollected * 50), tx, y + fs * 1.2);
-	gameContext.fillText("M" + moveCount, tx, y + fs * 2.4);
-}
-
-function drawUIEnemy(x, y, w, h, fs) {
-	if (battleActive) {
-		const u = getBattleUIFoe();
-		if (u && u.hp > 0) drawUIUnit(x, y, w, h, fs, u, 1);
-		return;
-	}
-	const pic = Math.min(w, h) * 0.42;
-	drawUnitIcon(2, x + w - pic / 2, y + pic / 2, pic);
-	gameContext.textAlign = "right";
-	gameContext.textBaseline = "top";
-	gameContext.font = "bold " + fs + "px sans-serif";
-	gameContext.fillStyle = "#fff";
-	gameContext.fillText("x " + aliveCount(), x + w - pic - 8, y);
+	if (!showPick && !showUpgrade) drawEndTurn(width - r - m, height - r - m, r, on);
+	const foe = getBattleUIFoe();
+	if (foe && foe.hp > 0) drawUIUnit(width - w - 8, y, w, h, fs, foe, 1);
 }
 
 function drawUIUnit(x, y, w, h, fs, u, right) {

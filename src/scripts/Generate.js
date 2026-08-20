@@ -94,7 +94,9 @@ function makeRandomLevel(slot) {
 		for (let tryPlace = enemyNeed * 16; tryPlace-- && enemies.length < enemyNeed;) {
 			const x = 1 + (Math.random() * (width - 2) | 0);
 			const y = 1 + (Math.random() * (height - 2) | 0);
-			if (grid[y][x] != "0" || Math.abs(x - playerX) < 2 && Math.abs(y - playerY) < 2) continue;
+			if (grid[y][x] != "0"
+				|| Math.abs(x - playerX) < 2 && Math.abs(y - playerY) < 2
+				|| Math.abs(x - exitX) < 2 && Math.abs(y - exitY) < 2) continue;
 			let tooClose = 0;
 			for (let n = enemies.length; n--;) {
 				if (Math.abs(enemies[n][0] - x) < 2 && Math.abs(enemies[n][1] - y) < 2) tooClose = 1;
@@ -132,6 +134,26 @@ function makeRandomLevel(slot) {
 			const x = 1 + (Math.random() * (width - 2) | 0);
 			const y = 1 + (Math.random() * (height - 2) | 0);
 			if (grid[y][x] == "0" && !reserved[x + y * width] && !wouldPin(x, y)) grid[y][x] = "3";
+		}
+
+		// Cross if 3 or 4 corners are blocked and all 4 sides are open
+		for (let y = 1; y < height - 1; y++) {
+			for (let x = 1; x < width - 1; x++) {
+				if (grid[y][x] != "0" && grid[y][x] != "4") continue;
+				let corners = 0;
+				let plus = 1;
+				for (let oy = -1; oy <= 1; oy++) {
+					for (let ox = -1; ox <= 1; ox++) {
+						if (!ox && !oy) continue;
+						const t = grid[y + oy][x + ox];
+						const blocked = t == "1" || t == "3";
+						if (ox && oy) {
+							if (blocked) corners ++;
+						} else if (blocked) plus = 0;
+					}
+				}
+				if (plus && corners >= 3) grid[y][x] = "7";
+			}
 		}
 
 		for (let coins = 2 + (Math.random() * 3 | 0) + (width * height > 90 ? 1 : 0); coins--;) {

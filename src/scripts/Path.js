@@ -52,14 +52,19 @@ function beginRetractPath() {
 	const dx = cx - prev[0];
 	const dy = cy - prev[1];
 	pathData[prev[1]][prev[0]] &= ~dirMask(dx, dy);
-	pathData[cy][cx] &= ~dirMask(-dx, -dy);
 	let still = 0;
 	for (let i = 0; i < pathTrail.length; i++) {
 		if (pathTrail[i][0] == cx && pathTrail[i][1] == cy) still = 1;
 	}
 	if (!still) {
-		pathData[cy][cx] = 0;
-		pathStep[cy][cx] = 0;
+		if (fillData[cy][cx]) {
+			pathStep[cy][cx] = 1;
+		} else {
+			pathData[cy][cx] = 0;
+			pathStep[cy][cx] = 0;
+		}
+	} else {
+		pathData[cy][cx] &= ~dirMask(-dx, -dy);
 	}
 	pathCount = pathTrail.length;
 }
@@ -162,5 +167,27 @@ function drawFlowingPath() {
 			gameContext.stroke();
 		}
 		s += len;
+	}
+}
+
+function drawFillNiches() {
+	const w = cellSize;
+	const r = w * 0.19;
+	const border = w * 0.12;
+	const shift = Date.now() * 0.1;
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (fillData[y][x] != 2 || (player.x == x && player.y == y)) continue;
+			const x0 = boardOffsetX + x * w + w / 2;
+			const y0 = boardOffsetY + y * w + w / 2;
+			gameContext.fillStyle = "#fff";
+			gameContext.beginPath();
+			gameContext.arc(x0, y0, r + border, 0, Math.PI * 2);
+			gameContext.fill();
+			gameContext.fillStyle = "hsl(" + (shift % 360) + ",85%,55%)";
+			gameContext.beginPath();
+			gameContext.arc(x0, y0, r, 0, Math.PI * 2);
+			gameContext.fill();
+		}
 	}
 }

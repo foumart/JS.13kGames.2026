@@ -52,10 +52,17 @@ function startBattle() {
 	battleControl = null;
 	boardWidth = battleWidth;
 	boardHeight = battleHeight;
+	totalScore = scoreStart;
 	battleUnits = [];
 	battleObstacles = [];
-	if (!skip) battleParty = [];
-	else {
+	if (!skip) {
+		battleParty = [];
+		if (livingRescueCount() <= 2) {
+			for (let i = 0; i < rescuedUnits.length; i++) {
+				if (!isDeadBmp(rescuedUnits[i])) battleParty.push(rescuedUnits[i]);
+			}
+		}
+	} else {
 		const kept = [];
 		for (let i = 0; i < battleParty.length; i++) {
 			if (deadUnits.indexOf(battleParty[i]) < 0) kept.push(battleParty[i]);
@@ -536,6 +543,13 @@ function performAttack(u, hits, done) {
 	const len = Math.max(1, Math.abs(dx) + Math.abs(dy));
 	TweenFX.to(u, 5, {offsetX: dx / len * 0.35, offsetY: dy / len * 0.35}, drawBattle, () => {
 		for (let i = 0; i < hits.length; i++) hits[i].hp -= u.dmg;
+		if (!u.enemy) {
+			const mul = u.hero ? 2 : 1;
+			for (let i = 0; i < hits.length; i++) {
+				totalScore += 50 * mul;
+				if (hits[i].hp <= 0) totalScore += 100 * mul;
+			}
+		}
 		hitShake(hits, () => {
 			TweenFX.to(u, 5, {offsetX: 0, offsetY: 0}, drawBattle, () => {
 				u.acted = 1;
