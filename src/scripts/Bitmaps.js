@@ -68,3 +68,47 @@ const unitData = [
 
 encode(backgroundData, offscreenBitmaps);
 encode(unitData, unitBitmaps);
+
+// Remap a sprite's opaque colors (dark→light) onto a 6-char-hex palette, cached on the source canvas.
+function bakePal(src, pal) {
+	const c = document.createElement("canvas");
+	c.width = src.width;
+	c.height = src.height;
+	const ctx = c.getContext("2d");
+	ctx.drawImage(src, 0, 0);
+	const img = ctx.getImageData(0, 0, c.width, c.height);
+	const d = img.data;
+	const cols = [];
+	const seen = {};
+	for (let i = 0; i < d.length; i += 4) {
+		if (!d[i + 3]) continue;
+		const k = d[i] | d[i + 1] << 8 | d[i + 2] << 16;
+		if (!seen[k]) {
+			seen[k] = 1;
+			cols.push([d[i] + d[i + 1] + d[i + 2], k]);
+		}
+	}
+	cols.sort((a, b) => a[0] - b[0]);
+	const map = {};
+	const n = pal.length / 6;
+	for (let i = 0; i < cols.length; i++) {
+		const h = pal.substr((n * i / cols.length | 0) * 6, 6);
+		const rgb = parseInt(h, 16);
+		map[cols[i][1]] = [rgb >> 16, rgb >> 8 & 255, rgb & 255];
+	}
+	for (let i = 0; i < d.length; i += 4) {
+		if (!d[i + 3]) continue;
+		const rgb = map[d[i] | d[i + 1] << 8 | d[i + 2] << 16];
+		d[i] = rgb[0];
+		d[i + 1] = rgb[1];
+		d[i + 2] = rgb[2];
+	}
+	ctx.putImageData(img, 0, 0);
+	return c;
+}
+
+function drawPaletted(src, pal, dx, dy, dw, dh) {
+	if (!src.pal) src.pal = {};
+	const baked = src.pal[pal] || (src.pal[pal] = bakePal(src, pal));
+	gameContext.drawImage(baked, 0, 0, baked.width, baked.height, dx, dy, dw, dh);
+}

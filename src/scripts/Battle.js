@@ -21,6 +21,7 @@ let battleKind = 0; // 1 regular, 2 boss
 
 const battleWidth = 9;
 const battleHeight = 9;
+let battleObstacles = [];
 
 function startBattle() {
 	const skip = skipObjective;
@@ -52,6 +53,7 @@ function startBattle() {
 	boardWidth = battleWidth;
 	boardHeight = battleHeight;
 	battleUnits = [];
+	battleObstacles = [];
 	if (!skip) battleParty = [];
 	else {
 		const kept = [];
@@ -80,6 +82,7 @@ function spawnBattleParty() {
 		battleUnits.push(makeRescued(battleParty[i], spots[i][0], spots[i][1]));
 	}
 	spawnEnemies();
+	spawnBattleRocks();
 	beginRound();
 }
 
@@ -244,6 +247,23 @@ function spawnEnemies() {
 	}
 }
 
+function spawnBattleRocks() {
+	battleObstacles = [];
+	for (let y = 0; y < battleHeight; y++) battleObstacles[y] = [];
+	let n = 2 + (Math.random() * 2 | 0);
+	for (let t = n * 8; t-- && n;) {
+		const x = 1 + (Math.random() * (battleWidth - 2) | 0);
+		const y = 2 + (Math.random() * 4 | 0);
+		if (getUnitAt(x, y) || battleObstacles[y][x]) continue;
+		battleObstacles[y][x] = 1;
+		n --;
+	}
+}
+
+function hasObstacle(x, y) {
+	return battleObstacles[y] && battleObstacles[y][x];
+}
+
 function resetBattle() {
 	startBattle();
 }
@@ -257,7 +277,7 @@ function getUnitAt(x, y) {
 }
 
 function isMapEmptyAt(x, y) {
-	return x >= 0 && y >= 0 && x < battleWidth && y < battleHeight && !getUnitAt(x, y);
+	return x >= 0 && y >= 0 && x < battleWidth && y < battleHeight && !getUnitAt(x, y) && !hasObstacle(x, y);
 }
 
 function checkForBattleEnd() {
@@ -448,6 +468,7 @@ function rayTarget(u, x, y) {
 		const nx = u.x + sx * i;
 		const ny = u.y + sy * i;
 		if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) return null;
+		if (hasObstacle(nx, ny)) return null;
 		const t = getUnitAt(nx, ny);
 		if (t) return t.enemy != u.enemy ? t : null;
 	}

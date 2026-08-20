@@ -56,6 +56,7 @@ class Unit {
 					const nx = ox + rays[r][0] * i;
 					const ny = oy + rays[r][1] * i;
 					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					if (hasObstacle(nx, ny)) break;
 					const t = getUnitAt(nx, ny);
 					if (t) {
 						if (t.enemy != this.enemy) hits.push(t);
@@ -72,6 +73,7 @@ class Unit {
 				const nx = ox + rays[r][0] * i;
 				const ny = oy + rays[r][1] * i;
 				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+				if (hasObstacle(nx, ny)) break;
 				const t = getUnitAt(nx, ny);
 				if (t) {
 					if (t.enemy != this.enemy && (i < bestD || (i == bestD && Math.random() < 0.5))) {
@@ -101,6 +103,7 @@ class Unit {
 					const nx = this.x + rays[r][0] * i;
 					const ny = this.y + rays[r][1] * i;
 					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					if (hasObstacle(nx, ny)) break;
 					const t = getUnitAt(nx, ny);
 					if (t && t.enemy == this.enemy) break;
 					battleTiles.push({
@@ -119,6 +122,7 @@ class Unit {
 				const nx = this.x + rays[r][0] * i;
 				const ny = this.y + rays[r][1] * i;
 				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+				if (hasObstacle(nx, ny)) break;
 				const t = getUnitAt(nx, ny);
 				if (!t) {
 					cells.push({x: nx, y: ny, occ: 0});

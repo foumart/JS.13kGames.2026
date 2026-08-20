@@ -669,11 +669,43 @@ function debugSkipToBattle() {
 }
 
 function fitBoard(cols, rows) {
-	const size = Math.min(width / cols, height / rows);
+	const size = Math.min(width / (cols + 1), height / (rows + 1));
 	cellSize = size;
 	boardOffsetX = (width - cols * size) / 2;
 	boardOffsetY = (height - rows * size) / 2;
 	return size;
+}
+
+function drawEdgeTiles(size, bmp) {
+	const ox = boardOffsetX;
+	const oy = boardOffsetY;
+	const cols = battleActive ? battleWidth : boardWidth;
+	const rows = battleActive ? battleHeight : boardHeight;
+	const gx0 = Math.floor(-ox / size);
+	const gy0 = Math.floor(-oy / size);
+	const gx1 = Math.ceil((width - ox) / size);
+	const gy1 = Math.ceil((height - oy) / size);
+	const rock = offscreenBitmaps[1];
+	gameContext.fillStyle = "#0004";
+	for (let gy = gy0; gy < gy1; gy++) {
+		for (let gx = gx0; gx < gx1; gx++) {
+			if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) continue;
+			const px = ox + gx * size;
+			const py = oy + gy * size;
+			gameContext.drawImage(bmp, 0, 0, tileWidth, tileWidth, px, py, size, size);
+			const rockHere = ((gx * 13 + gy * 7 + levelIndex * 3) % 5 + 5) % 5;
+			if (rockHere) {
+				gameContext.drawImage(rock, 0, 0, tileWidth, tileWidth, px, py, size, size);
+			}
+			gameContext.fillRect(px, py, size, size);
+			if (!rockHere) {
+				const period = 1400 + ((gx * 19 + gy * 11) % 10 + 10) % 10 * 180;
+				const phase = gx * 430 + gy * 710;
+				const sp = 7 + ((Date.now() + phase) / period | 0) % 2;
+				drawPaletted(offscreenBitmaps[sp], "131f0f1823131f2818", px, py, size, size);
+			}
+		}
+	}
 }
 
 function drawBoard() {
@@ -683,6 +715,8 @@ function drawBoard() {
 	}
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	const size = fitBoard(boardWidth, boardHeight);
+	portrait = height > width;
+	drawEdgeTiles(size, offscreenBitmaps[levelGround[predefinedIndex(levelIndex)] || 0]);
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
@@ -719,6 +753,10 @@ function drawBoard() {
 
 			if (obstacles[y][x]) {
 				gameContext.drawImage(offscreenBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				if (!x || !y || x == boardWidth - 1 || y == boardHeight - 1) {
+					gameContext.fillStyle = "#0005";
+					gameContext.fillRect(px, py, size, size);
+				}
 			} else if (castle[y][x]) {
 				gameContext.drawImage(offscreenBitmaps[9], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (exits[y][x]) {

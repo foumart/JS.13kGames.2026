@@ -51,6 +51,8 @@ function battleHinted(x, y) {
 function drawBattle() {
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	const tileSize = fitBoard(battleWidth, battleHeight);
+	portrait = height > width;
+	drawEdgeTiles(tileSize, offscreenBitmaps[0]);
 
 	for (let y = 0; y < battleHeight; y++) {
 		for (let x = 0; x < battleWidth; x++) {
@@ -60,6 +62,12 @@ function drawBattle() {
 				offscreenBitmaps[0],
 				0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
 			);
+			if (hasObstacle(x, y)) {
+				gameContext.drawImage(
+					offscreenBitmaps[1],
+					0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
+				);
+			}
 		}
 	}
 
