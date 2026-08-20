@@ -5,10 +5,10 @@ let boardOffsetX = 0;
 let boardOffsetY = 0;
 let portrait;
 
-let enemies = []; // 0 empty, 1 alive, 2 dying
+let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
 let obstacles = [];
 let coins = [];
-let clouds = []; // 1 H bridge, 2 V bridge, 3 cross
+let clouds = []; // 1 cross
 let exits = [];
 let castle = [];
 let rescues = []; // 0 empty, else unit bitmap index
@@ -45,15 +45,27 @@ let endNextBtn = null;
 let endRetryBtn = null;
 
 let leftoverEnemies = 0;
-let leftoverThisStage = 0;
+let leftTotalThisLevel = 0;
+let leftoverKinds = [0, 0, 0];
+let leftUnitsThisLevel = [0, 0, 0];
+let leftGoldThisLevel = 0;
+let leftUnitConverted = 0;
+const leprechaunPalettes = ["3a6", "542", "c98", "069"]; // blue, green, red, pink
 let rescuedUnits = [];
 let deadUnits = [];
 let levelCaptives = [];
 let rescueDying = [];
 let unitMods = {}; // bmp -> [hp, att, range, reach]
 let uniMods = [0, 0, 0, 0]; // hp, att, range, reach
-const rescueBmps = [3, 4, 7, 8, 9, 10, 11, 12, 13]; // Corwin, Merlin, Benedict, Fiona, Random, Bleys, Julian, Caine, Gerard
-const unitNames = {3:"Corwin",4:"Merlin",7:"Benedict",8:"Fiona",9:"Random",10:"Bleys",11:"Julian",12:"Caine",13:"Gerard"};
+const rescueBmps = [11, 3, 12, 5, 6, 7, 8, 9, 13]; // Corwin, Merlin, Benedict, Fiona, Random, Bleys, Julian, Caine, Gerard
+const unitNames = {11:"Corwin",3:"Merlin",12:"Benedict",5:"Fiona",6:"Random",7:"Bleys",8:"Julian",9:"Caine",13:"Gerard"};
+const unitSprites = {11:9,12:8,13:6}; // Corwin←Caine, Benedict←Julian, Gerard←Random
+const unitPalettes = {11:"2b0",12:"b23",13:"a3c"};
+
+const tileWidth = 6;
+const unitScale = 0.665;
+
+const campaignLength = 63;
 
 function inBounds(x, y) {
 	return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
@@ -87,7 +99,10 @@ function initBoard() {
 	totalScore = scoreStart;
 	scoreBanked = 0;
 	fillCharges = fillStart;
-	leftoverThisStage = 0;
+	leftTotalThisLevel = 0;
+	leftUnitsThisLevel = [0, 0, 0];
+	leftGoldThisLevel = 0;
+	leftUnitConverted = 0;
 	revealPlayerTile = 0;
 	state = 1;
 	showEnd = 0;
@@ -123,10 +138,10 @@ function initBoard() {
 		fillData[y] = [];
 		for (let x = 0; x < boardWidth; x++) {
 			const c = levelData[y].charAt(x);
-			enemies[y][x] = c == "1" ? 1 : 0;
+			enemies[y][x] = c == "1" ? (levelIndex >= 4 && Math.random() < 0.5 ? 2 : 1) : 0;
 			obstacles[y][x] = c == "3" ? 1 : 0;
 			coins[y][x] = c == "4" ? 1 : 0;
-			clouds[y][x] = c == "5" ? 1 : c == "6" ? 2 : c == "7" ? 3 : 0;
+			clouds[y][x] = c == "7" ? 1 : 0;
 			exits[y][x] = c == "8" ? 1 : 0;
 			castle[y][x] = c == "9" ? 1 : 0;
 			rescues[y][x] = 0;
@@ -162,11 +177,8 @@ function isPassable(x, y, dx, dy) {
 	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || castle[y][x] || fillData[y][x]) return 0;
 	if (rescues[y][x] && !rescueDying[y][x]) return 0;
 	const c = clouds[y][x];
-	// 1 = H bridge, 2 = V bridge, 3 = cross
-	if (c == 1 && dy) return 0;
-	if (c == 2 && dx) return 0;
 	if (pathStep[y][x]) {
-		if (c == 3) {
+		if (c) {
 			const pd = pathData[y][x];
 			const horiz = pd & 10; // E|W
 			const vert = pd & 5; // N|S
@@ -190,14 +202,50 @@ function fillNiche() {
 	redraw();
 }
 
-function aliveCount() {
+function lepKind(v) {
+	return v > 3 ? v - 3 : v;
+}
+
+function lepDying(v) {
+	return v > 3;
+}
+
+function lepAlive(v) {
+	return v > 0 && v < 4;
+}
+
+function kindAlive(k) {
 	let n = 0;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (enemies[y][x] == 1) n ++;
+			if (enemies[y][x] == k) n ++;
 		}
 	}
 	return n;
+}
+
+function countLeftovers() {
+	leftGoldThisLevel = coins.flat().reduce((n, c) => n + c, 0);
+	leftUnitConverted = 0;
+	let gold = leftGoldThisLevel;
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (enemies[y][x] != 1 || !gold) continue;
+			enemies[y][x] = 3;
+			leftUnitConverted ++;
+			gold --;
+		}
+	}
+	leftTotalThisLevel = 0;
+	leftUnitsThisLevel = [0, 0, 0];
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			const v = enemies[y][x];
+			if (!lepAlive(v)) continue;
+			leftTotalThisLevel ++;
+			leftUnitsThisLevel[v - 1] ++;
+		}
+	}
 }
 
 function hasMove() {
@@ -211,7 +259,7 @@ function hasMove() {
 function reviveDyingEnemies() {
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (enemies[y][x] == 2) enemies[y][x] = 1;
+			if (lepDying(enemies[y][x])) enemies[y][x] = lepKind(enemies[y][x]);
 			rescueDying[y][x] = 0;
 		}
 	}
@@ -227,7 +275,7 @@ function getClusters() {
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (enemies[y][x] != 1 || seen[y][x]) continue;
+			if (!lepAlive(enemies[y][x]) || seen[y][x]) continue;
 			const cluster = [];
 			const stack = [[x, y]];
 			seen[y][x] = 1;
@@ -240,7 +288,7 @@ function getClusters() {
 				for (let i = 0; i < 4; i++) {
 					const nx = cx + dirs[i][0];
 					const ny = cy + dirs[i][1];
-					if (inBounds(nx, ny) && enemies[ny][nx] == 1 && !seen[ny][nx]) {
+					if (inBounds(nx, ny) && lepAlive(enemies[ny][nx]) && !seen[ny][nx]) {
 						seen[ny][nx] = 1;
 						stack.push([nx, ny]);
 					}
@@ -275,7 +323,9 @@ function isClusterSurrounded(cluster) {
 
 function markClusterDying(cluster) {
 	for (let i = 0; i < cluster.length; i++) {
-		enemies[cluster[i][1]][cluster[i][0]] = 2;
+		if (lepAlive(enemies[cluster[i][1]][cluster[i][0]])) {
+			enemies[cluster[i][1]][cluster[i][0]] += 3;
+		}
 	}
 }
 
@@ -283,11 +333,12 @@ function flushDyingEnemies() {
 	const flushed = [];
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (enemies[y][x] == 2) {
+			if (lepDying(enemies[y][x])) {
+				const kind = lepKind(enemies[y][x]);
 				enemies[y][x] = 0;
 				fillData[y][x] = 1;
 				enemiesCleared ++;
-				flushed.push([x, y]);
+				flushed.push([x, y, 0, kind]);
 			}
 			const rescued = collectRescue(x, y);
 			if (rescued) flushed.push(rescued);
@@ -308,7 +359,7 @@ function restoreFlushed(flushed) {
 			const k = rescuedUnits.indexOf(bmp);
 			if (k >= 0) rescuedUnits.splice(k, 1);
 		} else {
-			enemies[y][x] = 1;
+			enemies[y][x] = flushed[i][3] || 1;
 			enemiesCleared --;
 		}
 	}
@@ -352,15 +403,15 @@ function allyMod(bmp) {
 
 function makeRescued(bmp, x, y) {
 	let u;
-	if (bmp == 3) u = new Corwin(x, y);
-	else if (bmp == 4) u = new Merlin(x, y);
-	else if (bmp == 7) u = new Benedict(x, y);
-	else if (bmp == 8) u = new Fiona(x, y);
-	else if (bmp == 9) u = new Random(x, y);
-	else if (bmp == 10) u = new Bleys(x, y);
-	else if (bmp == 11) u = new Julian(x, y);
-	else if (bmp == 12) u = new Caine(x, y);
-	else u = new Gerard(x, y);
+	if (bmp == 11) u = new Corwin(x, y);
+	else if (bmp == 3) u = new Merlin(x, y);
+	else if (bmp == 12) u = new Benedict(x, y);
+	else if (bmp == 5) u = new Fiona(x, y);
+	else if (bmp == 6) u = new Random(x, y);
+	else if (bmp == 7) u = new Bleys(x, y);
+	else if (bmp == 8) u = new Julian(x, y);
+	else if (bmp == 13) u = new Gerard(x, y);
+	else u = new Caine(x, y);
 	const m = allyMod(bmp);
 	u.hpMax += m[0];
 	u.hp = u.hpMax;
@@ -399,11 +450,19 @@ function remainingRescue() {
 }
 
 function worldNumber() {
-	return (levelIndex / 3 | 0) + 1;
+	return (levelIndex / 9 | 0) + 1;
+}
+
+function shadowNumber() {
+	return ((levelIndex / 3 | 0) % 3) + 1;
 }
 
 function stageNumber() {
 	return (levelIndex % 3) + 1;
+}
+
+function groundBmp() {
+	return offscreenBitmaps[(worldNumber() - 1) % offscreenBitmaps.length];
 }
 
 function stageScore() {
@@ -436,24 +495,26 @@ function scheduleEndScreen() {
 	}, 1000);
 }
 
-function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y) {
+function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 	const bmp = unitBitmaps[2];
 	const scale = size / tileWidth * unitScale;
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
 	const bounce = bounceSpeed && Math.sin(Date.now() * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
-	gameContext.drawImage(
-		bmp, 0, 0, bmp.width, bmp.height,
+	drawPaletted(
+		bmp, leprechaunPalettes[(kind || 1) - 1],
 		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh
 	);
 }
 
-function drawUnitIcon(bmpIndex, cx, cy, size) {
-	const bmp = unitBitmaps[bmpIndex];
+function drawUnitIcon(bmpIndex, cx, cy, size, pal) {
+	const bmp = unitBitmaps[unitSprites[bmpIndex] || bmpIndex];
+	pal = pal || unitPalettes[bmpIndex];
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
+	if (pal) drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh);
+	else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }
 
 function drawObjectiveScreen() {
@@ -474,7 +535,7 @@ function drawObjectiveScreen() {
 		gameContext.font = "bold " + (fs * 0.72 | 0) + "px sans-serif";
 		gameContext.fillText("Destroy all enemies", cx, cy + fs * 0.35);
 	} else {
-		gameContext.fillText("World " + worldNumber() + ", Level " + stageNumber(), cx, cy - fs * (stageCaptive ? 2.1 : 1.6));
+		gameContext.fillText("W:" + worldNumber() + " S:" + shadowNumber() + " L:" + stageNumber(), cx, cy - fs * (stageCaptive ? 2.1 : 1.6));
 		drawObjectiveLine(cx, cy + fs * (stageCaptive ? -0.1 : 0.25), fs * 0.72 | 0, icon);
 		if (stageCaptive) {
 			const ns = fs * 1.45 | 0;
@@ -516,9 +577,9 @@ function drawObjectiveLine(cx, cy, fs, icon) {
 		if (p.text) {
 			gameContext.fillText(p.text, x, cy);
 		} else if (p.sparkle) {
-			const sp = 7 + ((Date.now() / 180 | 0) % 2);
+			const sp = 3 + ((Date.now() / 180 | 0) % 2);
 			gameContext.drawImage(
-				offscreenBitmaps[sp], 0, 0, tileWidth, tileWidth,
+				objectBitmaps[sp], 0, 0, tileWidth, tileWidth,
 				x + gap / 2, cy - icon / 2, icon, icon
 			);
 		} else {
@@ -546,7 +607,7 @@ function checkCaptures(flushAcc) {
 		} else {
 			flushDyingEnemies();
 		}
-		leftoverThisStage = aliveCount();
+		countLeftovers();
 		revealPlayerTile = 1;
 		state = 2;
 		scheduleEndScreen();
@@ -625,8 +686,10 @@ function dismissObjective() {
 function nextLevel() {
 	fillStart = fillCharges;
 	scoreStart = totalScore;
-	leftoverEnemies += leftoverThisStage;
-	leftoverThisStage = 0;
+	leftoverEnemies += leftTotalThisLevel;
+	for (let i = 0; i < 3; i++) leftoverKinds[i] += leftUnitsThisLevel[i];
+	leftTotalThisLevel = 0;
+	leftUnitsThisLevel = [0, 0, 0];
 	if (levelIndex % 3 == 2) {
 		battleKind = isBossBattle() ? 2 : 1;
 		startBattle();
@@ -640,7 +703,11 @@ function afterBattleWin() {
 	applyUpgradePicks();
 	markBattleDead();
 	leftoverEnemies = 0;
-	leftoverThisStage = 0;
+	leftTotalThisLevel = 0;
+	leftoverKinds = [0, 0, 0];
+	leftUnitsThisLevel = [0, 0, 0];
+	leftGoldThisLevel = 0;
+	leftUnitConverted = 0;
 	showUpgrade = 0;
 	upgradePicks = {};
 	showPick = 0;
@@ -658,7 +725,11 @@ function afterBattleWin() {
 
 function restartCampaign() {
 	leftoverEnemies = 0;
-	leftoverThisStage = 0;
+	leftTotalThisLevel = 0;
+	leftoverKinds = [0, 0, 0];
+	leftUnitsThisLevel = [0, 0, 0];
+	leftGoldThisLevel = 0;
+	leftUnitConverted = 0;
 	rescuedUnits = [];
 	deadUnits = [];
 	levelCaptives = [];
@@ -690,7 +761,7 @@ function debugClearLevel() {
 		}
 	}
 	enemiesCleared = enemiesTotal;
-	leftoverThisStage = 0;
+	countLeftovers();
 	revealPlayerTile = 1;
 	state = 2;
 	scheduleEndScreen();
@@ -705,7 +776,7 @@ function debugSkipToBattle() {
 		const j = Math.random() * pool.length | 0;
 		rescuedUnits.push(pool.splice(j, 1)[0]);
 	}
-	if (!leftoverEnemies) leftoverEnemies = leftoverThisStage || 3;
+	if (!leftoverEnemies) leftoverEnemies = leftTotalThisLevel || 3;
 	battleKind = 1;
 	startBattle();
 }
@@ -727,7 +798,7 @@ function drawEdgeTiles(size, bmp) {
 	const gy0 = Math.floor(-oy / size);
 	const gx1 = Math.ceil((width - ox) / size);
 	const gy1 = Math.ceil((height - oy) / size);
-	const rock = offscreenBitmaps[1];
+	const rock = objectBitmaps[0];
 	for (let gy = gy0; gy < gy1; gy++) {
 		for (let gx = gx0; gx < gx1; gx++) {
 			if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) continue;
@@ -740,8 +811,8 @@ function drawEdgeTiles(size, bmp) {
 			} else {
 				const period = 1400 + ((gx * 19 + gy * 11) % 10 + 10) % 10 * 180;
 				const phase = gx * 430 + gy * 710;
-				const sp = 7 + ((Date.now() + phase) / period | 0) % 2;
-				drawPaletted(offscreenBitmaps[sp], "131f0f1823131f2818", px, py, size, size);
+				const sp = 3 + ((Date.now() + phase) / period | 0) % 2;
+				drawPaletted(objectBitmaps[sp], "9ab", px, py, size, size);
 			}
 		}
 	}
@@ -755,7 +826,7 @@ function drawBoard() {
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	const size = fitBoard(boardWidth, boardHeight);
 	portrait = height > width;
-	drawEdgeTiles(size, offscreenBitmaps[levelGround[predefinedIndex(levelIndex)] || 0]);
+	drawEdgeTiles(size, groundBmp());
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
@@ -778,46 +849,45 @@ function drawBoard() {
 				drawPurifiedTile(x, y);
 			} else {
 				gameContext.drawImage(
-					offscreenBitmaps[levelGround[predefinedIndex(levelIndex)] || 0],
+					groundBmp(),
 					0, 0, tileWidth, tileWidth, px, py, size, size
 				);
 			}
 			if (clouds[y][x]) {
-				const cb = clouds[y][x];
 				gameContext.drawImage(
-					offscreenBitmaps[cb == 1 ? 4 : cb == 2 ? 5 : 6],
+					objectBitmaps[2],
 					0, 0, tileWidth, tileWidth, px, py, size, size
 				);
 			}
 
 			if (obstacles[y][x]) {
-				gameContext.drawImage(offscreenBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (castle[y][x]) {
-				gameContext.drawImage(offscreenBitmaps[9], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (exits[y][x]) {
-				const sp = 7 + ((Date.now() / 180 | 0) + x + y) % 2;
-				gameContext.drawImage(offscreenBitmaps[sp], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				const sp = 3 + ((Date.now() / 180 | 0) + x + y) % 2;
+				gameContext.drawImage(objectBitmaps[sp], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (coins[y][x]) {
 				const cs = size * 0.8;
 				const cox = px + (size - cs) / 2;
 				const coy = py + size - cs - size * 0.06;
-				gameContext.drawImage(offscreenBitmaps[2], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
+				gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
 			} else if (rescues[y][x]) {
 				if (!rescueDying[y][x]) {
-					gameContext.drawImage(offscreenBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, size, size);
+					gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
 				}
 				const bounce = rescueDying[y][x] && Math.sin(Date.now() * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
 				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2 - bounce, size * 0.9);
 				if (!rescueDying[y][x]) {
-					gameContext.drawImage(offscreenBitmaps[10], 0, 0, tileWidth, tileWidth, px, py, size, size);
+					gameContext.drawImage(objectBitmaps[6], 0, 0, tileWidth, tileWidth, px, py, size, size);
 				}
 			}
 
 			if (enemies[y][x]) {
 				drawLeprechaunSprite(
 					px, py, size,
-					enemies[y][x] == 2 ? 0.014 : 0.004,
-					x, y
+					lepDying(enemies[y][x]) ? 0.014 : 0.004,
+					x, y, lepKind(enemies[y][x])
 				);
 			}
 		}
@@ -845,25 +915,56 @@ function drawBoard() {
 
 		if (state == 2) {
 			const icon = Math.max(28, size * 0.7 | 0);
-			drawLeprechaunSprite(cx - icon * 1.6, cy - fs * 1.35, icon, 0.004, 0, 0);
-			gameContext.fillStyle = "#fff";
-			gameContext.font = "bold " + (fs * 0.7 | 0) + "px sans-serif";
-			gameContext.textAlign = "left";
-			gameContext.textBaseline = "middle";
-			gameContext.fillText("x " + leftoverThisStage, cx - icon * 0.3, cy - fs * 1.35 + icon * 0.45);
+			const conv = leftUnitConverted;
+			const rowY = cy - fs * (conv ? 1.7 : 1.35);
+			let lx = cx - icon * 1.85;
+			for (let k = 0; k < 3; k++) {
+				drawLeprechaunSprite(lx, rowY, icon, 0.004, k, 0, k + 1);
+				gameContext.fillStyle = "#fff";
+				gameContext.font = "bold " + (fs * 0.55 | 0) + "px sans-serif";
+				gameContext.textAlign = "left";
+				gameContext.textBaseline = "middle";
+				gameContext.fillText("x" + leftUnitsThisLevel[k], lx + icon * 0.85, rowY + icon * 0.45);
+				lx += icon * 1.7;
+			}
+
+			if (conv) {
+				const sm = icon * 0.65;
+				const cy2 = cy - fs * 0.72;
+				const gLabel = "x" + leftGoldThisLevel;
+				const cLabel = "x" + conv;
+				gameContext.font = "bold " + (fs * 0.5 | 0) + "px sans-serif";
+				const gw = gameContext.measureText(gLabel).width;
+				const aw = gameContext.measureText("→").width;
+				const cw = gameContext.measureText(cLabel).width;
+				let x = cx - (sm + gw + sm + aw + sm + cw + 22) / 2;
+				gameContext.textAlign = "left";
+				gameContext.fillStyle = "#fff";
+				gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, x, cy2 - sm / 2, sm, sm);
+				x += sm + 2;
+				gameContext.fillText(gLabel, x, cy2);
+				x += gw + 8;
+				drawLeprechaunSprite(x, cy2 - sm / 2, sm, 0, 0, 0, 1);
+				x += sm + 4;
+				gameContext.fillText("→", x, cy2);
+				x += aw + 4;
+				drawLeprechaunSprite(x, cy2 - sm / 2, sm, 0, 0, 0, 3);
+				x += sm + 2;
+				gameContext.fillText(cLabel, x, cy2);
+			}
 
 			gameContext.textAlign = "center";
 			gameContext.font = (fs * 0.4 | 0) + "px sans-serif";
 			gameContext.fillStyle = "#ffd";
-			gameContext.fillText("SCORE " + currentScore(), cx, cy - fs * 0.15);
+			gameContext.fillText("SCORE " + currentScore(), cx, cy - fs * (conv ? -0.05 : 0.15));
 
 			const n = 1 + rescuedUnits.length;
 			let ix = cx - (n - 1) * icon * 0.7;
-			const by = cy + fs * 0.55;
+			const by = cy + fs * (conv ? 0.7 : 0.55);
 			drawUnitIcon(0, ix, by, icon);
 			const ss = icon * 0.5;
 			gameContext.drawImage(
-				offscreenBitmaps[7], 0, 0, tileWidth, tileWidth,
+				objectBitmaps[3], 0, 0, tileWidth, tileWidth,
 				ix + icon * 0.28, by - ss * 0.55, ss, ss
 			);
 			for (let i = 0; i < rescuedUnits.length; i++) {

@@ -1,7 +1,7 @@
 class Fiona extends Unit {
 
 	constructor(x, y) {
-		super(x, y, 1, 0, 3, 2, 8, 2);
+		super(x, y, 1, 0, 3, 2, 5, 2);
 	}
 
 	attackRays() {

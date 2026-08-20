@@ -11,7 +11,8 @@ function drawUI(size) {
 	if (battleActive) drawBattleHUD(uniX, uniY, panelW, panelH, fontSize, on);
 	else {
 		drawUIPlayer(uniX, uniY, panelW, panelH, fontSize);
-		drawUIEnemy(width - panelW - 8, uniY, panelW, panelH, fontSize);
+		const enemyW = Math.min(160, Math.max(panelW, fontSize * 7));
+		drawUIEnemy(width - enemyW - 8, uniY, enemyW, panelH, fontSize);
 	}
 
 	gameContext.textAlign = "center";
@@ -36,19 +37,31 @@ function drawUIPlayer(x, y, w, h, fs) {
 	gameContext.font = "bold " + fs + "px sans-serif";
 	gameContext.fillStyle = "#fff";
 	const tx = x + pic + 8;
-	gameContext.fillText("W:" + worldNumber() + " L:" + stageNumber(), tx, y);
+	gameContext.fillText("W:" + worldNumber() + " S:" + shadowNumber() + " L:" + stageNumber(), tx, y);
 	gameContext.fillText("M:" + moveCount, tx, y + fs * 1.2);
 	const sy = y + fs * 2.4;
-	gameContext.drawImage(offscreenBitmaps[7], 0, 0, tileWidth, tileWidth, tx, sy, fs, fs);
+	gameContext.drawImage(objectBitmaps[3], 0, 0, tileWidth, tileWidth, tx, sy, fs, fs);
 	gameContext.fillText(":" + fillCharges, tx + fs * 0.95, sy);
 }
 
 function drawUIEnemy(x, y, w, h, fs) {
-	const pic = Math.min(w, h) * 0.42;
-	drawUnitIcon(2, x + w - pic / 2, y + pic / 2, pic);
-	gameContext.textAlign = "right";
-	gameContext.textBaseline = "top";
+	const pic = Math.min(w, h) * 0.5;
+	drawLeprechaunSprite(x + w - pic, y, pic, 0, 0, 0, 4);
+	const sm = Math.max(fs * 1.2, 16);
+	let ty = y + pic + 2;
 	gameContext.font = "bold " + fs + "px sans-serif";
 	gameContext.fillStyle = "#fff";
-	gameContext.fillText("x " + aliveCount(), x + w - pic - 8, y);
+	gameContext.textBaseline = "middle";
+	for (let k = 0; k < 3; k++) {
+		const n = kindAlive(k + 1);
+		const m = leftoverKinds[k];
+		if (!n && !m) continue;
+		let label = ": " + n;
+		if (m) label += " (" + m + ")";
+		gameContext.textAlign = "right";
+		gameContext.fillText(label, x + w, ty + sm / 2);
+		const tw = gameContext.measureText(label).width;
+		drawLeprechaunSprite(x + w - tw - sm - 2, ty, sm, 0, 0, 0, k + 1);
+		ty += sm + 2;
+	}
 }

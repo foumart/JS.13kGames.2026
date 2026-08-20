@@ -222,7 +222,7 @@ function spawnEnemies() {
 	const cx = (battleWidth / 2) | 0;
 	const taken = {};
 	if (battleKind == 2) {
-		if ((predefinedIndex(levelIndex) / 3 | 0) == 0) {
+		if ((levelIndex / 9 | 0) == 0) {
 			battleUnits.push(new Hydra(cx, 0));
 			taken[cx] = 1;
 		} else {
@@ -233,8 +233,15 @@ function spawnEnemies() {
 			taken[cx - 2] = 1;
 			taken[cx + 2] = 1;
 		}
+	} else {
+		battleUnits.push(new Leprechaun(cx, 0, 4));
+		taken[cx] = 1;
 	}
-	let n = leftoverEnemies || 3;
+	const queue = [];
+	for (let k = 0; k < 3; k++) {
+		for (let q = leftoverKinds[k]; q--;) queue.push(k + 1);
+	}
+	let n = queue.length;
 	const spots = [];
 	for (let y = 0; y < 3; y++) {
 		for (let x = 0; x < battleWidth; x++) {
@@ -250,7 +257,7 @@ function spawnEnemies() {
 		spots[j] = t;
 	}
 	for (let i = 0; i < n; i++) {
-		battleUnits.push(new Leprechaun(spots[i][0], spots[i][1]));
+		battleUnits.push(new Leprechaun(spots[i][0], spots[i][1], queue[i]));
 	}
 }
 

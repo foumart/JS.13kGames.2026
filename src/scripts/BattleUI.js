@@ -52,19 +52,19 @@ function drawBattle() {
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	const tileSize = fitBoard(battleWidth, battleHeight);
 	portrait = height > width;
-	drawEdgeTiles(tileSize, offscreenBitmaps[0]);
+	drawEdgeTiles(tileSize, groundBmp());
 
 	for (let y = 0; y < battleHeight; y++) {
 		for (let x = 0; x < battleWidth; x++) {
 			const px = boardOffsetX + x * tileSize;
 			const py = boardOffsetY + y * tileSize;
 			gameContext.drawImage(
-				offscreenBitmaps[0],
+				groundBmp(),
 				0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
 			);
 			if (hasObstacle(x, y)) {
 				gameContext.drawImage(
-					offscreenBitmaps[1],
+					objectBitmaps[0],
 					0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
 				);
 			}
@@ -135,14 +135,16 @@ function getBattleUIAlly() {
 
 function getBattleUIFoe() {
 	if (battleSelect && battleSelect.enemy && battleSelect.hp > 0) return battleSelect;
+	let pink = null;
 	let fallback = null;
 	for (let i = 0; i < battleUnits.length; i++) {
 		const u = battleUnits[i];
 		if (!u.enemy || u.hp <= 0) continue;
 		if (u.type == 4) return u;
-		if (!fallback) fallback = u;
+		if (u.lep == 4) pink = u;
+		else if (!fallback) fallback = u;
 	}
-	return fallback;
+	return pink || fallback;
 }
 
 function drawBattleHUD(x, y, w, h, fs, on) {
@@ -306,7 +308,7 @@ function drawUpgradeScreen() {
 		const rowW = icon + 16 + Math.max(tw, fs * 14);
 		let x = width / 2 - rowW / 2;
 		if (fallen) gameContext.globalAlpha = 0.45;
-		drawUnitIcon(u.bmp, x + icon / 2, y + icon / 2, icon);
+		drawUnitIcon(u.bmp, x + icon / 2, y + icon / 2, icon, u.pal);
 		gameContext.globalAlpha = 1;
 		gameContext.textAlign = "left";
 		gameContext.fillStyle = "#fff";

@@ -1,6 +1,8 @@
 class Unit {
 
-	constructor(x, y, type, enemy, hp, dmg, bmp, range = 1, reach = 1) {
+	constructor(x, y, type, enemy, hp, dmg, bmp, range = 1, reach = 1, pal) {
+		if (typeof range === "string") { pal = range; range = 1; }
+		if (typeof reach === "string") { pal = reach; reach = 1; }
 		this.type = type;
 		this.enemy = enemy;
 		this.x = x;
@@ -11,6 +13,7 @@ class Unit {
 		this.range = range;
 		this.reach = reach;
 		this.bmp = bmp;
+		this.pal = pal;
 		this.moved = 0;
 		this.acted = 0;
 		this.offsetX = 0;
@@ -156,16 +159,17 @@ class Unit {
 		gameContext.save();
 		gameContext.translate(px + size / 2, py + size / 2 - hop);
 		gameContext.scale(this.face, 1);
-		gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
+		if (this.pal) drawPaletted(bmp, this.pal, -dw / 2, -dh / 2, dw, dh);
+		else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
 		gameContext.restore();
 	}
 
 	drawBmp() {
-		return this.bmp;
+		return unitSprites[this.bmp] || this.bmp;
 	}
 
 	drawPortrait(x, y, pic) {
-		drawUnitIcon(this.bmp, x + pic / 2, y + pic / 2, pic);
+		drawUnitIcon(this.bmp, x + pic / 2, y + pic / 2, pic, this.pal);
 	}
 }
 

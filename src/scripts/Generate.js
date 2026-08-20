@@ -1,21 +1,57 @@
 // Random puzzle maps generator
 
-// Cache levels to allow level retrying
+// Cache per slot so retrying a stage keeps the same layout
 let generatedLevels = [];
 
-// Each third map is one of the predefined levels
-function predefinedIndex(slot) {
-	return slot / 3 | 0;
+// World-boss puzzle: last of each 9-map world (3 shadows × 3 stages)
+function isBossStage(slot) {
+	return slot % 9 == 8;
 }
 
-// Boss fight comes after a predefined stage (3, 6, 9, 12 - predefined index: 2, 5, 8, 11).
+// Rescue on the 3rd stage of shadows 1 and 2, not on the world-boss map
+function hasRescue(slot) {
+	const n = slot % 9;
+	return n == 2 || n == 5;
+}
+
+// Castle battle after the world-boss puzzle
 function isBossBattle() {
-	return predefinedIndex(levelIndex) % 3 == 2;
+	return isBossStage(levelIndex);
 }
 
 function getLevelData(slot) {
-	if (slot % 3 == 2) return levels[predefinedIndex(slot)];
 	return generatedLevels[slot] || (generatedLevels[slot] = makeRandomLevel(slot));
+}
+
+// World-boss: castle on 3 sides of the exit, opening toward the player
+function addBossCastle(grid, width, height, exitX, exitY, playerX, playerY) {
+	const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+	let open = 0;
+	let best = 99;
+	for (let d = 0; d < 4; d++) {
+		const x = exitX + dirs[d][0];
+		const y = exitY + dirs[d][1];
+		const dist = Math.abs(x - playerX) + Math.abs(y - playerY);
+		if (dist < best) {
+			best = dist;
+			open = d;
+		}
+	}
+	for (let d = 0; d < 4; d++) {
+		if (d == open) continue;
+		const x = exitX + dirs[d][0];
+		const y = exitY + dirs[d][1];
+		if (x < 0 || y < 0 || x >= width || y >= height) continue;
+		if (grid[y][x] == "2" || grid[y][x] == "8") continue;
+		grid[y][x] = "9";
+	}
+}
+
+// Replace one spawned enemy with a jailed hero
+function jailEnemy(grid, enemies, slot) {
+	if (!hasRescue(slot) || !enemies.length) return;
+	const i = Math.random() * enemies.length | 0;
+	grid[enemies[i][1]][enemies[i][0]] = "A";
 }
 
 function makeRandomLevel(slot) {
@@ -29,15 +65,19 @@ function makeRandomLevel(slot) {
 	let height;
 	let grid;
 
-	// Count walkable adjacent neighbors (except obstacle 3, enemy 1, or out of bounds)
+	// Obstacle, enemy, castle, or captive — not walkable
+	function solid(tile) {
+		return tile == "3" || tile == "1" || tile == "9" || tile == "A";
+	}
+
+	// Count walkable adjacent neighbors (except solid tiles or out of bounds)
 	function walkOpen(x, y) {
 		let open = 0;
 		for (let d = 4; d--;) {
 			const nx = x + directions[d][0];
 			const ny = y + directions[d][1];
 			if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
-			const tile = grid[ny][nx];
-			if (tile != "3" && tile != "1") open ++;
+			if (!solid(grid[ny][nx])) open ++;
 		}
 		return open;
 	}
@@ -51,7 +91,7 @@ function makeRandomLevel(slot) {
 			const ny = y + directions[d][1];
 			if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
 			const tile = grid[ny][nx];
-			if (tile != "3" && tile != "1" && walkOpen(nx, ny) < 2) pin = 1;
+			if (!solid(tile) && walkOpen(nx, ny) < 2) pin = 1;
 		}
 		grid[y][x] = "0";
 		return pin;
@@ -75,7 +115,7 @@ function makeRandomLevel(slot) {
 			for (let x = 0; x < width; x++) grid[y][x] = "0";
 		}
 
-		// Place Player and exit
+		// Place Player and exit. Boss maps keep the exit in the top half so the castle has room.
 		const playerX = 1 + (Math.random() * (width - 2) | 0);
 		const playerY = height - 1 - (Math.random() * (height / 2) | 0);
 		let exitX;
@@ -83,12 +123,15 @@ function makeRandomLevel(slot) {
 		let exitTries = 0;
 		do {
 			exitX = 1 + (Math.random() * (width - 2) | 0);
-			exitY = Math.random() * (height / 2) | 0;
+			exitY = isBossStage(progress)
+				? 1 + (Math.random() * Math.max(1, (height / 2 | 0) - 1) | 0)
+				: Math.random() * (height / 2) | 0;
 		} while (++exitTries < 24 && Math.abs(exitX - playerX) + Math.abs(exitY - playerY) < width);
 		grid[playerY][playerX] = "2";
 		grid[exitY][exitX] = "8";
+		if (isBossStage(progress)) addBossCastle(grid, width, height, exitX, exitY, playerX, playerY);
 
-		// Enemies stay off the edge and at 2 squares from the player and each other
+		// Enemies stay off the edge and at 2 squares from the player, exit, and each other
 		const enemies = [];
 		const enemyNeed = enemyMin + (Math.random() * (enemyMax - enemyMin + 1) | 0);
 		for (let tryPlace = enemyNeed * 16; tryPlace-- && enemies.length < enemyNeed;) {
@@ -107,7 +150,7 @@ function makeRandomLevel(slot) {
 		}
 		if (enemies.length < enemyNeed) continue;
 
-		// Keep start, exit, enemies, or the four surround tiles beside each enemy
+		// Keep start, exit, castle, enemies, and the four surround tiles beside each enemy
 		const reserved = {};
 		reserved[playerX + playerY * width] = 1;
 		reserved[exitX + exitY * width] = 1;
@@ -115,6 +158,11 @@ function makeRandomLevel(slot) {
 			reserved[enemies[n][0] + enemies[n][1] * width] = 1;
 			for (let d = 4; d--;) {
 				reserved[enemies[n][0] + directions[d][0] + (enemies[n][1] + directions[d][1]) * width] = 1;
+			}
+		}
+		for (let y = height; y--;) {
+			for (let x = width; x--;) {
+				if (grid[y][x] == "9") reserved[x + y * width] = 1;
 			}
 		}
 
@@ -146,7 +194,7 @@ function makeRandomLevel(slot) {
 					for (let ox = -1; ox <= 1; ox++) {
 						if (!ox && !oy) continue;
 						const t = grid[y + oy][x + ox];
-						const blocked = t == "1" || t == "3";
+						const blocked = t == "1" || t == "3" || t == "9" || t == "A";
 						if (ox && oy) {
 							if (blocked) corners ++;
 						} else if (blocked) plus = 0;
@@ -173,8 +221,7 @@ function makeRandomLevel(slot) {
 				const x = cell[0] + directions[d][0];
 				const y = cell[1] + directions[d][1];
 				if (x < 0 || y < 0 || x >= width || y >= height) continue;
-				const tile = grid[y][x];
-				if (tile == "3" || tile == "1" || reachable[x + y * width]) continue;
+				if (solid(grid[y][x]) || reachable[x + y * width]) continue;
 				reachable[x + y * width] = 1;
 				flood.push([x, y]);
 			}
@@ -186,7 +233,7 @@ function makeRandomLevel(slot) {
 		for (let y = height; y-- && valid;) {
 			for (let x = width; x--;) {
 				const tile = grid[y][x];
-				if (tile != "3" && tile != "1" && walkOpen(x, y) < 2) { valid = 0; break; }
+				if (!solid(tile) && walkOpen(x, y) < 2) { valid = 0; break; }
 			}
 		}
 		for (let n = enemies.length; n-- && valid;) {
@@ -194,40 +241,43 @@ function makeRandomLevel(slot) {
 			for (let d = 4; d--;) {
 				const x = enemies[n][0] + directions[d][0];
 				const y = enemies[n][1] + directions[d][1];
-				if (x < 0 || y < 0 || x >= width || y >= height || grid[y][x] == "3") continue;
-				if (grid[y][x] == "1" || !reachable[x + y * width]) { valid = 0; break; }
+				if (x < 0 || y < 0 || x >= width || y >= height || grid[y][x] == "3" || grid[y][x] == "9") continue;
+				if (grid[y][x] == "1" || grid[y][x] == "A" || !reachable[x + y * width]) { valid = 0; break; }
 				sides ++;
 			}
 			if (!valid || sides < 4) { valid = 0; break; }
 		}
 		if (!valid) continue;
 
+		jailEnemy(grid, enemies, progress);
 		const rows = [];
 		for (let y = 0; y < height; y++) rows[y] = grid[y].join("");
 		return rows;
 	}
 
-	// If generation never passes, use a 90-degree turn of the previous authored map.
-	return rotateLevel(levels[predefinedIndex(progress) - 1]);
+	// If generation never passes, use a small hand-built map
+	return fallbackLevel(progress);
 }
 
-// 90 degrees clockwise. Uneven rows are padded as empty when reading past their end.
-function rotateLevel(source) {
-	const srcHeight = source.length;
-	let srcWidth = 0;
-	for (let y = 0; y < srcHeight; y++) {
-		if (source[y].length > srcWidth) srcWidth = source[y].length;
+function fallbackLevel(slot) {
+	const width = 9;
+	const height = 8;
+	const grid = [];
+	for (let y = 0; y < height; y++) {
+		grid[y] = [];
+		for (let x = 0; x < width; x++) grid[y][x] = "0";
 	}
-	const rotated = [];
-	for (let x = 0; x < srcWidth; x++) {
-		let row = "";
-		for (let y = 0; y < srcHeight; y++) {
-			let tile = source[srcHeight - 1 - y].charAt(x) || "0";
-			//if (tile == "5") tile = "6";
-			//else if (tile == "6") tile = "5";
-			row += tile;
-		}
-		rotated[x] = row;
-	}
-	return rotated;
+	const playerX = 4;
+	const playerY = 6;
+	const exitX = 4;
+	const exitY = 1;
+	grid[playerY][playerX] = "2";
+	grid[exitY][exitX] = "8";
+	const enemies = [[2, 3], [6, 3], [4, 4], [1, 5], [7, 5]];
+	for (let n = 0; n < enemies.length; n++) grid[enemies[n][1]][enemies[n][0]] = "1";
+	if (isBossStage(slot)) addBossCastle(grid, width, height, exitX, exitY, playerX, playerY);
+	jailEnemy(grid, enemies, slot);
+	const rows = [];
+	for (let y = 0; y < height; y++) rows[y] = grid[y].join("");
+	return rows;
 }
