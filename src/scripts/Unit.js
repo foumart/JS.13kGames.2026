@@ -1,8 +1,6 @@
 class Unit {
 
-	constructor(x, y, type, enemy, hp, dmg, bmp, range = 1, reach = 1, pal) {
-		if (typeof range === "string") { pal = range; range = 1; }
-		if (typeof reach === "string") { pal = reach; reach = 1; }
+	constructor(x, y, type, enemy, hp, dmg, bmp, pal, range = 1, reach = 1) {
 		this.type = type;
 		this.enemy = enemy;
 		this.x = x;
@@ -175,5 +173,5 @@ class Unit {
 
 Unit.ROOK = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 Unit.BISHOP = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-Unit.QUEEN = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+Unit.QUEEN = [...Unit.ROOK, ...Unit.BISHOP];
 Unit.KNIGHT = [[1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];

@@ -144,6 +144,7 @@ function app(callback) {
 		src(scripts, { allowEmpty: true })
 			//.pipe(replace('_debug', 'debug', replaceOptions))
 			.pipe(replace('let _debug;', `let _debug = ${debug || raw ? 'true' : 'false'};`, replaceOptions))
+			.pipe(replace('let debugKeys = 1;', `let debugKeys = ${roadroll ? 0 : 1};`, replaceOptions))
 			.pipe(gulpif(pwa, replace('service_worker', 'sw', replaceOptions)))
 			.pipe(replace('{VERSION}', version, replaceOptions))
 			.pipe(gulpif(!pwa, replace('function init', 'window.addEventListener("load",init);function init', replaceOptions)))
@@ -153,6 +154,7 @@ function app(callback) {
 		// Otherwise compile
 		src(scripts, { allowEmpty: true })
 			.pipe(replace('let _debug;', `let _debug = ${debug || raw ? 'true' : 'false'};`, replaceOptions))
+			.pipe(replace('let debugKeys = 1;', `let debugKeys = ${roadroll ? 0 : 1};`, replaceOptions))
 			.pipe(gulpif(pwa, replace('service_worker', 'sw', replaceOptions)))
 			.pipe(replace('{VERSION}', version, replaceOptions))
 			.pipe(gulpif(!pwa, replace('function init', 'window.addEventListener("load",init);function init', replaceOptions)))

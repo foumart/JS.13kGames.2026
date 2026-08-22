@@ -25,46 +25,47 @@ function encode(group, dest) {
 	}
 }
 
+const unitData = [
+	"fef776433edaec0c90541359215f8b9c6c44834", // color bank
+	"409", // unicorn idle
+	"409", // unicorn jump
+	"870", // leprechaun
+	"2c5", // hydra
+	"2ab", // serpent
+	"654", // merlin
+	"6b3", // fiona
+	"213", // random
+	"6b9", // bleys
+	"674", // caine
+	"J@@hV@`A|rG__`~_t_t_J@@hV@`G|r___@|OPCP@@T@`jBdjFiYZiZdjFP@AP@A@@@`EEuGn{[nij[TnF@^@PjFdvZYP[P]CdjNijZ}~ZdUFpjA`YMpdF`PE@UpPnqRqdjpx]rjjlZZLTPMD@M`Z@xkAxobd[JiZC[jM`iF`b@``@@Y@`BPAlnNkjzBY`PfA`bBXbI@z@P_CPsdfr^ZzdiaPfBPQAPP@@Y@PAPAh]Jdffnjnhij@Q@`QB"
+];
+
 const backgroundsData = [
-	"3091413d995500aa553b915122332233554488ccffffffffb2d1f0947357776655d262566d2a26ee88449898b9", // color bank
+	"3091413d995500aa553b9151808980acb9b3ffffffc1dffbb2d1f088ccffee8844d26256947357776655", // color bank
 	"0123", // grass
 	"4520", // swamp
-	"678e", // clouds
-	, // desert
-	"cbad", // volcano
-	"3dbe", // castle
-	"c4a5", // dungeon
-	"uaKYQgmqRXXvumKY]gmqR[yvTEmZIXi^TFPAIFdXRcIIddRR]Ebs@]sf]Qd{fYLsYfsLfYLsWu]]aXM^WtQQ"
+	"9687", // clouds
+	"bdca", // desert
+	"cbda", // volcano
+	"dabc", // castle
+	"c4d5", // dungeon
+	"uaKYQgmqRXXvumKY]gmqR[yvTEm^IX}^TGPAIFdXRcIIddRR]Ebs@]sf]Qd{fYLsYfsLfYLsWu]]aXM^WtQQ"
 ];
 
 const objectsData = [
-	"fd0dee776ffaabcfff554eeeeff3843333954430a579a", // color bank
-	"62a", // obstacle
-	"203", // coin
-	"571", // cloudX
-	"035", // sparkleA
-	"035", // sparkleB
-	"620", // castle
-	"1e4", // prison
-	, // tile 7
-	, // tile 8
-	"hJVYv{vyjztOH@nHinxZdAP@`ApB^{y^`CPB@BPAvKtg`A@B@@DP`KpO`KDPUTYYy[iZm^UUHLLHHLLHHLLH@APETUUUPEPEP@PAUEUUUEPA"
-];
-
-const unitData = [
-	"433651fef2159c6541f8bc90edac44359776834ec0ec7", // color bank
-	"d26", // unicorn idle
-	"d26", // unicorn jump
-	"3a2", // leprechaun
-	"17e", // merlin
-	"0c7", // hydra
-	"598", // fiona
-	"0b8", // random
-	"596", // bleys
-	"148", // julian
-	"0ce", // caine
-	"049", // serpent
-	"J@@hV@`A|rG__`~_t_t_J@@hV@`G|r___@|OPCP@@T@`jBdjFiYZiZdjFP@AP@A@@@@UpPnqPqdjpx]rjjLZZLTPMD@M`EEuG^{[[izZTnF@^@PjIdnfYpY`Z@xkAxobdZJiZCkjM`IF`H@TT@@Y@`BPAlnNkjzBY`PfA`bBXbI@z@P_CPsdfr^ZzdiaPfBPQAPP@PE@t_@t_CXgBiiIkj[ZfZPFDXd@@U@P_AP@`jAkjGhjZPQAPQAPP@PUFdYFijZ}~ZdUFpjA`YMpdF`PE"
+	"fffffafd0776554333deeabc", // color bank
+	"435", // obstacle
+	"321", // coin
+	"036", // cloudX
+	"210", // sparkleA
+	"210", // sparkleB
+	"432", // castle
+	"607", // prison
+	"254", // up
+	"254", // right
+	"254", // down
+	"254", // left
+	"hJVYv{vyjztOH@nHinxZdAP@pApC]ww]zkPC@BPAvKtg`A@B@@DP`KpO`KDPbHfYjZn[jZTUDLLDDLLDDLLDP@TAQDP@P@@@P@@AUE@AP@@@P@P@QDTAP@@@P@D@UED@P@@@"
 ];
 
 encode(backgroundsData, offscreenBitmaps);
@@ -73,6 +74,7 @@ encode(unitData, unitBitmaps);
 
 function palBmp(src, ref) {
 	ref = ref || "012";
+	if (ref.length != 4) while (ref.length < 7) ref += ref.length.toString(16);
 	if (!src.pals) src.pals = {};
 	if (src.pals[ref]) return src.pals[ref];
 	const bank = src.bank;

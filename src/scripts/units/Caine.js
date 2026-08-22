@@ -1,7 +1,7 @@
 class Caine extends Unit {
 
 	constructor(x, y) {
-		super(x, y, 1, 0, 9, 2, 9, 1, 2);
+		super(x, y, 1, 0, 9, 2, 9, 0, 1, 2);
 	}
 
 	moveRays() {

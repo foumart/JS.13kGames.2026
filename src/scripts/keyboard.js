@@ -1,6 +1,16 @@
+let debugKeys = 1; // 0 for release zip
+
 function onKeyDown(event) {
+	const k = event.keyCode;
+	if (debugKeys && k == 78) {
+		debugAdvance();
+		return;
+	}
+	if (debugKeys && k == 66 && !battleActive) {
+		debugSkipToBattle();
+		return;
+	}
 	if (showPick) {
-		const k = event.keyCode;
 		if (k == 37 || k == 65) movePickCursor(-1);
 		else if (k == 39 || k == 68) movePickCursor(1);
 		else if (k == 32) pickCursorUnit();
@@ -12,16 +22,16 @@ function onKeyDown(event) {
 		return;
 	}
 	if (showUpgrade) {
-		if (event.keyCode == 13 || event.keyCode == 32) afterBattleWin();
-		else if (event.keyCode == 82) {
+		if (k == 13 || k == 32) afterBattleWin();
+		else if (k == 82) {
 			skipObjective = 1;
 			resetBattle();
 		}
 		return;
 	}
 	if (showObjective) {
-		if (event.keyCode == 13 || event.keyCode == 32) dismissObjective();
-		else if (event.keyCode == 82) {
+		if (k == 13 || k == 32) dismissObjective();
+		else if (k == 82) {
 			skipObjective = 1;
 			if (battleActive) resetBattle();
 			else resetLevel();
@@ -29,7 +39,7 @@ function onKeyDown(event) {
 		return;
 	}
 	if (battleActive) {
-		if (event.keyCode == 82) { // R reset battle
+		if (k == 82) { // R reset battle
 			skipObjective = 1;
 			resetBattle();
 			return;
@@ -37,34 +47,28 @@ function onKeyDown(event) {
 
 		battleKey(event);
 	}
-	else if (event.keyCode == 78) { // N debug clear stage
-		debugClearLevel();
-	}
-	else if (event.keyCode == 66) { // B debug skip to battle
-		debugSkipToBattle();
-	}
-	else if (event.keyCode == 82) { // R reset current stage
+	else if (k == 82) { // R reset current stage
 		skipObjective = 1;
 		resetLevel();
 	}
-	else if (event.keyCode == 32) {
+	else if (k == 32) {
 		event.preventDefault();
 		if (showEnd && state == 2) nextLevel();
 		else fillNiche();
 	}
-	else if (event.keyCode == 13) {
+	else if (k == 13) {
 		if (showEnd && state == 2) nextLevel();
 	}
-	else if (event.keyCode == 38 || event.keyCode == 87) { // up / W
+	else if (k == 38 || k == 87) { // up / W
 		act(0, -1);
 	}
-	else if (event.keyCode == 40 || event.keyCode == 83) { // down / S
+	else if (k == 40 || k == 83) { // down / S
 		act(0, 1);
 	}
-	else if (event.keyCode == 37 || event.keyCode == 65) { // left / A
+	else if (k == 37 || k == 65) { // left / A
 		act(-1, 0);
 	}
-	else if (event.keyCode == 39 || event.keyCode == 68) { // right / D
+	else if (k == 39 || k == 68) { // right / D
 		act(1, 0);
 	}
 }

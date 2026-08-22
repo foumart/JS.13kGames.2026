@@ -59,8 +59,8 @@ function makeRandomLevel(slot) {
 	const progress = slot || 0;
 	const growRaw = progress < 3 ? 0 : (progress - 3) / 27;
 	const grow = growRaw > 1 ? 1 : growRaw;
-	const enemyMin = 5 + (progress * 5 / 30 | 0);
-	const enemyMax = 6 + (progress * 9 / 30 | 0);
+	const enemyMin = 6 + (progress * 5 / 30 | 0);
+	const enemyMax = progress < 6 ? 6 : 7 + (progress * 9 / 30 | 0);
 	let width;
 	let height;
 	let grid;
@@ -273,7 +273,7 @@ function fallbackLevel(slot) {
 	const exitY = 1;
 	grid[playerY][playerX] = "2";
 	grid[exitY][exitX] = "8";
-	const enemies = [[2, 3], [6, 3], [4, 4], [1, 5], [7, 5]];
+	const enemies = [[2, 3], [6, 3], [4, 4], [1, 5], [7, 5], [3, 2]];
 	for (let n = 0; n < enemies.length; n++) grid[enemies[n][1]][enemies[n][0]] = "1";
 	if (isBossStage(slot)) addBossCastle(grid, width, height, exitX, exitY, playerX, playerY);
 	jailEnemy(grid, enemies, slot);

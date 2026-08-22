@@ -21,6 +21,7 @@ let moveLog = []; // flushed enemy cells per forward move (for undo)
 let player;
 let moving = 0;
 let gameLoop;
+let time = 0;
 let pathCount = 0;
 let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
@@ -50,7 +51,7 @@ let leftoverKinds = [0, 0, 0];
 let leftUnitsThisLevel = [0, 0, 0];
 let leftGoldThisLevel = 0;
 let leftUnitConverted = 0;
-const leprechaunPalettes = ["3a6", "542", "c98", "069"]; // blue, green, red, pink
+const leprechaunPalettes = ["870", "8a0", "8b0", "890"]; // blue, green, red, pink
 let rescuedUnits = [];
 let deadUnits = [];
 let levelCaptives = [];
@@ -208,6 +209,15 @@ function lepKind(v) {
 
 function lepDying(v) {
 	return v > 3;
+}
+
+function anyDying() {
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (lepDying(enemies[y][x]) || rescueDying[y][x]) return 1;
+		}
+	}
+	return 0;
 }
 
 function lepAlive(v) {
@@ -500,7 +510,7 @@ function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 	const scale = size / tileWidth * unitScale;
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	const bounce = bounceSpeed && Math.sin(Date.now() * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
+	const bounce = bounceSpeed && Math.sin(time * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
 	drawPaletted(
 		bmp, leprechaunPalettes[(kind || 1) - 1],
 		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh
@@ -517,6 +527,24 @@ function drawUnitIcon(bmpIndex, cx, cy, size, pal) {
 	else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }
 
+function drawMoveArrows(size) {
+	if (moving || state != 1 || showObjective || showEnd) return;
+	const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+	const showGold = (time / 1000 | 0) % 2;
+	for (let i = 0; i < 4; i++) {
+		const dx = dirs[i][0];
+		const dy = dirs[i][1];
+		const nx = player.x + dx;
+		const ny = player.y + dy;
+		if (!puzzleMoveAt(nx, ny) || isPrevPath(nx, ny)) continue;
+		if (coins[ny][nx] && showGold) continue;
+		const bmp = objectBitmaps[7 + i];
+		const px = boardOffsetX + nx * size;
+		const py = boardOffsetY + ny * size;
+		gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, px, py, size, size);
+	}
+}
+
 function drawObjectiveScreen() {
 	if (!showObjective) return;
 	const size = cellSize || Math.min(width, height) / 12;
@@ -529,42 +557,46 @@ function drawObjectiveScreen() {
 	gameContext.fillStyle = "#fff";
 	gameContext.textAlign = "center";
 	gameContext.textBaseline = "middle";
-	gameContext.font = "bold " + fs + "px sans-serif";
 	if (battleActive) {
-		gameContext.fillText(battleTitle(), cx, cy - fs * 1.3);
-		gameContext.font = "bold " + (fs * 0.72 | 0) + "px sans-serif";
-		gameContext.fillText("Destroy all enemies", cx, cy + fs * 0.35);
+		txt(battleTitle(), cx, cy - fs * 1.7, fs);
+		txt("Destroy all enemies", cx, cy + fs * 0.7, fs * 0.72 | 0);
 	} else {
-		gameContext.fillText("W:" + worldNumber() + " S:" + shadowNumber() + " L:" + stageNumber(), cx, cy - fs * (stageCaptive ? 2.1 : 1.6));
-		drawObjectiveLine(cx, cy + fs * (stageCaptive ? -0.1 : 0.25), fs * 0.72 | 0, icon);
+		const lh = fs * 1.85;
+		const ic = icon * 1.2 | 0;
+		let y = height * 0.16;
+		txt("World: " + worldNumber(), cx, y, fs);
+		txt("Shadow: " + shadowNumber(), cx, y + lh, fs);
+		txt("Stage: " + stageNumber(), cx, y + lh * 2, fs);
+		const y4 = height * 0.68;
+		drawObjectiveParts(cx, y4, fs, ic, stageCaptive
+			? [{ text: "Rescue " }, { bmp: stageCaptive }, { text: " and proceed to " }, { sparkle: 1 }]
+			: [{ text: "Proceed to " }, { sparkle: 1 }]
+		);
 		if (stageCaptive) {
-			const ns = fs * 1.45 | 0;
-			gameContext.font = "900 " + ns + "px sans-serif";
 			gameContext.textAlign = "center";
 			gameContext.textBaseline = "middle";
 			gameContext.fillStyle = "#fff";
-			gameContext.fillText(unitNames[stageCaptive], cx, cy + fs * 2.2);
+			txt(unitNames[stageCaptive], cx, y4 + lh * 1.45, fs * 1.45 | 0);
+		} else {
+			const parts = [{ text: "Purify " }];
+			for (let k = 1; k <= 3; k++) {
+				const n = kindAlive(k);
+				if (!n) continue;
+				if (parts.length > 1) parts.push({ text: "  " });
+				parts.push({ lep: k });
+				parts.push({ text: "" + n });
+			}
+			if (parts.length > 1) drawObjectiveParts(cx, y4 + lh * 1.35, fs, ic, parts);
 		}
 	}
 }
 
-function drawObjectiveLine(cx, cy, fs, icon) {
-	const parts = [];
-	if (stageCaptive) {
-		parts.push({ text: "Rescue " });
-		parts.push({ bmp: stageCaptive });
-		parts.push({ text: " and proceed to " });
-		parts.push({ sparkle: 1 });
-	} else {
-		parts.push({ text: "Proceed to " });
-		parts.push({ sparkle: 1 });
-	}
-	gameContext.font = "bold " + fs + "px sans-serif";
-	const gap = icon * 0.15;
+function drawObjectiveParts(cx, cy, fs, icon, parts) {
+	const gap = icon * 0.2;
 	let total = 0;
 	const widths = [];
 	for (let i = 0; i < parts.length; i++) {
-		const w = parts[i].text ? gameContext.measureText(parts[i].text).width : icon + gap;
+		const w = parts[i].text ? txt(parts[i].text, null, 0, fs) : icon + gap;
 		widths.push(w);
 		total += w;
 	}
@@ -575,13 +607,15 @@ function drawObjectiveLine(cx, cy, fs, icon) {
 	for (let i = 0; i < parts.length; i++) {
 		const p = parts[i];
 		if (p.text) {
-			gameContext.fillText(p.text, x, cy);
+			txt(p.text, x, cy, fs);
 		} else if (p.sparkle) {
-			const sp = 3 + ((Date.now() / 180 | 0) % 2);
+			const sp = 3 + ((time / 180 | 0) % 2);
 			gameContext.drawImage(
 				objectBitmaps[sp], 0, 0, tileWidth, tileWidth,
 				x + gap / 2, cy - icon / 2, icon, icon
 			);
+		} else if (p.lep) {
+			drawLeprechaunSprite(x + gap / 2, cy - icon / 2, icon, 0, 0, 0, p.lep);
 		} else {
 			drawUnitIcon(p.bmp, x + (icon + gap) / 2, cy, icon);
 		}
@@ -750,6 +784,33 @@ function restartCampaign() {
 	resetLevel();
 }
 
+function debugAdvance() {
+	if (showPick) {
+		const need = Math.min(2, livingRescueCount());
+		for (let i = 0; i < rescuedUnits.length && battleParty.length < need; i++) {
+			if (!isDeadBmp(rescuedUnits[i]) && battleParty.indexOf(rescuedUnits[i]) < 0) {
+				battleParty.push(rescuedUnits[i]);
+			}
+		}
+		confirmParty();
+		return;
+	}
+	if (showUpgrade || showEnd && battleResult == 2) {
+		afterBattleWin();
+		return;
+	}
+	if (showObjective) {
+		dismissObjective();
+		return;
+	}
+	if (battleActive) {
+		if (!battleResult) battleFinish(2);
+		return;
+	}
+	if (showEnd && state == 2) nextLevel();
+	else debugClearLevel();
+}
+
 function debugClearLevel() {
 	if (state != 1 || moving || clearTimer || showObjective) return;
 	for (let y = 0; y < boardHeight; y++) {
@@ -811,7 +872,7 @@ function drawEdgeTiles(size, bmp) {
 			} else {
 				const period = 1400 + ((gx * 19 + gy * 11) % 10 + 10) % 10 * 180;
 				const phase = gx * 430 + gy * 710;
-				const sp = 3 + ((Date.now() + phase) / period | 0) % 2;
+				const sp = 3 + ((time + phase) / period | 0) % 2;
 				drawPaletted(objectBitmaps[sp], "9ab", px, py, size, size);
 			}
 		}
@@ -827,6 +888,8 @@ function drawBoard() {
 	const size = fitBoard(boardWidth, boardHeight);
 	portrait = height > width;
 	drawEdgeTiles(size, groundBmp());
+	rainbowPulse = anyDying();
+	scrollRainbow();
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
@@ -865,18 +928,20 @@ function drawBoard() {
 			} else if (castle[y][x]) {
 				gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (exits[y][x]) {
-				const sp = 3 + ((Date.now() / 180 | 0) + x + y) % 2;
+				const sp = 3 + ((time / 180 | 0) + x + y) % 2;
 				gameContext.drawImage(objectBitmaps[sp], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (coins[y][x]) {
-				const cs = size * 0.8;
-				const cox = px + (size - cs) / 2;
-				const coy = py + size - cs - size * 0.06;
-				gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
+				if (!puzzleMoveAt(x, y) || isPrevPath(x, y) || (time / 1000 | 0) % 2) {
+					const cs = size * 0.8;
+					const cox = px + (size - cs) / 2;
+					const coy = py + size - cs - size * 0.06;
+					gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
+				}
 			} else if (rescues[y][x]) {
 				if (!rescueDying[y][x]) {
 					gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
 				}
-				const bounce = rescueDying[y][x] && Math.sin(Date.now() * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
+				const bounce = rescueDying[y][x] && Math.sin(time * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
 				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2 - bounce, size * 0.9);
 				if (!rescueDying[y][x]) {
 					gameContext.drawImage(objectBitmaps[6], 0, 0, tileWidth, tileWidth, px, py, size, size);
@@ -895,11 +960,12 @@ function drawBoard() {
 
 	drawFlowingPath();
 	drawFillNiches();
+	drawMoveArrows(size);
 
 	player.resize();
 	player.draw();
 
-	drawUI(size);
+	if (!showObjective) drawUI(size);
 
 	if (showEnd && state > 1) {
 		gameContext.fillStyle = state == 2 ? "#103c" : "#0009";
@@ -910,8 +976,7 @@ function drawBoard() {
 		const cy = gameCanvas.height / 2;
 		const fs = Math.max(16, size * 0.55 | 0);
 		gameContext.fillStyle = "#fff";
-		gameContext.font = "bold " + fs + "px sans-serif";
-		gameContext.fillText(state == 2 ? "STAGE CLEAR!" : "STUCK - R", cx, cy - fs * 2.2);
+		txt(state == 2 ? "STAGE CLEAR!" : "STUCK - R", cx, cy - fs * 2.2, fs);
 
 		if (state == 2) {
 			const icon = Math.max(28, size * 0.7 | 0);
@@ -921,10 +986,9 @@ function drawBoard() {
 			for (let k = 0; k < 3; k++) {
 				drawLeprechaunSprite(lx, rowY, icon, 0.004, k, 0, k + 1);
 				gameContext.fillStyle = "#fff";
-				gameContext.font = "bold " + (fs * 0.55 | 0) + "px sans-serif";
 				gameContext.textAlign = "left";
 				gameContext.textBaseline = "middle";
-				gameContext.fillText("x" + leftUnitsThisLevel[k], lx + icon * 0.85, rowY + icon * 0.45);
+				txt("x" + leftUnitsThisLevel[k], lx + icon * 0.85, rowY + icon * 0.45, fs * 0.55 | 0);
 				lx += icon * 1.7;
 			}
 
@@ -933,30 +997,29 @@ function drawBoard() {
 				const cy2 = cy - fs * 0.72;
 				const gLabel = "x" + leftGoldThisLevel;
 				const cLabel = "x" + conv;
-				gameContext.font = "bold " + (fs * 0.5 | 0) + "px sans-serif";
-				const gw = gameContext.measureText(gLabel).width;
-				const aw = gameContext.measureText("→").width;
-				const cw = gameContext.measureText(cLabel).width;
+				const sz = fs * 0.5 | 0;
+				const gw = txt(gLabel, null, 0, sz);
+				const aw = txt("→", null, 0, sz);
+				const cw = txt(cLabel, null, 0, sz);
 				let x = cx - (sm + gw + sm + aw + sm + cw + 22) / 2;
 				gameContext.textAlign = "left";
 				gameContext.fillStyle = "#fff";
 				gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, x, cy2 - sm / 2, sm, sm);
 				x += sm + 2;
-				gameContext.fillText(gLabel, x, cy2);
+				txt(gLabel, x, cy2, sz);
 				x += gw + 8;
 				drawLeprechaunSprite(x, cy2 - sm / 2, sm, 0, 0, 0, 1);
 				x += sm + 4;
-				gameContext.fillText("→", x, cy2);
+				txt("→", x, cy2, sz);
 				x += aw + 4;
 				drawLeprechaunSprite(x, cy2 - sm / 2, sm, 0, 0, 0, 3);
 				x += sm + 2;
-				gameContext.fillText(cLabel, x, cy2);
+				txt(cLabel, x, cy2, sz);
 			}
 
 			gameContext.textAlign = "center";
-			gameContext.font = (fs * 0.4 | 0) + "px sans-serif";
 			gameContext.fillStyle = "#ffd";
-			gameContext.fillText("SCORE " + currentScore(), cx, cy - fs * (conv ? -0.05 : 0.15));
+			txt("SCORE " + currentScore(), cx, cy - fs * (conv ? -0.05 : 0.15), -(fs * 0.4 | 0));
 
 			const n = 1 + rescuedUnits.length;
 			let ix = cx - (n - 1) * icon * 0.7;
@@ -972,10 +1035,10 @@ function drawBoard() {
 				drawUnitIcon(rescuedUnits[i], ix, by, icon);
 			}
 		} else {
-			gameContext.font = (fs * 0.7 | 0) + "px sans-serif";
-			gameContext.fillText("SCORE " + currentScore() + "  MOVES " + moveCount, cx, cy - fs * 0.4);
+			txt("SCORE " + currentScore() + "  MOVES " + moveCount, cx, cy - fs * 0.4, -(fs * 0.7 | 0));
 		}
 	}
 
 	drawObjectiveScreen();
+	if (showObjective) drawUI(size);
 }

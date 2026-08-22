@@ -635,7 +635,7 @@ function getPosFromEvent(event) {
 	if (!cellSize) return null;
 	const x = Math.floor((event.clientX - boardOffsetX) / cellSize);
 	const y = Math.floor((event.clientY - boardOffsetY) / cellSize);
-	if (x < 0 || y < 0 || x >= battleWidth || y >= battleHeight) return null;
+	if (x < 0 || y < 0 || x >= (battleActive ? battleWidth : boardWidth) || y >= (battleActive ? battleHeight : boardHeight)) return null;
 	return {x, y};
 }
 
@@ -648,7 +648,11 @@ function battleClick(event) {
 		dismissObjective();
 		return;
 	}
-	if (!battleActive || battleResult) return;
+	if (!battleActive) {
+		puzzleClick(event);
+		return;
+	}
+	if (battleResult) return;
 	const edx = event.clientX - endTurnX;
 	const edy = event.clientY - endTurnY;
 	if (!battlePhase && !animating && edx * edx + edy * edy <= endTurnR * endTurnR) {

@@ -1,5 +1,9 @@
 let rainbowCanvas;
 let pathTrail = [];
+let rainbowPulse = 0;
+let rainbowAnim = 0;
+let rainbowStart = 0;
+let rainbowDone = 0;
 
 // N=1 E=2 S=4 W=8
 function dirMask(dx, dy) {
@@ -76,18 +80,45 @@ function buildRainbowBackdrop() {
 	rainbowCanvas = document.createElement("canvas");
 	rainbowCanvas.width = bw;
 	rainbowCanvas.height = bh;
-	const ctx = rainbowCanvas.getContext("2d");
-	const cycles = 7;
-	const denom = bw + bh - 2 || 1;
+	rainbowCanvas.ctx = rainbowCanvas.getContext("2d");
+	paintRainbow(0);
+}
 
+function paintRainbow(shift) {
+	const bw = rainbowCanvas.width;
+	const bh = rainbowCanvas.height;
+	const ctx = rainbowCanvas.ctx;
+	const denom = bw + bh - 2 || 1;
 	for (let y = 0; y < bh; y++) {
 		for (let x = 0; x < bw; x++) {
-			const t = (x + y) / denom;
-			const hue = (t * 360 * cycles) % 360;
-			ctx.fillStyle = "hsl(" + hue + ",85%,58%)";
+			ctx.fillStyle = "hsl(" + ((x + y + shift) / denom * 2520) % 360 + ",85%,58%)";
 			ctx.fillRect(x, y, 1, 1);
 		}
 	}
+}
+
+function scrollRainbow() {
+	if (!rainbowPulse) rainbowDone = 0;
+	if (rainbowPulse && !rainbowAnim && !rainbowDone) {
+		rainbowStart = time;
+		rainbowAnim = 1;
+		rainbowDone = 1;
+	}
+	if (!rainbowAnim) return;
+	const denom = rainbowCanvas.width + rainbowCanvas.height - 2 || 1;
+	const t = (time - rainbowStart) / 1000;
+	if (t >= 1) {
+		paintRainbow(0);
+		rainbowAnim = 0;
+	} else {
+		paintRainbow(t * denom / 7);
+	}
+}
+
+function pathInk(shift) {
+	return state == 2
+		? "hsl(" + ((shift == null ? time * 0.1 : shift) % 360) + ",85%,55%)"
+		: "hsl(120,85%,55%)";
 }
 
 function drawPurifiedTile(x, y) {
@@ -102,7 +133,7 @@ function drawPurifiedTile(x, y) {
 	);
 }
 
-// Rainbow along path - hue shift over time
+// Path trail: green while playing, rainbow when the stage is cleared
 function drawFlowingPath() {
 	const n = pathTrail.length;
 	if (!n) return;
@@ -111,7 +142,8 @@ function drawFlowingPath() {
 	const thick = w * 0.33;
 	const border = w * 0.12;
 	const band = w * 0.45;
-	const shift = Date.now() * 0.1;
+	const rainbow = state == 2;
+	const shift = time * 0.1;
 	const pts = [];
 
 	for (let i = 0; i < n; i++) {
@@ -129,14 +161,13 @@ function drawFlowingPath() {
 		gameContext.beginPath();
 		gameContext.arc(pts[0].x, pts[0].y, thick / 2 + border, 0, Math.PI * 2);
 		gameContext.fill();
-		gameContext.fillStyle = "hsl(" + (shift % 360) + ",85%,55%)";
+		gameContext.fillStyle = pathInk(shift);
 		gameContext.beginPath();
 		gameContext.arc(pts[0].x, pts[0].y, thick / 2, 0, Math.PI * 2);
 		gameContext.fill();
 		return;
 	}
 
-	// White border under the rainbow
 	gameContext.strokeStyle = "#fff";
 	gameContext.lineWidth = thick + border * 2;
 	gameContext.beginPath();
@@ -146,8 +177,19 @@ function drawFlowingPath() {
 	}
 	gameContext.stroke();
 
-	let s = 0;
 	gameContext.lineWidth = thick;
+	if (!rainbow) {
+		gameContext.strokeStyle = pathInk();
+		gameContext.beginPath();
+		gameContext.moveTo(pts[0].x, pts[0].y);
+		for (let i = 1; i < n; i++) {
+			gameContext.lineTo(pts[i].x, pts[i].y);
+		}
+		gameContext.stroke();
+		return;
+	}
+
+	let s = 0;
 	for (let i = 0; i < n - 1; i++) {
 		const a = pts[i];
 		const b = pts[i + 1];
@@ -174,7 +216,7 @@ function drawFillNiches() {
 	const w = cellSize;
 	const r = w * 0.19;
 	const border = w * 0.12;
-	const shift = Date.now() * 0.1;
+	const shift = time * 0.1;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (fillData[y][x] != 2 || (player.x == x && player.y == y)) continue;
