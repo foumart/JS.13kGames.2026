@@ -28,10 +28,11 @@ class Player {
 		const hopped = collectRescue(this.x, this.y);
 		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
 			extendPath(ox, oy, this.x, this.y, dx, dy);
-			collectCoin(this.x, this.y);
+			const gold = collectCoin(this.x, this.y);
 			moveCount ++;
 			const flushed = flushDyingEnemies();
 			if (hopped) flushed.push(hopped);
+			if (gold) flushed.push(gold);
 			checkCaptures(flushed);
 			moveLog.push(flushed);
 			moving = 0;

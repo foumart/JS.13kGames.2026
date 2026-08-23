@@ -1,4 +1,6 @@
-// taken from https://www.foumartgames.com/games/AnimalTactics/ (laser chess)
+// expanded on https://www.foumartgames.com/games/AnimalTactics/ (laser chess)
+// by Noncho Savov' 2020
+// All Rights reserved!
 let battleActive = 0;
 let battleUnits = [];
 let battleSelect = null;
@@ -16,6 +18,8 @@ let showUpgrade = 0;
 let battleParty = [];
 let pickCursor = 0;
 let upgradePicks = {};
+let upgradeCurUnit = 0;
+let upgradeCurOpt = 0;
 let menuHits = [];
 let battleKind = 0; // 1 regular, 2 boss
 
@@ -27,14 +31,6 @@ function startBattle() {
 	const skip = skipObjective;
 	skipObjective = 0;
 	battleActive = 1;
-	if (endTimer) {
-		clearTimeout(endTimer);
-		endTimer = 0;
-	}
-	if (clearTimer) {
-		clearTimeout(clearTimer);
-		clearTimer = 0;
-	}
 	hideEndButtons();
 	showEnd = 0;
 	showUpgrade = 0;
@@ -76,17 +72,14 @@ function startBattle() {
 		return;
 	}
 	spawnBattleParty();
-	if (!skip) {
-		showObjective = 1;
-		showObjectiveButtons();
-	}
+	showObjective = 1;
+	showObjectiveButtons();
 }
 
 function spawnBattleParty() {
-	battleUnits = [buffUnicorn(new Unicorn(4, 7))];
-	const spots = [[2, 7], [6, 7]];
+	battleUnits = [makeUnit(getUnitDefinition(UNITS[0][0]), 4, 7)];
 	for (let i = 0; i < battleParty.length && i < 2; i++) {
-		battleUnits.push(makeRescued(battleParty[i], spots[i][0], spots[i][1]));
+		battleUnits.push(makeUnit(getUnitDefinition(battleParty[i]), i ? 6 : 2, 7));
 	}
 	spawnEnemies();
 	spawnBattleRocks();
@@ -142,11 +135,11 @@ function pickCursorUnit() {
 	pickPartyBmp(rescuedUnits[pickCursor]);
 }
 
-function markBattleDead() {
+function markHeroesDead() {
 	for (let i = 0; i < battleUnits.length; i++) {
-		const u = battleUnits[i];
-		if (u.enemy || u.hero || u.hp > 0) continue;
-		if (deadUnits.indexOf(u.bmp) < 0) deadUnits.push(u.bmp);
+		const unit = battleUnits[i];
+		if (unit.enemy || unit.hero || unit.hp > 0) continue;
+		if (deadUnits.indexOf(unit.name) < 0) deadUnits.push(unit.name);
 	}
 }
 
@@ -159,8 +152,8 @@ function toggleParty(bmp) {
 function battleSurvivors() {
 	const list = [];
 	for (let i = 0; i < battleUnits.length; i++) {
-		const u = battleUnits[i];
-		if (u.hp > 0 && !u.enemy) list.push(u);
+		const unit = battleUnits[i];
+		if (unit.hp > 0 && !unit.enemy) list.push(unit);
 	}
 	return list;
 }
@@ -174,30 +167,72 @@ function battleRoster() {
 }
 
 function upgradeId(u) {
-	return u.hero ? 0 : u.bmp;
+	return u.hero ? 0 : u.name;
+}
+
+function upgradeKinds(unit) {
+	if (!unit || unit.hp <= 0) return [];
+	return unit.hero ? ["hp", "att"] : ["hp", "att"].concat(unit.lockRange ? [] : ["range"]).concat(unit.lockReach ? [] : ["reach"]);
+}
+
+function upgradeRows() {
+	const list = battleRoster();
+	const rows = [];
+	for (let i = 0; i < list.length; i++) {
+		const kinds = upgradeKinds(list[i]);
+		if (kinds.length) rows.push({u: list[i], id: upgradeId(list[i]), kinds});
+	}
+	return rows;
+}
+
+function defaultUpgradePicks() {
+	upgradePicks = {};
+	upgradeCurUnit = 0;
+	upgradeCurOpt = 0;
+	const rows = upgradeRows();
+	for (let i = 0; i < rows.length; i++) upgradePicks[rows[i].id] = "hp";
 }
 
 function setUpgrade(id, kind) {
 	upgradePicks[id] = upgradePicks[id] == kind ? 0 : kind;
+	const rows = upgradeRows();
+	for (let i = 0; i < rows.length; i++) {
+		if (rows[i].id != id) continue;
+		upgradeCurUnit = i;
+		const j = rows[i].kinds.indexOf(kind);
+		if (j >= 0) upgradeCurOpt = j;
+	}
 	redraw();
+}
+
+function moveUpgradeCursor(dx, dy) {
+	const rows = upgradeRows();
+	if (!rows.length) return;
+	upgradeCurUnit = (upgradeCurUnit + dy + rows.length) % rows.length;
+	const n = rows[upgradeCurUnit].kinds.length;
+	upgradeCurOpt = dx ? (upgradeCurOpt + dx + n) % n : Math.min(upgradeCurOpt, n - 1);
+	redraw();
+}
+
+function pickUpgradeCursor() {
+	const rows = upgradeRows();
+	const row = rows[upgradeCurUnit];
+	if (!row) return;
+	const kind = row.kinds[upgradeCurOpt];
+	if (kind) setUpgrade(row.id, kind);
 }
 
 function applyUpgradePicks() {
 	const list = battleSurvivors();
 	for (let i = 0; i < list.length; i++) {
-		const u = list[i];
-		const k = upgradePicks[upgradeId(u)];
+		const unit = list[i];
+		const k = upgradePicks[upgradeId(unit)];
 		if (!k) continue;
-		if (u.hero) {
-			if (k == "hp") uniMods[0] += 2;
-			else if (k == "att") uniMods[1] += 1;
-		} else {
-			const m = allyMod(u.bmp);
-			if (k == "hp") m[0] += 2;
-			else if (k == "att") m[1] += 1;
-			else if (k == "range") m[2] += 1;
-			else m[3] += 1;
-		}
+		const m = allyMod(unit.name);
+		if (k == "hp") m[0] += 2;
+		else if (k == "att") m[1] += 1;
+		else if (k == "range" && !unit.lockRange) m[2] += 1;
+		else if (k == "reach" && !unit.lockReach) m[3] += 1;
 	}
 }
 
@@ -220,22 +255,24 @@ function battleTitle() {
 
 function spawnEnemies() {
 	const cx = (battleWidth / 2) | 0;
+	const w = worldNumber();
+	const last = battleKind == 2 && levelIndex >= campaignLength - 1;
 	const taken = {};
+	const put = (u, x) => {
+		battleUnits.push(u);
+		taken[x] = 1;
+	};
 	if (battleKind == 2) {
-		if ((levelIndex / 9 | 0) == 0) {
-			battleUnits.push(new Hydra(cx, 0));
-			taken[cx] = 1;
-		} else {
-			battleUnits.push(new Serpent(cx, 0));
-			battleUnits.push(new Hydra(cx - 2, 0));
-			battleUnits.push(new Hydra(cx + 2, 0));
-			taken[cx] = 1;
-			taken[cx - 2] = 1;
-			taken[cx + 2] = 1;
+		if (w < 3) put(makeFoe(1, cx, 0, w), cx);
+		else {
+			put(makeFoe(2, cx, 0, last ? 4 : w - 2 > 3 ? 3 : w - 2), cx);
+			put(makeFoe(1, cx - 2, 0, last ? 4 : 3), cx - 2);
+			put(makeFoe(1, cx + 2, 0, last ? 4 : 3), cx + 2);
 		}
 	} else {
-		battleUnits.push(new Leprechaun(cx, 0, 4));
-		taken[cx] = 1;
+		put(makeFoe(0, cx, 0, 4), cx);
+		if (w > 1) put(makeFoe(1, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
+		if (w > 3) put(makeFoe(2, cx + 2, 0, w - 3 > 3 ? 3 : w - 3), cx + 2);
 	}
 	const queue = [];
 	for (let k = 0; k < 3; k++) {
@@ -257,7 +294,7 @@ function spawnEnemies() {
 		spots[j] = t;
 	}
 	for (let i = 0; i < n; i++) {
-		battleUnits.push(new Leprechaun(spots[i][0], spots[i][1], queue[i]));
+		battleUnits.push(makeFoe(0, spots[i][0], spots[i][1], queue[i]));
 	}
 }
 
@@ -327,7 +364,7 @@ function battleFinish(result) {
 	battleHints = [];
 	if (result == 2) {
 		showUpgrade = 1;
-		upgradePicks = {};
+		defaultUpgradePicks();
 	}
 	scheduleEndScreen();
 }

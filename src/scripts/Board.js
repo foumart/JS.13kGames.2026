@@ -10,7 +10,6 @@ let obstacles = [];
 let coins = [];
 let clouds = []; // 1 cross
 let exits = [];
-let castle = [];
 let rescues = []; // 0 empty, else unit bitmap index
 let pathData = [];
 let pathStep = [];
@@ -23,11 +22,11 @@ let moving = 0;
 let gameLoop;
 let time = 0;
 let pathCount = 0;
+
 let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
 let showObjective = 0;
 let skipObjective = 0;
-let endTimer = 0;
 let stageCaptive = 0;
 
 let levelIndex = 0;
@@ -40,7 +39,6 @@ let totalScore = 0;
 let scoreStart = 0;
 let scoreBanked = 0;
 let revealPlayerTile = 0;
-let clearTimer = 0;
 let endBtnWrap = null;
 let endNextBtn = null;
 let endRetryBtn = null;
@@ -51,17 +49,31 @@ let leftoverKinds = [0, 0, 0];
 let leftUnitsThisLevel = [0, 0, 0];
 let leftGoldThisLevel = 0;
 let leftUnitConverted = 0;
-const leprechaunPalettes = ["870", "8a0", "8b0", "890"]; // blue, green, red, pink
+let goldFlies = [];
 let rescuedUnits = [];
 let deadUnits = [];
 let levelCaptives = [];
 let rescueDying = [];
-let unitMods = {}; // bmp -> [hp, att, range, reach]
-let uniMods = [0, 0, 0, 0]; // hp, att, range, reach
-const rescueBmps = [11, 3, 12, 5, 6, 7, 8, 9, 13]; // Corwin, Merlin, Benedict, Fiona, Random, Bleys, Julian, Caine, Gerard
-const unitNames = {11:"Corwin",3:"Merlin",12:"Benedict",5:"Fiona",6:"Random",7:"Bleys",8:"Julian",9:"Caine",13:"Gerard"};
-const unitSprites = {11:9,12:8,13:6}; // Corwin←Caine, Benedict←Julian, Gerard←Random
-const unitPalettes = {11:"2b0",12:"b23",13:"a3c"};
+let unitMods = {}; // name -> [hp, att, range, reach]
+const enemyPalettes = [
+	["980", "9a0", "9b0", "910"], // leprechaun: blue, green, red, pink
+	["4c6", "4a7", "4b1", "41c"], // hydra
+	["4ab", "48c", "41b", "4c1"]  // serpent
+];
+const UNITS = [
+	// name, hp, dmg, move, atk, bmp [pal, range, reach] - move/atk: 0:* 1:+ 2:x 3:knight
+	["Unicorn",  5, 2, 3, 1, 0],
+	["Corwin",   9, 2, 0, 3, 9, "4b0", 0],
+	["Merlin",   5, 3, 0, 1, 5],
+	["Benedict", 10,3, 2, 0, 8, "b45", 1, 0],
+	["Fiona",    3, 2, 0, 2, 6],
+	["Random",   8, 2, 1, 1, 7],
+	["Bleys",    7, 2, 1, 1, 8],
+	["Julian",   7, 2, 2, 0, 6, "c62"],
+	["Caine",    9, 2, 2, 2, 9],
+	["Gerard",   12,3, 1, 1, 7, "a5c", 1, 0],
+	["Eric",     10,2, 0, 1, 7, "ac5", 0]
+];
 
 const tileWidth = 6;
 const unitScale = 0.665;
@@ -81,7 +93,6 @@ function initBoard() {
 	coins = [];
 	clouds = [];
 	exits = [];
-	castle = [];
 	rescues = [];
 	stageCaptive = 0;
 	unrescueLevel(levelIndex);
@@ -104,20 +115,14 @@ function initBoard() {
 	leftUnitsThisLevel = [0, 0, 0];
 	leftGoldThisLevel = 0;
 	leftUnitConverted = 0;
+	goldFlies = [];
 	revealPlayerTile = 0;
 	state = 1;
 	showEnd = 0;
+	battleResult = 0;
 	showObjective = skipObjective ? 0 : 1;
 	skipObjective = 0;
 	moving = 0;
-	if (endTimer) {
-		clearTimeout(endTimer);
-		endTimer = 0;
-	}
-	if (clearTimer) {
-		clearTimeout(clearTimer);
-		clearTimer = 0;
-	}
 	hideEndButtons();
 
 	let startX = 0;
@@ -131,7 +136,6 @@ function initBoard() {
 		coins[y] = [];
 		clouds[y] = [];
 		exits[y] = [];
-		castle[y] = [];
 		rescues[y] = [];
 		rescueDying[y] = [];
 		pathData[y] = [];
@@ -144,7 +148,6 @@ function initBoard() {
 			coins[y][x] = c == "4" ? 1 : 0;
 			clouds[y][x] = c == "7" ? 1 : 0;
 			exits[y][x] = c == "8" ? 1 : 0;
-			castle[y][x] = c == "9" ? 1 : 0;
 			rescues[y][x] = 0;
 			if (c >= "A" && c <= "Z") {
 				let bmp = levelCaptives[levelIndex][capIdx];
@@ -175,11 +178,11 @@ function initBoard() {
 }
 
 function isPassable(x, y, dx, dy) {
-	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || castle[y][x] || fillData[y][x]) return 0;
+	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || fillData[y][x] == 1) return 0;
 	if (rescues[y][x] && !rescueDying[y][x]) return 0;
-	const c = clouds[y][x];
+	const cross = clouds[y][x] || fillData[y][x] == 2;
 	if (pathStep[y][x]) {
-		if (c) {
+		if (cross) {
 			const pd = pathData[y][x];
 			const horiz = pd & 10; // E|W
 			const vert = pd & 5; // N|S
@@ -191,7 +194,7 @@ function isPassable(x, y, dx, dy) {
 	return 1;
 }
 
-function fillNiche() {
+function useSparkAbility() {
 	if (battleActive || moving || showEnd || showObjective || state != 1) return;
 	if (fillCharges < 1) return;
 	const x = player.x;
@@ -203,28 +206,28 @@ function fillNiche() {
 	redraw();
 }
 
-function lepKind(v) {
+function leprechaunType(v) {
 	return v > 3 ? v - 3 : v;
 }
 
-function lepDying(v) {
+function leprechaunDying(v) {
 	return v > 3;
 }
 
 function anyDying() {
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (lepDying(enemies[y][x]) || rescueDying[y][x]) return 1;
+			if (leprechaunDying(enemies[y][x]) || rescueDying[y][x]) return 1;
 		}
 	}
 	return 0;
 }
 
-function lepAlive(v) {
+function isLeprechaunAlive(v) {
 	return v > 0 && v < 4;
 }
 
-function kindAlive(k) {
+function countAliveLeprechaunsOfKind(k) {
 	let n = 0;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
@@ -234,28 +237,52 @@ function kindAlive(k) {
 	return n;
 }
 
-function countLeftovers() {
-	leftGoldThisLevel = coins.flat().reduce((n, c) => n + c, 0);
-	leftUnitConverted = 0;
-	let gold = leftGoldThisLevel;
-	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
-			if (enemies[y][x] != 1 || !gold) continue;
-			enemies[y][x] = 3;
-			leftUnitConverted ++;
-			gold --;
-		}
-	}
+function countEnemiesLeft() {
 	leftTotalThisLevel = 0;
 	leftUnitsThisLevel = [0, 0, 0];
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			const v = enemies[y][x];
-			if (!lepAlive(v)) continue;
+			if (!isLeprechaunAlive(v)) continue;
 			leftTotalThisLevel ++;
 			leftUnitsThisLevel[v - 1] ++;
 		}
 	}
+}
+
+function countEnemiesAndCoinsLeft() {
+	const golds = [];
+	const leps = [];
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (coins[y][x]) golds.push([x, y]);
+			if (enemies[y][x] == 1) leps.push([x, y]);
+		}
+	}
+	leftGoldThisLevel = golds.length;
+	leftUnitConverted = Math.min(golds.length, leps.length);
+	goldFlies = [];
+	for (let i = 0; i < leftUnitConverted; i++) {
+		const g = golds[i];
+		const l = leps[i];
+		coins[g[1]][g[0]] = 0;
+		const fly = { x: g[0], y: g[1] };
+		goldFlies.push(fly);
+		TweenFX.to(fly, 60, { x: l[0], y: l[1] }, ()=>{}, () => {
+			enemies[l[1]][l[0]] = 3;
+			const k = goldFlies.indexOf(fly);
+			if (k >= 0) goldFlies.splice(k, 1);
+			if (!goldFlies.length) {
+				countEnemiesLeft();
+				scheduleEndScreen();
+			}
+		}, -9);
+	}
+	if (!goldFlies.length) countEnemiesLeft();
+}
+
+function waitDelay(callback, frames = 30) {
+	TweenFX.to({}, frames, {}, ()=>{}, callback);
 }
 
 function hasMove() {
@@ -269,10 +296,24 @@ function hasMove() {
 function reviveDyingEnemies() {
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (lepDying(enemies[y][x])) enemies[y][x] = lepKind(enemies[y][x]);
-			rescueDying[y][x] = 0;
+			if (leprechaunDying(enemies[y][x])) {
+				enemies[y][x] = leprechaunType(enemies[y][x]);
+				fillData[y][x] = 0;
+			}
+			if (rescueDying[y][x]) {
+				rescueDying[y][x] = 0;
+				fillData[y][x] = 0;
+			}
 		}
 	}
+}
+
+function isJailed(x, y) {
+	return rescues[y][x] && !rescueDying[y][x];
+}
+
+function inGroup(x, y) {
+	return isLeprechaunAlive(enemies[y][x]) || isJailed(x, y);
 }
 
 function getClusters() {
@@ -285,7 +326,7 @@ function getClusters() {
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (!lepAlive(enemies[y][x]) || seen[y][x]) continue;
+			if (!inGroup(x, y) || seen[y][x]) continue;
 			const cluster = [];
 			const stack = [[x, y]];
 			seen[y][x] = 1;
@@ -298,7 +339,7 @@ function getClusters() {
 				for (let i = 0; i < 4; i++) {
 					const nx = cx + dirs[i][0];
 					const ny = cy + dirs[i][1];
-					if (inBounds(nx, ny) && lepAlive(enemies[ny][nx]) && !seen[ny][nx]) {
+					if (inBounds(nx, ny) && inGroup(nx, ny) && !seen[ny][nx]) {
 						seen[ny][nx] = 1;
 						stack.push([nx, ny]);
 					}
@@ -319,7 +360,7 @@ function isClusterSurrounded(cluster) {
 			const nx = x + dirs[d][0];
 			const ny = y + dirs[d][1];
 			if (!inBounds(nx, ny)) continue;
-			if (obstacles[ny][nx] || castle[ny][nx]) continue; // wall seals this side
+			if (obstacles[ny][nx] || rescues[ny][nx]) continue; // wall / cell seals this side
 			let inCluster = 0;
 			for (let j = 0; j < cluster.length; j++) {
 				if (cluster[j][0] == nx && cluster[j][1] == ny) inCluster = 1;
@@ -333,18 +374,24 @@ function isClusterSurrounded(cluster) {
 
 function markClusterDying(cluster) {
 	for (let i = 0; i < cluster.length; i++) {
-		if (lepAlive(enemies[cluster[i][1]][cluster[i][0]])) {
-			enemies[cluster[i][1]][cluster[i][0]] += 3;
-		}
+		const x = cluster[i][0];
+		const y = cluster[i][1];
+		if (isLeprechaunAlive(enemies[y][x])) enemies[y][x] += 3;
+		if (rescues[y][x]) rescueDying[y][x] = 1;
+		fillData[y][x] = 1;
 	}
+	rainbowDone = 0;
+	rainbowAnim = 0;
+	rainbowWait = 0;
+	paintRainbow(0);
 }
 
 function flushDyingEnemies() {
 	const flushed = [];
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (lepDying(enemies[y][x])) {
-				const kind = lepKind(enemies[y][x]);
+			if (leprechaunDying(enemies[y][x])) {
+				const kind = leprechaunType(enemies[y][x]);
 				enemies[y][x] = 0;
 				fillData[y][x] = 1;
 				enemiesCleared ++;
@@ -368,6 +415,9 @@ function restoreFlushed(flushed) {
 			rescueDying[y][x] = 0;
 			const k = rescuedUnits.indexOf(bmp);
 			if (k >= 0) rescuedUnits.splice(k, 1);
+		} else if (flushed[i][3] < 0) {
+			coins[y][x] = 1;
+			coinsCollected --;
 		} else {
 			enemies[y][x] = flushed[i][3] || 1;
 			enemiesCleared --;
@@ -376,10 +426,14 @@ function restoreFlushed(flushed) {
 }
 
 function collectCoin(x, y) {
-	if (coins[y][x]) {
-		coins[y][x] = 0;
-		coinsCollected ++;
-	}
+	if (!coins[y][x]) return 0;
+	coins[y][x] = 0;
+	coinsCollected ++;
+	return [x, y, 0, -1];
+}
+
+function drawSparkle(x, y, s, n) {
+	gameContext.drawImage(objectBitmaps[3 + (n & 1)], 0, 0, tileWidth, tileWidth, x, y, s, s);
 }
 
 function pickRescueBmp() {
@@ -390,11 +444,11 @@ function pickRescueBmp() {
 		for (let i = 0; i < placed.length; i++) taken[placed[i]] = 1;
 	}
 	const pool = [];
-	for (let i = 0; i < rescueBmps.length; i++) {
-		if (!taken[rescueBmps[i]]) pool.push(rescueBmps[i]);
+	for (let i = 1; i < UNITS.length; i++) {
+		if (!taken[UNITS[i][0]]) pool.push(UNITS[i][0]);
 	}
-	const list = pool.length ? pool : rescueBmps;
-	return list[Math.random() * list.length | 0];
+	if (!pool.length) for (let i = 1; i < UNITS.length; i++) pool.push(UNITS[i][0]);
+	return pool[Math.random() * pool.length | 0];
 }
 
 function unrescueLevel(i) {
@@ -406,38 +460,43 @@ function unrescueLevel(i) {
 	}
 }
 
-function allyMod(bmp) {
-	if (!unitMods[bmp]) unitMods[bmp] = [0, 0, 0, 0];
-	return unitMods[bmp];
+function allyMod(name) {
+	if (!unitMods[name]) unitMods[name] = [0, 0, 0, 0];
+	return unitMods[name];
 }
 
-function makeRescued(bmp, x, y) {
-	let u;
-	if (bmp == 11) u = new Corwin(x, y);
-	else if (bmp == 3) u = new Merlin(x, y);
-	else if (bmp == 12) u = new Benedict(x, y);
-	else if (bmp == 5) u = new Fiona(x, y);
-	else if (bmp == 6) u = new Random(x, y);
-	else if (bmp == 7) u = new Bleys(x, y);
-	else if (bmp == 8) u = new Julian(x, y);
-	else if (bmp == 13) u = new Gerard(x, y);
-	else u = new Caine(x, y);
-	const m = allyMod(bmp);
-	u.hpMax += m[0];
-	u.hp = u.hpMax;
-	u.dmg += m[1];
-	u.range += m[2];
-	u.reach += m[3];
-	return u;
+function getUnitDefinition(name) {
+	for (let i = 0; i < UNITS.length; i++) {
+		if (UNITS[i][0] == name) return UNITS[i];
+	}
 }
 
-function buffUnicorn(u) {
-	u.hpMax += uniMods[0];
-	u.hp = u.hpMax;
-	u.dmg += uniMods[1];
-	u.range += uniMods[2];
-	u.reach += uniMods[3];
-	return u;
+function makeUnit(data, x, y, type) {
+	const unit = new Unit(data, x, y, type);
+	if (!unit.enemy) {
+		const mod = allyMod(data[0]);
+		unit.hpMax += mod[0];
+		unit.hp = unit.hpMax;
+		unit.dmg += mod[1];
+		if (!unit.lockRange) unit.range += mod[2];
+		if (!unit.lockReach) unit.reach += mod[3];
+	}
+	return unit;
+}
+
+function makeFoe(kind, x, y, l) {
+	l = l ? l > 4 ? 4 : l : 1;
+	return makeUnit([
+		,
+		kind ? kind > 1 ? 6 + l * 4 : l * 3 : l,
+		kind ? 1 + l : 1 + (l > 2),
+		+!kind,
+		2 * !kind,
+		2 + kind,
+		enemyPalettes[kind][l - 1],
+		1 + (kind > 1),
+		1 + (!kind && l > 3)
+	], x, y, kind ? 4 : 3);
 }
 
 function collectRescue(x, y) {
@@ -453,7 +512,7 @@ function collectRescue(x, y) {
 function remainingRescue() {
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (rescues[y][x]) return 1;
+			if (isJailed(x, y)) return 1;
 		}
 	}
 	return 0;
@@ -472,11 +531,17 @@ function stageNumber() {
 }
 
 function groundBmp() {
-	return offscreenBitmaps[(worldNumber() - 1) % offscreenBitmaps.length];
+	return backgroundsBitmaps[worldNumber() % backgroundsBitmaps.length];
+}
+
+function isPerfect() {
+	if (leftTotalThisLevel) return 0;
+	if (stageCaptive && rescuedUnits.indexOf(stageCaptive) < 0) return 0;
+	return 1;
 }
 
 function stageScore() {
-	return enemiesCleared * 100 + coinsCollected * 50 + (enemiesCleared >= enemiesTotal ? 1000 : 0);
+	return enemiesCleared * 100 + coinsCollected * 50 + (state == 2 && isPerfect() ? 1000 : 0);
 }
 
 function currentScore() {
@@ -489,20 +554,20 @@ function calcLevelScore() {
 }
 
 function scheduleEndScreen() {
-	if (endTimer) return;
-	calcLevelScore();
-	if (state == 2) {
-		fillCharges ++;
-		if (!scoreBanked) {
-			totalScore += levelScore;
-			scoreBanked = 1;
+	waitDelay(()=> {
+		calcLevelScore();
+		if (state == 2) {
+			fillCharges ++;
+			if (!scoreBanked) {
+				totalScore += levelScore;
+				scoreBanked = 1;
+			}
 		}
-	}
-	endTimer = setTimeout(() => {
+
 		showEnd = 1;
 		showEndButtons();
 		redraw();
-	}, 1000);
+	});
 }
 
 function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
@@ -512,18 +577,19 @@ function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 	const dh = bmp.height * scale;
 	const bounce = bounceSpeed && Math.sin(time * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
 	drawPaletted(
-		bmp, leprechaunPalettes[(kind || 1) - 1],
-		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh
+		bmp, enemyPalettes[0][(kind || 1) - 1],
+		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh, gameContext
 	);
 }
 
-function drawUnitIcon(bmpIndex, cx, cy, size, pal) {
-	const bmp = unitBitmaps[unitSprites[bmpIndex] || bmpIndex];
-	pal = pal || unitPalettes[bmpIndex];
+function drawUnitIcon(src, cx, cy, size, pal) {
+	const d = !src || src.bgr != null ? src : getUnitDefinition(src);
+	const bmp = unitBitmaps[d && d.bgr != null ? d.bgr : d ? d[5] : 0];
+	pal = pal || (d && (d.pal || typeof d[6] == "string" && d[6]));
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	if (pal) drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh);
+	if (pal) drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, gameContext);
 	else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }
 
@@ -537,19 +603,31 @@ function drawMoveArrows(size) {
 		const nx = player.x + dx;
 		const ny = player.y + dy;
 		if (!puzzleMoveAt(nx, ny) || isPrevPath(nx, ny)) continue;
-		if (coins[ny][nx] && showGold) continue;
-		const bmp = objectBitmaps[7 + i];
+		if ((coins[ny][nx] || exits[ny][nx]) && showGold) continue;
+		const bmp = objectBitmaps[6 + i];
 		const px = boardOffsetX + nx * size;
 		const py = boardOffsetY + ny * size;
 		gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, px, py, size, size);
 	}
 }
 
+function drawGoldFlies(size) {
+	const n = goldFlies.length;
+	if (!n) return;
+	const cs = size * 0.8;
+	for (let i = 0; i < n; i++) {
+		const f = goldFlies[i];
+		const px = boardOffsetX + f.x * size + (size - cs) / 2;
+		const py = boardOffsetY + f.y * size + size - cs - size * 0.06;
+		gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, cs, cs);
+	}
+}
+
 function drawObjectiveScreen() {
 	if (!showObjective) return;
 	const size = cellSize || Math.min(width, height) / 12;
-	const fs = Math.max(18, size * 0.48 | 0);
-	const icon = Math.max(32, size * 0.9 | 0);
+	const fs = Math.max(18, size /2);
+	const icon = Math.max(32, size * 0.9);
 	const cx = width / 2;
 	const cy = height / 2;
 	gameContext.fillStyle = "#103c";
@@ -559,35 +637,19 @@ function drawObjectiveScreen() {
 	gameContext.textBaseline = "middle";
 	if (battleActive) {
 		txt(battleTitle(), cx, cy - fs * 1.7, fs);
-		txt("Destroy all enemies", cx, cy + fs * 0.7, fs * 0.72 | 0);
+		txt("Destroy all enemies", cx, cy + fs * 0.7, fs * 0.7);
 	} else {
-		const lh = fs * 1.85;
-		const ic = icon * 1.2 | 0;
-		let y = height * 0.16;
-		txt("World: " + worldNumber(), cx, y, fs);
-		txt("Shadow: " + shadowNumber(), cx, y + lh, fs);
-		txt("Stage: " + stageNumber(), cx, y + lh * 2, fs);
-		const y4 = height * 0.68;
-		drawObjectiveParts(cx, y4, fs, ic, stageCaptive
-			? [{ text: "Rescue " }, { bmp: stageCaptive }, { text: " and proceed to " }, { sparkle: 1 }]
-			: [{ text: "Proceed to " }, { sparkle: 1 }]
-		);
-		if (stageCaptive) {
-			gameContext.textAlign = "center";
-			gameContext.textBaseline = "middle";
-			gameContext.fillStyle = "#fff";
-			txt(unitNames[stageCaptive], cx, y4 + lh * 1.45, fs * 1.45 | 0);
-		} else {
-			const parts = [{ text: "Purify " }];
-			for (let k = 1; k <= 3; k++) {
-				const n = kindAlive(k);
-				if (!n) continue;
-				if (parts.length > 1) parts.push({ text: "  " });
-				parts.push({ lep: k });
-				parts.push({ text: "" + n });
-			}
-			if (parts.length > 1) drawObjectiveParts(cx, y4 + lh * 1.35, fs, ic, parts);
-		}
+		const lh = fs * 2;
+		const ic = icon * 1.2;
+		let y = height / 4;
+		txt("World: " + worldNumber() + "-" + shadowNumber(), cx, y, fs);
+		txt("Stage: " + stageNumber(), cx, y + lh, fs);
+		if (stageCaptive) drawObjectiveParts(cx, y*2, fs, ic, [
+			{ text: "Rescue " }, { bmp: stageCaptive }, { text: stageCaptive }
+		]);
+		drawObjectiveParts(cx + ic * 0.4, y*2 + lh * (stageCaptive ? 1.35 : 0.55), fs, ic, [
+			{ text: "Proceed to " }, { sparkle: 1 }
+		]);
 	}
 }
 
@@ -609,13 +671,7 @@ function drawObjectiveParts(cx, cy, fs, icon, parts) {
 		if (p.text) {
 			txt(p.text, x, cy, fs);
 		} else if (p.sparkle) {
-			const sp = 3 + ((time / 180 | 0) % 2);
-			gameContext.drawImage(
-				objectBitmaps[sp], 0, 0, tileWidth, tileWidth,
-				x + gap / 2, cy - icon / 2, icon, icon
-			);
-		} else if (p.lep) {
-			drawLeprechaunSprite(x + gap / 2, cy - icon / 2, icon, 0, 0, 0, p.lep);
+			drawSparkle(x + gap / 2, cy - icon / 2, icon, time / 180);
 		} else {
 			drawUnitIcon(p.bmp, x + (icon + gap) / 2, cy, icon);
 		}
@@ -628,11 +684,6 @@ function checkCaptures(flushAcc) {
 	for (let i = 0; i < clusters.length; i++) {
 		if (isClusterSurrounded(clusters[i])) markClusterDying(clusters[i]);
 	}
-	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
-			if (rescues[y][x] && isClusterSurrounded([[x, y]])) rescueDying[y][x] = 1;
-		}
-	}
 
 	if (exits[player.y][player.x] && !remainingRescue()) {
 		if (flushAcc) {
@@ -641,10 +692,10 @@ function checkCaptures(flushAcc) {
 		} else {
 			flushDyingEnemies();
 		}
-		countLeftovers();
+		countEnemiesAndCoinsLeft();
 		revealPlayerTile = 1;
 		state = 2;
-		scheduleEndScreen();
+		if (!goldFlies.length) scheduleEndScreen();
 		return;
 	}
 
@@ -684,7 +735,13 @@ function ensureEndButtons() {
 function showEndButtons() {
 	ensureEndButtons();
 	endRetryBtn.style.display = "block";
-	endRetryBtn.onclick = () => { skipObjective = 1; battleActive ? resetBattle() : resetLevel(); };
+	endRetryBtn.onclick = () => {
+		if (battleActive) resetBattle();
+		else {
+			skipObjective = 1;
+			resetLevel();
+		}
+	};
 	endNextBtn.style.opacity = "1";
 	endNextBtn.onclick = battleActive ? afterBattleWin : nextLevel;
 	endNextBtn.textContent = battleActive
@@ -735,7 +792,7 @@ function nextLevel() {
 
 function afterBattleWin() {
 	applyUpgradePicks();
-	markBattleDead();
+	markHeroesDead();
 	leftoverEnemies = 0;
 	leftTotalThisLevel = 0;
 	leftoverKinds = [0, 0, 0];
@@ -748,6 +805,7 @@ function afterBattleWin() {
 	hideEndButtons();
 	battleKind = 0;
 	battleActive = 0;
+	battleResult = 0;
 	scoreStart = totalScore;
 	if (levelIndex < campaignLength - 1) {
 		levelIndex ++;
@@ -769,7 +827,6 @@ function restartCampaign() {
 	levelCaptives = [];
 	generatedLevels = [];
 	unitMods = {};
-	uniMods = [0, 0, 0, 0];
 	battleParty = [];
 	battleKind = 0;
 	battleActive = 0;
@@ -785,34 +842,63 @@ function restartCampaign() {
 }
 
 function debugAdvance() {
-	if (showPick) {
-		const need = Math.min(2, livingRescueCount());
-		for (let i = 0; i < rescuedUnits.length && battleParty.length < need; i++) {
-			if (!isDeadBmp(rescuedUnits[i]) && battleParty.indexOf(rescuedUnits[i]) < 0) {
-				battleParty.push(rescuedUnits[i]);
+	if (battleActive) {
+		if (showUpgrade || battleResult == 2) {
+			afterBattleWin();
+			return;
+		}
+		if (showPick) {
+			const need = Math.min(2, livingRescueCount());
+			for (let i = 0; i < rescuedUnits.length && battleParty.length < need; i++) {
+				if (!isDeadBmp(rescuedUnits[i]) && battleParty.indexOf(rescuedUnits[i]) < 0) {
+					battleParty.push(rescuedUnits[i]);
+				}
+			}
+			confirmParty();
+		}
+		showObjective = 0;
+		hideEndButtons();
+		for (let i = 0; i < battleUnits.length; i++) {
+			if (battleUnits[i].enemy) battleUnits[i].hp = 0;
+		}
+		battleFinish(2);
+		return;
+	}
+	if (showEnd && state == 2) {
+		nextLevel();
+		return;
+	}
+	if (moving) return;
+	showObjective = 0;
+	hideEndButtons();
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (enemies[y][x]) {
+				enemies[y][x] = 0;
+				fillData[y][x] = 1;
+			}
+			if (coins[y][x]) {
+				coins[y][x] = 0;
+				coinsCollected ++;
+			}
+			const k = rescues[y][x];
+			if (k) {
+				rescues[y][x] = 0;
+				rescueDying[y][x] = 0;
+				fillData[y][x] = 1;
+				if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
 			}
 		}
-		confirmParty();
-		return;
 	}
-	if (showUpgrade || showEnd && battleResult == 2) {
-		afterBattleWin();
-		return;
-	}
-	if (showObjective) {
-		dismissObjective();
-		return;
-	}
-	if (battleActive) {
-		if (!battleResult) battleFinish(2);
-		return;
-	}
-	if (showEnd && state == 2) nextLevel();
-	else debugClearLevel();
+	enemiesCleared = enemiesTotal;
+	countEnemiesAndCoinsLeft();
+	revealPlayerTile = 1;
+	state = 2;
+	if (!goldFlies.length) scheduleEndScreen();
 }
 
 function debugClearLevel() {
-	if (state != 1 || moving || clearTimer || showObjective) return;
+	if (state != 1 || moving || showObjective) return;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (enemies[y][x]) {
@@ -822,17 +908,18 @@ function debugClearLevel() {
 		}
 	}
 	enemiesCleared = enemiesTotal;
-	countLeftovers();
+	countEnemiesAndCoinsLeft();
 	revealPlayerTile = 1;
 	state = 2;
-	scheduleEndScreen();
+	if (!goldFlies.length) scheduleEndScreen();
 	drawBoard();
 }
 
 function debugSkipToBattle() {
-	if (moving || clearTimer) return;
+	if (moving) return;
 	rescuedUnits = [];
-	const pool = rescueBmps.slice();
+	const pool = [];
+	for (let i = 0; i < UNITS.length; i++) pool.push(UNITS[i][0]);
 	for (let i = 0; i < 4 && pool.length; i++) {
 		const j = Math.random() * pool.length | 0;
 		rescuedUnits.push(pool.splice(j, 1)[0]);
@@ -872,8 +959,7 @@ function drawEdgeTiles(size, bmp) {
 			} else {
 				const period = 1400 + ((gx * 19 + gy * 11) % 10 + 10) % 10 * 180;
 				const phase = gx * 430 + gy * 710;
-				const sp = 3 + ((time + phase) / period | 0) % 2;
-				drawPaletted(objectBitmaps[sp], "9ab", px, py, size, size);
+				drawPaletted(objectBitmaps[3 + ((time + phase) / period & 1)], "543", px, py, size, size, gameContext);
 			}
 		}
 	}
@@ -925,11 +1011,10 @@ function drawBoard() {
 
 			if (obstacles[y][x]) {
 				gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
-			} else if (castle[y][x]) {
-				gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else if (exits[y][x]) {
-				const sp = 3 + ((time / 180 | 0) + x + y) % 2;
-				gameContext.drawImage(objectBitmaps[sp], 0, 0, tileWidth, tileWidth, px, py, size, size);
+				if (!puzzleMoveAt(x, y) || isPrevPath(x, y) || (time / 1000 | 0) % 2) {
+					drawSparkle(px, py, size, (time / 180 | 0) + x + y);
+				}
 			} else if (coins[y][x]) {
 				if (!puzzleMoveAt(x, y) || isPrevPath(x, y) || (time / 1000 | 0) % 2) {
 					const cs = size * 0.8;
@@ -944,15 +1029,15 @@ function drawBoard() {
 				const bounce = rescueDying[y][x] && Math.sin(time * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
 				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2 - bounce, size * 0.9);
 				if (!rescueDying[y][x]) {
-					gameContext.drawImage(objectBitmaps[6], 0, 0, tileWidth, tileWidth, px, py, size, size);
+					gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, size, size);
 				}
 			}
 
 			if (enemies[y][x]) {
 				drawLeprechaunSprite(
 					px, py, size,
-					lepDying(enemies[y][x]) ? 0.014 : 0.004,
-					x, y, lepKind(enemies[y][x])
+					leprechaunDying(enemies[y][x]) ? 0.014 : 0.004,
+					x, y, leprechaunType(enemies[y][x])
 				);
 			}
 		}
@@ -961,11 +1046,12 @@ function drawBoard() {
 	drawFlowingPath();
 	drawFillNiches();
 	drawMoveArrows(size);
+	drawGoldFlies(size);
 
 	player.resize();
 	player.draw();
 
-	if (!showObjective) drawUI(size);
+	if (!showObjective && !showEnd) drawUI(size);
 
 	if (showEnd && state > 1) {
 		gameContext.fillStyle = state == 2 ? "#103c" : "#0009";
@@ -980,65 +1066,30 @@ function drawBoard() {
 
 		if (state == 2) {
 			const icon = Math.max(28, size * 0.7 | 0);
-			const conv = leftUnitConverted;
-			const rowY = cy - fs * (conv ? 1.7 : 1.35);
-			let lx = cx - icon * 1.85;
-			for (let k = 0; k < 3; k++) {
-				drawLeprechaunSprite(lx, rowY, icon, 0.004, k, 0, k + 1);
-				gameContext.fillStyle = "#fff";
-				gameContext.textAlign = "left";
-				gameContext.textBaseline = "middle";
-				txt("x" + leftUnitsThisLevel[k], lx + icon * 0.85, rowY + icon * 0.45, fs * 0.55 | 0);
-				lx += icon * 1.7;
-			}
+			if (isPerfect()) txt("Perfect!", cx, cy - fs * 0.9, fs * 0.72 | 0);
 
-			if (conv) {
-				const sm = icon * 0.65;
-				const cy2 = cy - fs * 0.72;
-				const gLabel = "x" + leftGoldThisLevel;
-				const cLabel = "x" + conv;
-				const sz = fs * 0.5 | 0;
-				const gw = txt(gLabel, null, 0, sz);
-				const aw = txt("→", null, 0, sz);
-				const cw = txt(cLabel, null, 0, sz);
-				let x = cx - (sm + gw + sm + aw + sm + cw + 22) / 2;
-				gameContext.textAlign = "left";
-				gameContext.fillStyle = "#fff";
-				gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, x, cy2 - sm / 2, sm, sm);
-				x += sm + 2;
-				txt(gLabel, x, cy2, sz);
-				x += gw + 8;
-				drawLeprechaunSprite(x, cy2 - sm / 2, sm, 0, 0, 0, 1);
-				x += sm + 4;
-				txt("→", x, cy2, sz);
-				x += aw + 4;
-				drawLeprechaunSprite(x, cy2 - sm / 2, sm, 0, 0, 0, 3);
-				x += sm + 2;
-				txt(cLabel, x, cy2, sz);
-			}
-
-			gameContext.textAlign = "center";
-			gameContext.fillStyle = "#ffd";
-			txt("SCORE " + currentScore(), cx, cy - fs * (conv ? -0.05 : 0.15), -(fs * 0.4 | 0));
-
-			const n = 1 + rescuedUnits.length;
-			let ix = cx - (n - 1) * icon * 0.7;
-			const by = cy + fs * (conv ? 0.7 : 0.55);
-			drawUnitIcon(0, ix, by, icon);
-			const ss = icon * 0.5;
-			gameContext.drawImage(
-				objectBitmaps[3], 0, 0, tileWidth, tileWidth,
-				ix + icon * 0.28, by - ss * 0.55, ss, ss
-			);
-			for (let i = 0; i < rescuedUnits.length; i++) {
-				ix += icon * 1.4;
+			const by = cy + fs * 0.55;
+			const ss = icon;
+			const psz = fs * 0.85 | 0;
+			const pw = txt("+1", null, 0, psz);
+			const n = rescuedUnits.length;
+			const gap = icon * 1.4;
+			let ix = cx - (ss + 6 + pw + n * gap) / 2;
+			drawSparkle(ix, by - ss / 2, ss, time / 180);
+			ix += ss + 6;
+			gameContext.textAlign = "left";
+			gameContext.fillStyle = "#fff";
+			txt("+1", ix, by, psz);
+			ix += pw + gap * 0.35;
+			for (let i = 0; i < n; i++) {
+				ix += gap;
 				drawUnitIcon(rescuedUnits[i], ix, by, icon);
 			}
 		} else {
-			txt("SCORE " + currentScore() + "  MOVES " + moveCount, cx, cy - fs * 0.4, -(fs * 0.7 | 0));
+			txt("SCORE " + currentScore() + "  MOVES " + moveCount, cx, cy - fs * 0.4, fs * 0.7 | 0);
 		}
 	}
 
 	drawObjectiveScreen();
-	if (showObjective) drawUI(size);
+	if (showObjective || showEnd) drawUI(size);
 }

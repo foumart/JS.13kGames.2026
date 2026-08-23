@@ -120,8 +120,6 @@ function drawBattle() {
 		if (order[i].hp > 0 || order[i].shake) order[i].draw(tileSize);
 	}
 
-	drawUI(tileSize);
-
 	if (showEnd && battleResult > 1 && !showUpgrade) {
 		gameContext.fillStyle = battleResult == 2 ? "#103c" : "#0009";
 		gameContext.fillRect(0, 0, width, height);
@@ -131,6 +129,7 @@ function drawBattle() {
 		txt(battleResult == 2 ? "VICTORY!" : "DEFEAT - R", width / 2, height / 2, Math.max(18, tileSize * 0.5 | 0));
 	}
 
+	drawUI(tileSize);
 	drawPickScreen();
 	drawUpgradeScreen();
 	drawObjectiveScreen();
@@ -152,7 +151,7 @@ function getBattleUIFoe() {
 		const u = battleUnits[i];
 		if (!u.enemy || u.hp <= 0) continue;
 		if (u.type == 4) return u;
-		if (u.level == 4) pink = u;
+		if (u.advance && u.reach > 1) pink = u;
 		else if (!fallback) fallback = u;
 	}
 	return pink || fallback;
@@ -163,7 +162,7 @@ function drawBattleHUD(x, y, w, h, fs, on) {
 	if (u) drawUIUnit(x, y, w, h, fs, u, 0);
 	const r = Math.max(16, Math.min(width, height) * 0.04);
 	const m = Math.max(24, Math.min(width, height) * 0.045);
-	if (!showPick && !showUpgrade) drawEndTurn(width - r - m, height - r - m, r, on);
+	if (!showPick && !showUpgrade && !showEnd) drawEndTurn(width - r - m, height - r - m, r, on);
 	const foe = getBattleUIFoe();
 	if (foe && foe.hp > 0) drawUIUnit(width - w, y, w, h, fs, foe, 1);
 }
@@ -173,8 +172,8 @@ function drawUIUnit(x, y, w, h, fs, u, right) {
 	const pic = Math.min(w, h) * 0.42;
 	const px = right ? x + w - pic : x;
 	const hp = "HP " + Math.max(0, u.hp) + "/" + u.hpMax;
-	let tw = Math.max(txt(hp, null, 0, fs), txt("AT " + u.dmg, null, 0, fs));
-	if (!u.hero) tw = Math.max(tw, txt("RG " + u.range, null, 0, fs), txt("RC " + u.reach, null, 0, fs));
+	let tw = Math.max(txt(hp, null, 0, fs), txt("Dmg " + u.dmg, null, 0, fs));
+	if (!u.hero) tw = Math.max(tw, txt("Move " + u.range, null, 0, fs), txt("Range " + u.reach, null, 0, fs));
 	const fw = pic + 8 + tw;
 	drawFrame(right ? x + w - fw : x, y, fw, Math.max(pic, fs * (u.hero ? 2.2 : 4.6)));
 	u.drawPortrait(px, y, pic);
@@ -183,23 +182,23 @@ function drawUIUnit(x, y, w, h, fs, u, right) {
 	gameContext.fillStyle = "#fff";
 	const tx = right ? px - 8 : x + pic + 8;
 	txt("HP " + Math.max(0, u.hp) + "/" + u.hpMax, tx, y, fs);
-	txt("AT " + u.dmg, tx, y + fs * 1.2, fs);
+	txt("Dmg " + u.dmg, tx, y + fs * 1.2, fs);
 	if (!u.hero) {
-		txt("RG " + u.range, tx, y + fs * 2.4, fs);
-		txt("RC " + u.reach, tx, y + fs * 3.6, fs);
+		txt("Move " + u.range, tx, y + fs * 2.4, fs);
+		txt("Range " + u.reach, tx, y + fs * 3.6, fs);
 	}
 }
 
-function drawMenuBtn(x, y, w, h, label, on, fn) {
+function drawMenuBtn(x, y, w, h, label, on, fn, cur) {
 	gameContext.fillStyle = on ? "#ffe066" : "#345";
 	gameContext.fillRect(x, y, w, h);
-	gameContext.strokeStyle = "#fff";
-	gameContext.lineWidth = 2;
-	gameContext.strokeRect(x, y, w, h);
+	gameContext.strokeStyle = cur ? "#6e6" : "#fff";
+	gameContext.lineWidth = cur ? 4 : 2;
+	gameContext.strokeRect(cur ? x - 2 : x, cur ? y - 2 : y, cur ? w + 4 : w, cur ? h + 4 : h);
 	gameContext.fillStyle = on ? "#120028" : "#fff";
 	gameContext.textAlign = "center";
 	gameContext.textBaseline = "middle";
-	txt(label, x + w / 2, y + h / 2 + 1, h * 0.55 | 0);
+	txt(label, x + w / 2, y + h / 2 + 1, h * 0.42 | 0);
 	menuHits.push({x, y, w, h, fn});
 }
 
@@ -274,20 +273,26 @@ function rayStyle(rays) {
 }
 
 function drawPickInfo(cx, y, fs) {
-	const bmp = rescuedUnits[pickCursor];
-	if (!bmp) return;
-	const u = makeRescued(bmp, 0, 0);
-	const name = unitNames[bmp] || "";
+	const name = rescuedUnits[pickCursor];
+	if (!name) return;
+	const u = makeUnit(name, 0, 0);
 	const moveN = u.range;
 	const atkN = u.around || u.reach;
 	const ls = fs * 0.78 | 0;
 	gameContext.textAlign = "center";
 	gameContext.textBaseline = "top";
 	gameContext.fillStyle = "#fff";
-	txt(name, cx, y, fs);
-	txt("HP:" + u.hpMax + "  AT:" + u.dmg, cx, y + fs * 1.15, ls);
-	txt("Move Range:" + moveN + " " + rayStyle(u.moveRays()), cx, y + fs * 2.05, ls);
-	txt("Attack Reach:" + atkN + " " + rayStyle(u.attackRays()), cx, y + fs * 2.95, ls);
+	txt(u.name, cx, y, fs);
+	txt("HP:" + u.hpMax + "  Dmg:" + u.dmg, cx, y + fs * 1.15, ls);
+	txt("Move:" + moveN + " " + rayStyle(u.moveRays()), cx, y + fs * 2.05, ls);
+	txt("Range:" + atkN + " " + rayStyle(u.attackRays()), cx, y + fs * 2.95, ls);
+}
+
+function upgradeLabel(kind) {
+	if (kind == "hp") return "HP +2";
+	if (kind == "att") return "Dmg +1";
+	if (kind == "range") return "Move +1";
+	return "Range +1";
 }
 
 function drawUpgradeScreen() {
@@ -296,8 +301,8 @@ function drawUpgradeScreen() {
 	const list = battleRoster();
 	const fs = Math.max(14, Math.min(width, height) * 0.036 | 0);
 	const icon = Math.max(34, Math.min(width, height) * 0.09 | 0);
-	const btnW = Math.max(48, fs * 3.6);
 	const btnH = Math.max(24, fs * 1.45);
+	const btnFs = btnH * 0.42 | 0;
 	gameContext.fillStyle = "#103c";
 	gameContext.fillRect(0, 0, width, height);
 	gameContext.fillStyle = "#fff";
@@ -307,18 +312,24 @@ function drawUpgradeScreen() {
 	txt("Choose a bonus", width / 2, height * 0.1 + fs * 1.7, fs);
 	const rowH = icon + fs * 1.1 + btnH + 18;
 	let y = height * 0.2;
+	let live = 0;
 	for (let i = 0; i < list.length; i++) {
 		const u = list[i];
 		const fallen = u.hp <= 0;
 		const id = upgradeId(u);
 		const pick = upgradePicks[id];
-		const kinds = fallen ? [] : u.hero ? ["hp", "att"] : ["hp", "att", "range", "reach"];
-		const labels = u.hero ? ["HP +2", "AT +1"] : ["HP +2", "AT +1", "RG +1", "RC +1"];
+		const kinds = upgradeKinds(u);
+		const labels = [];
+		let btnW = Math.max(48, fs * 3.6);
+		for (let k = 0; k < kinds.length; k++) {
+			labels[k] = upgradeLabel(kinds[k]);
+			btnW = Math.max(btnW, txt(labels[k], null, 0, btnFs) + 16);
+		}
 		const tw = Math.max(kinds.length, 1) * (btnW + 8) - 8;
-		const rowW = icon + 16 + Math.max(tw, fs * 14);
+		const rowW = icon + 16 + Math.max(tw, fs * 18);
 		let x = width / 2 - rowW / 2;
 		if (fallen) gameContext.globalAlpha = 0.45;
-		drawUnitIcon(u.bmp, x + icon / 2, y + icon / 2, icon, u.pal);
+		drawUnitIcon(u, x + icon / 2, y + icon / 2, icon);
 		gameContext.globalAlpha = 1;
 		gameContext.textAlign = "left";
 		gameContext.fillStyle = "#fff";
@@ -326,15 +337,17 @@ function drawUpgradeScreen() {
 			txt("fallen", x + icon + 12, y + icon / 2, fs);
 		} else {
 			txt(
-				"HP " + u.hpMax + "  AT " + u.dmg + (u.hero ? "" : "  RG " + u.range + "  RC " + u.reach),
+				"HP " + u.hpMax + "  Dmg " + u.dmg + (u.hero ? "" : "  Move " + u.range + "  Range " + u.reach),
 				x + icon + 12, y + fs * 0.7, fs
 			);
 			let bx = x + icon + 12;
 			const by = y + fs * 1.3;
+			const curRow = live == upgradeCurUnit;
 			for (let k = 0; k < kinds.length; k++) {
-				drawMenuBtn(bx, by, btnW, btnH, labels[k], pick == kinds[k], setUpgrade.bind(null, id, kinds[k]));
+				drawMenuBtn(bx, by, btnW, btnH, labels[k], pick == kinds[k], setUpgrade.bind(null, id, kinds[k]), curRow && k == upgradeCurOpt);
 				bx += btnW + 8;
 			}
+			live ++;
 		}
 		y += rowH;
 	}

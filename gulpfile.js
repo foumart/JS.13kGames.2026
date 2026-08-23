@@ -47,6 +47,32 @@ const debug = argv.debug != undefined ? true : false;
 // --roadroll: use a JS packer for up to 15% compression
 const roadroll = argv.roadroll != undefined ? true : false;
 
+const roadrollOptions = {
+	selectors: 32,
+	maxMemoryMB: 640,
+	precision: 16,
+	recipLearningRate: 1500,
+	modelMaxCount: 3,
+	modelRecipBaseCount: 30,
+	numAbbreviations: 64,
+	allowFreeVars: 0
+};
+
+async function packJsWithRoadroller(js) {
+	const { Packer } = await import('roadroller');
+	const packer = new Packer(
+		[{
+			data: js,
+			type: 'js',
+			action: 'eval'
+		}],
+		roadrollOptions
+	);
+	await packer.optimize();
+	const { firstLine, secondLine } = packer.makeDecoder();
+	return firstLine + secondLine;
+}
+
 // --mobile: should html tags for mobile be included. Adds 42 bytes.
 const mobile = argv.mobile != undefined || argv.all != undefined ? `
 <meta name="mobile-web-app-capable" content="yes">
@@ -130,9 +156,7 @@ function sw(callback) {
 // Compile (or copy if raw) the pwa initialization script as well as game logic scripts
 function app(callback) {
 	const scripts = [
-		'src/scripts/*.js',
-		'src/scripts/units/*.js',
-		'src/scripts/enemies/*.js'
+		'src/scripts/*.js'
 	];
 	if (pwa) {
 		scripts.unshift('resources/sw_init.js');
@@ -215,29 +239,7 @@ async function mangle() {
 	}
 
 	if (roadroll && !debug) {
-		if (roadroll) {
-			const { Packer } = await import('roadroller');
-			const packer = new Packer(
-				[{
-					data: js,
-					type: 'js',
-					action: 'eval'
-				}],
-				{
-					selectors: 32,
-					maxMemoryMB: 640,
-					precision: 16,
-					recipLearningRate: 1500,
-					modelMaxCount: 3,
-					modelRecipBaseCount: 30,
-					numAbbreviations: 64,
-					allowFreeVars: 0
-				}
-			);
-			await packer.optimize();
-			const { firstLine, secondLine } = packer.makeDecoder();
-			js = firstLine + secondLine;
-		}
+		js = await packJsWithRoadroller(js);
 	} else {
 		let dummyPromise = new Promise(function(resolve) {
 			setTimeout(resolve, 1);
@@ -253,9 +255,7 @@ function pack(callback) {
 
 	if (raw) {
 		// Use glob to get all JavaScript files
-		const scriptFiles = glob.sync('src/scripts/*.js').reverse()
-			.concat(glob.sync('src/scripts/units/*.js'))
-			.concat(glob.sync('src/scripts/enemies/*.js'));
+		const scriptFiles = glob.sync('src/scripts/*.js').reverse();
 		// Add initialization scripts as well
 		if (pwa) {
 			scriptFiles.unshift('src/scripts/sw_init.js');
@@ -306,6 +306,26 @@ function clean(callback) {
 		await del(dir + '/tmp/');
 		callback();
 	})();
+}
+
+// Pack the inline script already in public/index.html (no full rebuild)
+async function roadrollHtml() {
+	const fs = require('fs');
+	const htmlPath = dir + '/index.html';
+	if (!fs.existsSync(htmlPath)) {
+		throw new Error(htmlPath + ' not found. Run a build first.');
+	}
+	let html = fs.readFileSync(htmlPath, 'utf8');
+	const open = html.lastIndexOf('<script>');
+	const close = html.lastIndexOf('</script>');
+	if (open < 0 || close < open) {
+		throw new Error('No inline <script> in ' + htmlPath);
+	}
+	const js = html.slice(open + 8, close);
+	const packed = await packJsWithRoadroller(js);
+	html = html.slice(0, open + 8) + packed + html.slice(close);
+	fs.writeFileSync(htmlPath, html);
+	console.log(`        roadroller  ${js.length} -> ${packed.length} bytes`);
 }
 
 // Package zip (exclude any fonts that are used locally, like Twemoji.ttf)
@@ -379,6 +399,7 @@ exports.build = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, 
 exports.prod = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
 exports.sync = series(ico, app, cs, mangle, assets, pack, clean, reload);
 exports.zip = series(archive, check);
+exports.roadroll = series(roadrollHtml, archive, check);
 
 /*
    JS13K Template Gulpfile by Noncho Savov

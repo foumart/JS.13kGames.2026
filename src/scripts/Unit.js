@@ -1,25 +1,33 @@
 class Unit {
 
-	constructor(x, y, type, enemy, hp, dmg, bmp, pal, range = 1, reach = 1) {
-		this.type = type;
-		this.enemy = enemy;
+	constructor(d, x, y, type) {
+		let i = 0;
+		this.name = d[i++];
+		this.hp = d[i++];
+		this.dmg = d[i++];
+		this.mv = d[i++];
+		this.atk = d[i++];
+		this.bgr = d[i++];
+		this.pal = typeof d[i] == "string" ? d[i++] : 0;
 		this.x = x;
 		this.y = y;
-		this.hp = hp;
-		this.hpMax = hp;
-		this.dmg = dmg;
-		this.range = range;
-		this.reach = reach;
-		this.bmp = bmp;
-		this.pal = pal;
+		this.type = type || (UNITS.indexOf(d) ? 1 : 0);
+		this.hpMax = this.hp;
+		this.bmp = this.bgr;
+		this.enemy = this.type > 2;
+		this.hero = !this.type;
+		this.around = this.hero || this.type == 4;
+		this.advance = this.type == 3;
+		this.lockRange = d[i] == 0;
+		this.lockReach = d[i + 1] == 0;
+		this.range = d[i] || 1;
+		this.reach = d[i + 1] || 1;
 		this.moved = 0;
 		this.acted = 0;
 		this.offsetX = 0;
 		this.offsetY = 0;
 		this.shake = 0;
-		this.face = enemy ? 1 : -1;
-		this.advance = 0;
-		this.around = 0;
+		this.face = this.enemy ? 1 : -1;
 	}
 
 	stepMoves(dirs, max) {
@@ -41,11 +49,11 @@ class Unit {
 	}
 
 	attackRays() {
-		return Unit.QUEEN;
+		return Unit.RAY[this.atk] || Unit.QUEEN;
 	}
 
 	moveRays() {
-		return Unit.QUEEN;
+		return Unit.RAY[this.mv] || Unit.QUEEN;
 	}
 
 	hits(ox, oy) {
@@ -147,7 +155,7 @@ class Unit {
 	draw(size) {
 		const px = boardOffsetX + (this.x + this.offsetX) * size + (this.shake ? Math.sin(this.shake * 24) * this.shake * size * 0.16 : 0);
 		const py = boardOffsetY + (this.y + this.offsetY) * size + (this.shake ? Math.cos(this.shake * 17) * this.shake * size * 0.08 : 0);
-		const bmp = unitBitmaps[this.drawBmp()];
+		const bmp = unitBitmaps[(this.offsetX || this.offsetY) && !this.bgr ? 1 : this.bgr];
 		const scale = size / tileWidth * unitScale;
 		const dw = bmp.width * scale;
 		const dh = bmp.height * scale;
@@ -157,17 +165,13 @@ class Unit {
 		gameContext.save();
 		gameContext.translate(px + size / 2, py + size / 2 - hop);
 		gameContext.scale(this.face, 1);
-		if (this.pal) drawPaletted(bmp, this.pal, -dw / 2, -dh / 2, dw, dh);
+		if (this.pal) drawPaletted(bmp, this.pal, -dw / 2, -dh / 2, dw, dh, gameContext);
 		else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
 		gameContext.restore();
 	}
 
-	drawBmp() {
-		return unitSprites[this.bmp] || this.bmp;
-	}
-
 	drawPortrait(x, y, pic) {
-		drawUnitIcon(this.bmp, x + pic / 2, y + pic / 2, pic, this.pal);
+		drawUnitIcon(this, x + pic / 2, y + pic / 2, pic);
 	}
 }
 
@@ -175,3 +179,4 @@ Unit.ROOK = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 Unit.BISHOP = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
 Unit.QUEEN = [...Unit.ROOK, ...Unit.BISHOP];
 Unit.KNIGHT = [[1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
+Unit.RAY = [Unit.QUEEN, Unit.ROOK, Unit.BISHOP, Unit.KNIGHT];

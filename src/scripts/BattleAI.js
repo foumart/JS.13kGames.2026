@@ -44,7 +44,7 @@ function battleThink(u, done) {
 	const want = u.enemy ? 0 : 1;
 	const stayHits = u.hits(u.x, u.y);
 
-	if (u.strikeFirst && stayHits.length) {
+	if (stayHits.length) {//u.strikeFirst && 
 		previewTiles(u, 1, () => performAttack(u, stayHits, () => {
 			if (checkForBattleEnd()) return;
 			const moves = u.moves();

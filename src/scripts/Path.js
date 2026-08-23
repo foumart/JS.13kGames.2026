@@ -4,6 +4,7 @@ let rainbowPulse = 0;
 let rainbowAnim = 0;
 let rainbowStart = 0;
 let rainbowDone = 0;
+let rainbowWait = 0;
 
 // N=1 E=2 S=4 W=8
 function dirMask(dx, dy) {
@@ -98,11 +99,21 @@ function paintRainbow(shift) {
 }
 
 function scrollRainbow() {
-	if (!rainbowPulse) rainbowDone = 0;
+	if (!rainbowPulse) {
+		rainbowDone = 0;
+		rainbowWait = 0;
+	}
 	if (rainbowPulse && !rainbowAnim && !rainbowDone) {
+		if (!rainbowWait) {
+			rainbowWait = time;
+			paintRainbow(0);
+			return;
+		}
+		if (time - rainbowWait < 100) return;
 		rainbowStart = time;
 		rainbowAnim = 1;
 		rainbowDone = 1;
+		rainbowWait = 0;
 	}
 	if (!rainbowAnim) return;
 	const denom = rainbowCanvas.width + rainbowCanvas.height - 2 || 1;
@@ -214,22 +225,11 @@ function drawFlowingPath() {
 
 function drawFillNiches() {
 	const w = cellSize;
-	const r = w * 0.19;
-	const border = w * 0.12;
-	const shift = time * 0.1;
+	gameContext.imageSmoothingEnabled = false;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (fillData[y][x] != 2 || (player.x == x && player.y == y)) continue;
-			const x0 = boardOffsetX + x * w + w / 2;
-			const y0 = boardOffsetY + y * w + w / 2;
-			gameContext.fillStyle = "#fff";
-			gameContext.beginPath();
-			gameContext.arc(x0, y0, r + border, 0, Math.PI * 2);
-			gameContext.fill();
-			gameContext.fillStyle = "hsl(" + (shift % 360) + ",85%,55%)";
-			gameContext.beginPath();
-			gameContext.arc(x0, y0, r, 0, Math.PI * 2);
-			gameContext.fill();
+			drawSparkle(boardOffsetX + x * w, boardOffsetY + y * w, w, (time / 500 | 0) + x + y);
 		}
 	}
 }

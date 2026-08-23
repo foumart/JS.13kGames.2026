@@ -16,31 +16,36 @@ function onKeyDown(event) {
 		else if (k == 32) pickCursorUnit();
 		else if (k == 13) confirmParty();
 		else if (k == 82) {
-			skipObjective = 1;
 			resetBattle();
 		}
 		return;
 	}
 	if (showUpgrade) {
-		if (k == 13 || k == 32) afterBattleWin();
-		else if (k == 82) {
-			skipObjective = 1;
-			resetBattle();
+		if (k == 37 || k == 65) moveUpgradeCursor(-1, 0);
+		else if (k == 39 || k == 68) moveUpgradeCursor(1, 0);
+		else if (k == 38 || k == 87) moveUpgradeCursor(0, -1);
+		else if (k == 40 || k == 83) moveUpgradeCursor(0, 1);
+		else if (k == 32) {
+			event.preventDefault();
+			pickUpgradeCursor();
 		}
+		else if (k == 13) afterBattleWin();
+		else if (k == 82) resetBattle();
 		return;
 	}
 	if (showObjective) {
 		if (k == 13 || k == 32) dismissObjective();
 		else if (k == 82) {
-			skipObjective = 1;
 			if (battleActive) resetBattle();
-			else resetLevel();
+			else {
+				skipObjective = 1;
+				resetLevel();
+			}
 		}
 		return;
 	}
 	if (battleActive) {
 		if (k == 82) { // R reset battle
-			skipObjective = 1;
 			resetBattle();
 			return;
 		}
@@ -54,7 +59,7 @@ function onKeyDown(event) {
 	else if (k == 32) {
 		event.preventDefault();
 		if (showEnd && state == 2) nextLevel();
-		else fillNiche();
+		else useSparkAbility();
 	}
 	else if (k == 13) {
 		if (showEnd && state == 2) nextLevel();

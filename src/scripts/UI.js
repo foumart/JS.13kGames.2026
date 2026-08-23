@@ -1,12 +1,11 @@
-function txt(s, x, y, z) {
-	z = z | 0;
-	gameContext.font = (z < 0 ? "" : "900 ") + (z < 0 ? -z : z) + "px sans-serif";
-	if (x != null) gameContext.fillText(s, x, y);
-	return gameContext.measureText(s).width;
+function txt(text, x, y, size) {
+	gameContext.font = "900 " + size + "px arial";
+	if (x != null) gameContext.fillText(text, x, y);
+	return gameContext.measureText(text).width;
 }
 
 function drawFrame(x, y, w, h) {
-	gameContext.fillStyle = "#fff3";
+	gameContext.fillStyle = "#546d";
 	const fx = Math.max(0, x - 16);
 	const fy = Math.max(0, y - 8);
 	gameContext.fillRect(fx, fy, Math.min(width, x + w + 16) - fx, y + h + 8 - fy);
@@ -28,7 +27,7 @@ function drawUI(size) {
 		drawUIEnemy(width - enemyW - px, py, enemyW, panelH, fontSize);
 	}
 
-	if (!showObjective) {
+	if (currentScore()) {
 		const label = "Score: " + currentScore();
 		const sw = txt(label, null, 0, fontSize);
 		drawFrame(width / 2 - sw / 2, py, sw, fontSize);
@@ -40,12 +39,11 @@ function drawUI(size) {
 }
 
 function drawUIPlayer(x, y, w, h, fs) {
-	const pic = (portrait ? Math.min(w, h) : Math.max(w, h)) * 0.42;
-	const sm = pic * 0.55;
-	const wsl = "W" + worldNumber() + " S" + shadowNumber() + " L" + stageNumber();
-	const tw = Math.max(txt(wsl, null, 0, fs), txt("M:" + moveCount, null, 0, fs), fs * 0.95 + txt(":" + fillCharges, null, 0, fs));
+	const pic = (portrait ? Math.min(w, h) : Math.max(w, h)) / 2;
+	const sm = pic / 2;
+	const tw = fs + txt(fillCharges, null, 0, fs);
 	const n = rescuedUnits.length;
-	drawFrame(x, y, Math.max(pic + 8 + tw, n * (sm + 2)), Math.max(pic + (n ? sm + 2 : 0), fs * 3.4));
+	drawFrame(x, y, Math.max(pic + 8 + tw, n * (sm + 2)), pic + (n ? sm + 2 : 0));
 	drawUnitIcon(0, x + pic / 2, y + pic / 2, pic);
 	let rx = x;
 	const ry = y + pic + 2;
@@ -57,38 +55,39 @@ function drawUIPlayer(x, y, w, h, fs) {
 	gameContext.textBaseline = "top";
 	gameContext.fillStyle = "#fff";
 	const tx = x + pic + 8;
-	txt(wsl, tx, y, fs);
-	txt("M:" + moveCount, tx, y + fs * 1.2, fs);
-	const sy = y + fs * 2.4;
-	gameContext.drawImage(objectBitmaps[3], 0, 0, tileWidth, tileWidth, tx, sy, fs, fs);
+	const sy = y + (pic - fs) / 2;
+	drawSparkle(tx, sy, fs, time / 180);
 	txt(":" + fillCharges, tx + fs * 0.95, sy, fs);
 }
 
 function drawUIEnemy(x, y, w, h, fs) {
 	const pic = Math.min(w, h) * 0.5;
 	const sm = Math.max(fs * 1.2, 16);
-	let rows = 0, maxW = pic;
+	const wsl = "Vail " + (levelIndex / 3 | 1);
+	const list = [];
+	if (!isBossBattle()) list.push([4, 1]);
 	for (let k = 0; k < 3; k++) {
-		const n = kindAlive(k + 1);
-		const m = leftoverKinds[k];
-		if (!n && !m) continue;
-		rows ++;
-		maxW = Math.max(maxW, sm + 2 + txt(": " + n + (m ? " (" + m + ")" : ""), null, 0, fs));
+		const n = leftoverKinds[k] + countAliveLeprechaunsOfKind(k + 1);
+		if (n) list.push([k + 1, n]);
 	}
-	drawFrame(x + w - maxW, y, maxW, pic + (rows && 2 + rows * (sm + 2)));
-	drawLeprechaunSprite(x + w - pic, y, pic, 0, 0, 0, 4);
-	let ty = y + pic + 2;
+	let maxW = txt(wsl, null, 0, fs), hgt = fs * 1.2;
+	for (let i = 0; i < list.length; i++) {
+		const sz = i ? sm : pic;
+		maxW = Math.max(maxW, sz + 2 + txt(list[i][1], null, 0, sz * 0.5));
+		hgt += 2 + sz;
+	}
+	drawFrame(x + w - maxW, y, maxW, hgt);
 	gameContext.fillStyle = "#fff";
-	gameContext.textBaseline = "middle";
 	gameContext.textAlign = "right";
-	for (let k = 0; k < 3; k++) {
-		const n = kindAlive(k + 1);
-		const m = leftoverKinds[k];
-		if (!n && !m) continue;
-		let label = ": " + n;
-		if (m) label += " (" + m + ")";
-		const tw = txt(label, x + w, ty + sm / 2, fs);
-		drawLeprechaunSprite(x + w - tw - sm - 2, ty, sm, 0, 0, 0, k + 1);
-		ty += sm + 2;
+	gameContext.textBaseline = "top";
+	txt(wsl, x + w, y, fs);
+	let ty = y + fs * 1.2;
+	gameContext.textBaseline = "middle";
+	for (let i = 0; i < list.length; i++) {
+		const sz = i ? sm : pic;
+		ty += 2;
+		drawLeprechaunSprite(x + w - sz, ty, sz, 0, 0, 0, list[i][0]);
+		txt(list[i][1], x + w - sz - 2, ty + sz / 2, sz * 0.5);
+		ty += sz;
 	}
 }

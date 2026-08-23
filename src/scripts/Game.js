@@ -1,5 +1,5 @@
 function act(dx, dy) {
-	if (moving || state != 1 || clearTimer || showObjective) return;
+	if (moving || state != 1 || showObjective) return;
 	const nx = player.x + dx;
 	const ny = player.y + dy;
 	if (isPassable(nx, ny, dx, dy)) player.moveTo(dx, dy);
