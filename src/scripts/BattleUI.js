@@ -1,9 +1,16 @@
 let endTurnX = 0;
 let endTurnY = 0;
 let endTurnR = 0;
+let modeBtnX = 0;
+let modeBtnY = 0;
+let modeBtnR = 0;
 let hoverTile = null;
 
 function battleHover(event) {
+	if (hitModeButton(event, 1)) {
+		gameCanvas.style.cursor = "pointer";
+		return;
+	}
 	if (showPick || showUpgrade || showObjective || showEnd) {
 		if (hoverTile) {
 			hoverTile = null;
@@ -53,6 +60,46 @@ function drawEndTurn(cx, cy, r, on) {
 	}
 }
 
+function hitModeButton(event, hover) {
+	if (!canToggleMode() || !modeBtnR) return 0;
+	const dx = event.clientX - modeBtnX;
+	const dy = event.clientY - modeBtnY;
+	if (dx * dx + dy * dy > modeBtnR * modeBtnR) return 0;
+	if (!hover) toggleStageMode();
+	return 1;
+}
+
+function drawModeButton() {
+	if (!canToggleMode()) return;
+	const r = Math.max(16, Math.min(width, height) * 0.04);
+	const m = Math.max(24, Math.min(width, height) * 0.045);
+	modeBtnX = r + m;
+	modeBtnY = height - r - m;
+	modeBtnR = r;
+	gameContext.beginPath();
+	gameContext.arc(modeBtnX, modeBtnY, r, 0, 7);
+	gameContext.fillStyle = "#adc";
+	gameContext.fill();
+	gameContext.fillStyle = "#124";
+	gameContext.lineWidth = Math.max(2, r * 0.12);
+	gameContext.strokeStyle = "#124";
+	if (puzzleBattle) {
+		gameContext.beginPath();
+		gameContext.moveTo(modeBtnX - r * 0.38, modeBtnY + r * 0.22);
+		gameContext.lineTo(modeBtnX - r * 0.12, modeBtnY - r * 0.18);
+		gameContext.lineTo(modeBtnX + r * 0.12, modeBtnY + r * 0.08);
+		gameContext.lineTo(modeBtnX + r * 0.38, modeBtnY - r * 0.28);
+		gameContext.stroke();
+	} else {
+		const s = r * 0.22;
+		for (let gy = -1; gy <= 1; gy++) {
+			for (let gx = -1; gx <= 1; gx++) {
+				gameContext.fillRect(modeBtnX + gx * s * 1.35 - s * 0.45, modeBtnY + gy * s * 1.35 - s * 0.45, s * 0.9, s * 0.9);
+			}
+		}
+	}
+}
+
 function battleHinted(x, y) {
 	for (let i = 0; i < battleHints.length; i++) {
 		if (battleHints[i].x == x && battleHints[i].y == y) return 1;
@@ -62,23 +109,33 @@ function battleHinted(x, y) {
 
 function drawBattle() {
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
-	const tileSize = fitBoard(battleWidth, battleHeight);
+	const tileSize = fitBoard(boardWidth, boardHeight);
 	portrait = height > width;
 	drawEdgeTiles(tileSize, groundBmp());
 
-	for (let y = 0; y < battleHeight; y++) {
-		for (let x = 0; x < battleWidth; x++) {
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
 			const px = boardOffsetX + x * tileSize;
 			const py = boardOffsetY + y * tileSize;
 			gameContext.drawImage(
 				groundBmp(),
 				0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
 			);
-			if (hasObstacle(x, y)) {
-				gameContext.drawImage(
-					objectBitmaps[0],
-					0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
-				);
+			if (clouds[y] && clouds[y][x]) {
+				gameContext.drawImage(objectBitmaps[2], 0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize);
+			}
+			if (hasObstacle(x, y) && !(rescues[y] && rescues[y][x])) {
+				gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize);
+			} else if (exits[y] && exits[y][x]) {
+				drawSparkle(px, py, tileSize, (time / 180 | 0) + x + y);
+			} else if (coins[y] && coins[y][x]) {
+				const cs = tileSize * 0.8;
+				gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, px + (tileSize - cs) / 2, py + tileSize - cs - tileSize * 0.06, cs, cs);
+			}
+			if (rescues[y] && rescues[y][x]) {
+				gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize);
+				drawUnitIcon(rescues[y][x], px + tileSize / 2, py + tileSize / 2, tileSize * 0.9);
+				gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize);
 			}
 		}
 	}
@@ -124,15 +181,14 @@ function drawBattle() {
 		gameContext.fillStyle = battleResult == 2 ? "#103c" : "#0009";
 		gameContext.fillRect(0, 0, width, height);
 		gameContext.fillStyle = "#fff";
-		//gameContext.textAlign = "center";
-		//gameContext.textBaseline = "middle";
-		txt(battleResult == 2 ? "VICTORY!" : "DEFEAT - R", width / 2, height / 2, Math.max(18, tileSize * 0.5 | 0));
+		txt(puzzleBattle && battleResult == 2 ? "STAGE CLEAR!" : (battleResult == 2 ? "VICTORY!" : "DEFEAT - R"), width / 2, height / 2, Math.max(18, tileSize * 0.5 | 0));
 	}
 
 	drawUI(tileSize);
 	drawPickScreen();
 	drawUpgradeScreen();
 	drawObjectiveScreen();
+	drawModeButton();
 }
 
 function getBattleUIAlly() {
@@ -162,7 +218,7 @@ function drawBattleHUD(x, y, w, h, fs, on) {
 	if (u) drawUIUnit(x, y, w, h, fs, u, 0);
 	const r = Math.max(16, Math.min(width, height) * 0.04);
 	const m = Math.max(24, Math.min(width, height) * 0.045);
-	if (!showPick && !showUpgrade && !showEnd) drawEndTurn(width - r - m, height - r - m, r, on);
+	if (!showPick && !showUpgrade && !showEnd && !showObjective) drawEndTurn(width - r - m, height - r - m, r, on);
 	const foe = getBattleUIFoe();
 	if (foe && foe.hp > 0) drawUIUnit(width - w, y, w, h, fs, foe, 1);
 }

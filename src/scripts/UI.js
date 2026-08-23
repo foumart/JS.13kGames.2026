@@ -17,7 +17,7 @@ function drawUI(size) {
 	portrait = height > width;
 	const on = battleActive && !battlePhase && !animating && !battleResult && !thinking && !showPick && !showUpgrade;
 	const fontSize = Math.min(26, Math.max(12, size * 0.42 | 0));
-	const side = Math.max(boardOffsetX, width - boardOffsetX - (battleActive ? battleWidth : boardWidth) * size);
+	const side = Math.max(boardOffsetX, width - boardOffsetX - boardWidth * size);
 	const panelW = Math.min(96, Math.min(side > 48 ? side - 12 : width * 0.42, 240));
 	const panelH = Math.min(96, Math.min(portrait ? Math.max(boardOffsetY - 12, 80) : size * 2.4, 240));
 	const px = 16, py = 8;

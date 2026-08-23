@@ -36,7 +36,7 @@ function onKeyDown(event) {
 	if (showObjective) {
 		if (k == 13 || k == 32) dismissObjective();
 		else if (k == 82) {
-			if (battleActive) resetBattle();
+			if (battleActive && !puzzleBattle) resetBattle();
 			else {
 				skipObjective = 1;
 				resetLevel();
@@ -46,7 +46,7 @@ function onKeyDown(event) {
 	}
 	if (battleActive) {
 		if (k == 82) { // R reset battle
-			resetBattle();
+			puzzleBattle ? resetLevel() : resetBattle();
 			return;
 		}
 

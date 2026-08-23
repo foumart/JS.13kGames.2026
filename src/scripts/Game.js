@@ -2,8 +2,13 @@ function act(dx, dy) {
 	if (moving || state != 1 || showObjective) return;
 	const nx = player.x + dx;
 	const ny = player.y + dy;
-	if (isPassable(nx, ny, dx, dy)) player.moveTo(dx, dy);
-	else if (isPrevPath(nx, ny)) player.retractTo(dx, dy);
+	if (isPassable(nx, ny, dx, dy)) {
+		modeLocked = 1;
+		player.moveTo(dx, dy);
+	} else if (isPrevPath(nx, ny)) {
+		modeLocked = 1;
+		player.retractTo(dx, dy);
+	}
 }
 
 function puzzleMoveAt(x, y) {

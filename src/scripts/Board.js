@@ -132,7 +132,10 @@ function initBoard() {
 	state = 1;
 	showEnd = 0;
 	battleResult = 0;
+	puzzleBattle = 0;
+	battleActive = 0;
 	showObjective = skipObjective ? 0 : 1;
+	modeLocked = 0;
 	skipObjective = 0;
 	moving = 0;
 	hideEndButtons();
@@ -214,6 +217,7 @@ function useSparkAbility() {
 	if (!inBounds(x, y) || fillData[y][x]) return;
 	fillData[y][x] = 2;
 	fillCharges --;
+	modeLocked = 1;
 	checkCaptures();
 	redraw();
 }
@@ -749,15 +753,15 @@ function showEndButtons() {
 	ensureEndButtons();
 	endRetryBtn.style.display = "block";
 	endRetryBtn.onclick = () => {
-		if (battleActive) resetBattle();
+		if (battleActive && !puzzleBattle) resetBattle();
 		else {
-			skipObjective = 1;
+			if (!puzzleBattle) skipObjective = 1;
 			resetLevel();
 		}
 	};
 	endNextBtn.style.opacity = "1";
-	endNextBtn.onclick = battleActive ? afterBattleWin : nextLevel;
-	endNextBtn.textContent = battleActive
+	endNextBtn.onclick = battleActive && !puzzleBattle ? afterBattleWin : nextLevel;
+	endNextBtn.textContent = battleActive && !puzzleBattle
 		? (levelIndex < campaignLength - 1 ? "NEXT LEVEL" : "REPLAY")
 		: (levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL");
 	endNextBtn.style.display = state == 2 ? "block" : "none";
@@ -794,6 +798,11 @@ function nextLevel() {
 	for (let i = 0; i < 3; i++) leftoverKinds[i] += leftUnitsThisLevel[i];
 	leftTotalThisLevel = 0;
 	leftUnitsThisLevel = [0, 0, 0];
+	if (puzzleBattle) {
+		puzzleBattle = 0;
+		battleActive = 0;
+		battleUnits = [];
+	}
 	if (levelIndex % 3 == 2) {
 		battleKind = isBossBattle() ? 2 : 1;
 		startBattle();
@@ -818,6 +827,7 @@ function afterBattleWin() {
 	hideEndButtons();
 	battleKind = 0;
 	battleActive = 0;
+	puzzleBattle = 0;
 	battleResult = 0;
 	scoreStart = totalScore;
 	if (levelIndex < campaignLength - 1) {
@@ -843,6 +853,7 @@ function restartCampaign() {
 	battleParty = [];
 	battleKind = 0;
 	battleActive = 0;
+	puzzleBattle = 0;
 	showPick = 0;
 	showUpgrade = 0;
 	levelIndex = 0;
@@ -856,8 +867,12 @@ function restartCampaign() {
 
 function debugAdvance() {
 	if (battleActive) {
-		if (showUpgrade || battleResult == 2) {
+		if (showUpgrade || (battleResult == 2 && !puzzleBattle)) {
 			afterBattleWin();
+			return;
+		}
+		if (puzzleBattle && battleResult == 2) {
+			nextLevel();
 			return;
 		}
 		if (showPick) {
@@ -953,8 +968,8 @@ function fitBoard(cols, rows) {
 function drawEdgeTiles(size, bmp) {
 	const ox = boardOffsetX;
 	const oy = boardOffsetY;
-	const cols = battleActive ? battleWidth : boardWidth;
-	const rows = battleActive ? battleHeight : boardHeight;
+	const cols = boardWidth;
+	const rows = boardHeight;
 	const gx0 = Math.floor(-ox / size);
 	const gy0 = Math.floor(-oy / size);
 	const gx1 = Math.ceil((width - ox) / size);
@@ -1104,5 +1119,6 @@ function drawBoard() {
 	}
 
 	drawObjectiveScreen();
+	drawModeButton();
 	if (showObjective || showEnd) drawUI(size);
 }

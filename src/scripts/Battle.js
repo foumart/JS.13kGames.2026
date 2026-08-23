@@ -22,10 +22,11 @@ let upgradeCurUnit = 0;
 let upgradeCurOpt = 0;
 let menuHits = [];
 let battleKind = 0; // 1 regular, 2 boss
+let puzzleBattle = 0; // puzzle stage played as tactics
+let modeLocked = 0;
 
 const battleWidth = 9;
 const battleHeight = 9;
-let battleObstacles = [];
 
 function startBattle() {
 	const skip = skipObjective;
@@ -46,11 +47,14 @@ function startBattle() {
 	battleTiles = [];
 	battleHints = [];
 	battleControl = null;
+	puzzleBattle = 0;
+	modeLocked = 0;
 	boardWidth = battleWidth;
 	boardHeight = battleHeight;
 	totalScore = scoreStart;
 	battleUnits = [];
-	battleObstacles = [];
+	obstacles = [];
+	for (let y = 0; y < boardHeight; y++) obstacles[y] = [];
 	if (!skip) {
 		battleParty = [];
 		if (livingRescueCount() <= 2) {
@@ -254,7 +258,7 @@ function battleTitle() {
 }
 
 function spawnEnemies() {
-	const cx = (battleWidth / 2) | 0;
+	const cx = (boardWidth / 2) | 0;
 	const w = worldNumber();
 	const last = battleKind == 2 && levelIndex >= campaignLength - 1;
 	const taken = {};
@@ -281,7 +285,7 @@ function spawnEnemies() {
 	let n = queue.length;
 	const spots = [];
 	for (let y = 0; y < 3; y++) {
-		for (let x = 0; x < battleWidth; x++) {
+		for (let x = 0; x < boardWidth; x++) {
 			if (!y && taken[x]) continue;
 			spots.push([x, y]);
 		}
@@ -299,20 +303,63 @@ function spawnEnemies() {
 }
 
 function spawnBattleRocks() {
-	battleObstacles = [];
-	for (let y = 0; y < battleHeight; y++) battleObstacles[y] = [];
 	let n = 2 + (Math.random() * 2 | 0);
 	for (let t = n * 8; t-- && n;) {
-		const x = 1 + (Math.random() * (battleWidth - 2) | 0);
+		const x = 1 + (Math.random() * (boardWidth - 2) | 0);
 		const y = 2 + (Math.random() * 4 | 0);
-		if (getUnitAt(x, y) || battleObstacles[y][x]) continue;
-		battleObstacles[y][x] = 1;
+		if (getUnitAt(x, y) || hasObstacle(x, y)) continue;
+		obstacles[y][x] = 1;
 		n --;
 	}
 }
 
 function hasObstacle(x, y) {
-	return battleObstacles[y] && battleObstacles[y][x];
+	return (obstacles[y] && obstacles[y][x]) || (rescues[y] && rescues[y][x] && !rescueDying[y][x]);
+}
+
+function canToggleMode() {
+	return !battleKind && !modeLocked && !showObjective && !showPick && !showUpgrade && !showEnd && state == 1 && !animating && !moving;
+}
+
+function toggleStageMode() {
+	if (!canToggleMode()) return;
+	if (puzzleBattle) {
+		puzzleBattle = 0;
+		battleActive = 0;
+		battleUnits = [];
+		battleTiles = [];
+		battleHints = [];
+		skipObjective = 1;
+		initBoard();
+		modeLocked = 0;
+		return;
+	}
+	startPuzzleBattle();
+}
+
+function startPuzzleBattle() {
+	puzzleBattle = 1;
+	battleActive = 1;
+	battleResult = 0;
+	animating = 0;
+	thinking = 0;
+	battleEpoch ++;
+	battleAim = null;
+	battleTiles = [];
+	battleHints = [];
+	battleControl = null;
+	battleSelect = null;
+	battleUnits = [makeUnit(getUnitDefinition(UNITS[0][0]), player.x, player.y)];
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			if (enemies[y][x] > 0 && enemies[y][x] < 4) {
+				const u = makeFoe(0, x, y, enemies[y][x]);
+				u.advance = 0;
+				battleUnits.push(u);
+			}
+		}
+	}
+	beginRound();
 }
 
 function resetBattle() {
@@ -328,7 +375,7 @@ function getUnitAt(x, y) {
 }
 
 function isMapEmptyAt(x, y) {
-	return x >= 0 && y >= 0 && x < battleWidth && y < battleHeight && !getUnitAt(x, y) && !hasObstacle(x, y);
+	return inBounds(x, y) && !getUnitAt(x, y) && !hasObstacle(x, y);
 }
 
 function checkForBattleEnd() {
@@ -340,7 +387,7 @@ function checkForBattleEnd() {
 		if (u.hp <= 0) continue;
 		if (u.enemy) {
 			e ++;
-			if (u.advance && u.y >= battleHeight - 1) breach = 1;
+			if (u.advance && !puzzleBattle && u.y >= boardHeight - 1) breach = 1;
 		} else p ++;
 	}
 	if (!p || breach) {
@@ -363,8 +410,24 @@ function battleFinish(result) {
 	battleTiles = [];
 	battleHints = [];
 	if (result == 2) {
-		showUpgrade = 1;
-		defaultUpgradePicks();
+		if (puzzleBattle) {
+			for (let y = 0; y < boardHeight; y++) {
+				for (let x = 0; x < boardWidth; x++) {
+					if (rescues[y][x]) {
+						rescueDying[y][x] = 1;
+						collectRescue(x, y);
+					}
+					if (enemies[y][x] > 0 && enemies[y][x] < 4) {
+						enemies[y][x] = 0;
+						enemiesCleared ++;
+					}
+				}
+			}
+			countEnemiesAndCoinsLeft();
+		} else {
+			showUpgrade = 1;
+			defaultUpgradePicks();
+		}
 	}
 	scheduleEndScreen();
 }
@@ -481,6 +544,7 @@ function nextRoundPhase() {
 }
 
 function playerMove(u, x, y) {
+	modeLocked = 1;
 	performMove(u, x, y, () => {
 		battleAim = null;
 		battleHints = [];
@@ -494,6 +558,7 @@ function playerMove(u, x, y) {
 }
 
 function playerAttack(u, x, y) {
+	modeLocked = 1;
 	const hits = u.actHits(x, y);
 	if (!hits.length) {
 		if (u.moved) battleFinishUnit(u);
@@ -518,7 +583,7 @@ function rayTarget(u, x, y) {
 	for (let i = 1; i <= u.reach; i++) {
 		const nx = u.x + sx * i;
 		const ny = u.y + sy * i;
-		if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) return null;
+		if (!inBounds(nx, ny)) return null;
 		if (hasObstacle(nx, ny)) return null;
 		const t = getUnitAt(nx, ny);
 		if (t) return t.enemy != u.enemy ? t : null;
@@ -660,6 +725,7 @@ function pickKnightAim(u, dx, dy, dx2, dy2) {
 
 function battleEndTurn() {
 	if (!battleActive || battleResult || animating || battlePhase) return;
+	modeLocked = 1;
 	battleEpoch ++;
 	battleAim = null;
 	battleTiles = [];
@@ -672,11 +738,12 @@ function getPosFromEvent(event) {
 	if (!cellSize) return null;
 	const x = Math.floor((event.clientX - boardOffsetX) / cellSize);
 	const y = Math.floor((event.clientY - boardOffsetY) / cellSize);
-	if (x < 0 || y < 0 || x >= (battleActive ? battleWidth : boardWidth) || y >= (battleActive ? battleHeight : boardHeight)) return null;
+	if (!inBounds(x, y)) return null;
 	return {x, y};
 }
 
 function battleClick(event) {
+	if (hitModeButton(event)) return;
 	if (showPick || showUpgrade) {
 		hitMenu(event);
 		return;

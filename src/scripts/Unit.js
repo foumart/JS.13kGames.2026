@@ -64,7 +64,7 @@ class Unit {
 				for (let i = 1; i <= this.around; i++) {
 					const nx = ox + rays[r][0] * i;
 					const ny = oy + rays[r][1] * i;
-					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					if (!inBounds(nx, ny)) break;
 					if (hasObstacle(nx, ny)) break;
 					const t = getUnitAt(nx, ny);
 					if (t) {
@@ -81,7 +81,7 @@ class Unit {
 			for (let i = 1; i <= this.reach; i++) {
 				const nx = ox + rays[r][0] * i;
 				const ny = oy + rays[r][1] * i;
-				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+				if (!inBounds(nx, ny)) break;
 				if (hasObstacle(nx, ny)) break;
 				const t = getUnitAt(nx, ny);
 				if (t) {
@@ -111,7 +111,7 @@ class Unit {
 				for (let i = 1; i <= this.around; i++) {
 					const nx = this.x + rays[r][0] * i;
 					const ny = this.y + rays[r][1] * i;
-					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					if (!inBounds(nx, ny)) break;
 					if (hasObstacle(nx, ny)) break;
 					const t = getUnitAt(nx, ny);
 					if (t && t.enemy == this.enemy) break;
@@ -130,7 +130,7 @@ class Unit {
 			for (let i = 1; i <= this.reach; i++) {
 				const nx = this.x + rays[r][0] * i;
 				const ny = this.y + rays[r][1] * i;
-				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+				if (!inBounds(nx, ny)) break;
 				if (hasObstacle(nx, ny)) break;
 				const t = getUnitAt(nx, ny);
 				if (!t) {
