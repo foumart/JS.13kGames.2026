@@ -16,23 +16,25 @@ function encodeBitmap(group, dest) {
 			const z = enc.charCodeAt(i);
 			px.push(z & 3, (z >> 2) & 3, (z >> 4) & 3);
 		}
-		dest.push(drawPalettedBitmap({ width: size, height: size, px, bank }, group[k + 1]));
+		const pal = group[k + 1] || "";
+		const palW = 3;
+		dest.push(drawPalettedBitmap({ width: size, height: size, px, bank, pal, palW }, pal.substr(0, palW)));
 	}
 }
 
 const unitData = [
-	"feff8bec0776433edac905413592159c6c44834", // color bank
+	"feff8bec0776433edac9054149b3592159c6392c44834", // color bank
 	, // unicorn idle
 	, // unicorn jump
-	"980", // leprechaun
-	"4c6", // hydra
-	"4ab", // serpent
-	"762", // merlin
-	"7b5", // fiona
-	"435", // random
-	"7b1", // bleys
-	"782", // caine
-	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@T@`jBdjFiYZiZdjFP@AP@A@@@`EEuGn{[nij[TnF@^@PjFdvZYP[P]CdjNijZ}~ZdUFpjA`YMpdF`PE@UpPnqRqdipx~rjnlZZLTPMD@M`Z@xkAxobd[JiZC[jM`iF`b@``@@Y``bPqlnnkjJBY@PfA`bBXbI@z@P_CPsdfr^ZzdiaPfBPQAPP@@V@`~A@A`]Jdffnjnhij@Q@`QB"
+	"09a0ba0da01a", // leprechaun
+	"6e419a1d42b3", // hydra
+	"bc489ade41de", // serpent
+	"267bc72872de", // merlin
+	"5d75c4", // fiona
+	"5345c759a", // random
+	"1d46ea", // bleys
+	"29a537", // caine
+	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@|@`jBljNk{zkUzljNp@Cp@C@@@`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK@PpfSrUSlkPXVRjfdzzD|pGL@G`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfhkj@s@`sB"
 ];
 
 const backgroundsData = [
@@ -76,6 +78,8 @@ function drawPalettedBitmap(src, ref) {
 	c.px = src.px;
 	c.bank = bank;
 	c.palettes = src.palettes;
+	c.pal = src.pal;
+	c.palW = src.palW;
 	for (let y = 0; y < size; y++) {
 		for (let x = 0; x < size; x++) {
 			const p = src.px[y * size + x];
@@ -88,7 +92,9 @@ function drawPalettedBitmap(src, ref) {
 	return src.palettes[ref] = c;
 }
 
-function drawPaletted(src, ref, dx, dy, dw, dh, ctx) {
+function drawPaletted(src, i, dx, dy, dw, dh, ctx) {
+	const w = src.palW || 3;
+	const ref = typeof i == "string" ? i : (src.pal || "012").substr((i || 0) * w, w) || "012";
 	const bmp = drawPalettedBitmap(src, ref);
 	ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, dx, dy, dw, dh);
 }

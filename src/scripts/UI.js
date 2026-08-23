@@ -1,4 +1,6 @@
 function txt(text, x, y, size) {
+	gameContext.textAlign = "center";
+	gameContext.textBaseline = "top";
 	gameContext.font = "900 " + size + "px arial";
 	if (x != null) gameContext.fillText(text, x, y);
 	return gameContext.measureText(text).width;
@@ -8,7 +10,7 @@ function drawFrame(x, y, w, h) {
 	gameContext.fillStyle = "#546d";
 	const fx = Math.max(0, x - 16);
 	const fy = Math.max(0, y - 8);
-	gameContext.fillRect(fx, fy, Math.min(width, x + w + 16) - fx, y + h + 8 - fy);
+	gameContext.fillRect(fx, fy, Math.min(width, x + w * 1.5) - fx, y + h + 9 - fy);
 }
 
 function drawUI(size) {
@@ -31,9 +33,9 @@ function drawUI(size) {
 		const label = "Score: " + currentScore();
 		const sw = txt(label, null, 0, fontSize);
 		drawFrame(width / 2 - sw / 2, py, sw, fontSize);
-		gameContext.textAlign = "center";
-		gameContext.textBaseline = "top";
 		gameContext.fillStyle = "#ffd";
+		//gameContext.textAlign = "center";
+		//gameContext.textBaseline = "top";
 		txt(label, width / 2, py, fontSize);
 	}
 }
@@ -51,9 +53,9 @@ function drawUIPlayer(x, y, w, h, fs) {
 		drawUnitIcon(rescuedUnits[i], rx + sm / 2, ry + sm / 2, sm);
 		rx += sm + 2;
 	}
-	gameContext.textAlign = "left";
-	gameContext.textBaseline = "top";
 	gameContext.fillStyle = "#fff";
+	//gameContext.textAlign = "left";
+	//gameContext.textBaseline = "top";
 	const tx = x + pic + 8;
 	const sy = y + (pic - fs) / 2;
 	drawSparkle(tx, sy, fs, time / 180);
@@ -78,11 +80,11 @@ function drawUIEnemy(x, y, w, h, fs) {
 	}
 	drawFrame(x + w - maxW, y, maxW, hgt);
 	gameContext.fillStyle = "#fff";
-	gameContext.textAlign = "right";
-	gameContext.textBaseline = "top";
+	//gameContext.textAlign = "right";
+	//gameContext.textBaseline = "top";
 	txt(wsl, x + w, y, fs);
 	let ty = y + fs * 1.2;
-	gameContext.textBaseline = "middle";
+	//gameContext.textBaseline = "middle";
 	for (let i = 0; i < list.length; i++) {
 		const sz = i ? sm : pic;
 		ty += 2;

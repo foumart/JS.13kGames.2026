@@ -55,24 +55,36 @@ let deadUnits = [];
 let levelCaptives = [];
 let rescueDying = [];
 let unitMods = {}; // name -> [hp, att, range, reach]
-const enemyPalettes = [
-	["980", "9a0", "9b0", "910"], // leprechaun: blue, green, red, pink
-	["4c6", "4a7", "4b1", "41c"], // hydra
-	["4ab", "48c", "41b", "4c1"]  // serpent
-];
 const UNITS = [
-	// name, hp, dmg, move, atk, bmp [pal, range, reach] - move/atk: 0:* 1:+ 2:x 3:knight
+	// name,     hp,dm,mv,at,bm[pa,rn,rc] - move/atk: 0:* 1:+ 2:x 3:knight
 	["Unicorn",  5, 2, 3, 1, 0],
-	["Corwin",   9, 2, 0, 3, 9, "4b0", 0],
+	["Corwin",   9, 2, 0, 3, 9, 1, 0],
 	["Merlin",   5, 3, 0, 1, 5],
-	["Benedict", 10,3, 2, 0, 8, "b45", 1, 0],
+	["Benedict", 10,3, 2, 0, 8, 1, 1, 0],
 	["Fiona",    3, 2, 0, 2, 6],
 	["Random",   8, 2, 1, 1, 7],
 	["Bleys",    7, 2, 1, 1, 8],
-	["Julian",   7, 2, 2, 0, 6, "c62"],
+	["Julian",   7, 2, 2, 0, 6, 1],
 	["Caine",    9, 2, 2, 2, 9],
-	["Gerard",   12,3, 1, 1, 7, "a5c", 1, 0],
-	["Eric",     10,2, 0, 1, 7, "ac5", 0]
+	["Gerard",   12,3, 1, 1, 7, 1, 1, 0]
+
+	//["Brand",  20,5, 9, 2, 8, 1]
+
+	// Rest of Amberites (except Oberon and Dworkin)
+	//["Eric",   10,2, 0, 1, 7, 2, 0],
+	//["Flora",  4, 1, 0, 1, 7, 2, 0]
+	//["Deirdre",3, 1, 0, 1, 7, 2, 0]
+	//["Martin", 3, 1, 0, 1, 7, 2, 0]
+	
+	// From Chaos
+	//["Jasra",    3, 1, 0, 1, 7, 2, 0]
+	//["Borel",    3, 1, 0, 1, 7, 2, 0]
+	//["Jurt",    3, 1, 0, 1, 7, 2, 0]
+	//["Mandor",    3, 1, 0, 1, 7, 2, 0]
+	//["Dara",    3, 1, 0, 1, 7, 2, 0]
+
+	//["Luke",    3, 1, 0, 1, 7, 2, 0]
+	//["Ghostwheel",    3, 1, 0, 1, 7, 2, 0]
 ];
 
 const tileWidth = 6;
@@ -214,6 +226,10 @@ function leprechaunDying(v) {
 	return v > 3;
 }
 
+function isLeprechaunAlive(v) {
+	return v > 0 && v < 4;
+}
+
 function anyDying() {
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
@@ -221,10 +237,6 @@ function anyDying() {
 		}
 	}
 	return 0;
-}
-
-function isLeprechaunAlive(v) {
-	return v > 0 && v < 4;
 }
 
 function countAliveLeprechaunsOfKind(k) {
@@ -472,6 +484,7 @@ function getUnitDefinition(name) {
 }
 
 function makeUnit(data, x, y, type) {
+	if (typeof data == "string") data = getUnitDefinition(data);
 	const unit = new Unit(data, x, y, type);
 	if (!unit.enemy) {
 		const mod = allyMod(data[0]);
@@ -489,11 +502,11 @@ function makeFoe(kind, x, y, l) {
 	return makeUnit([
 		,
 		kind ? kind > 1 ? 6 + l * 4 : l * 3 : l,
-		kind ? 1 + l : 1 + (l > 2),
+		kind ? 1 + l : (1 + l) * 2,
 		+!kind,
 		2 * !kind,
 		2 + kind,
-		enemyPalettes[kind][l - 1],
+		l - 1,
 		1 + (kind > 1),
 		1 + (!kind && l > 3)
 	], x, y, kind ? 4 : 3);
@@ -577,7 +590,7 @@ function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 	const dh = bmp.height * scale;
 	const bounce = bounceSpeed && Math.sin(time * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
 	drawPaletted(
-		bmp, enemyPalettes[0][(kind || 1) - 1],
+		bmp, (kind || 1) - 1,
 		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh, gameContext
 	);
 }
@@ -585,7 +598,7 @@ function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 function drawUnitIcon(src, cx, cy, size, pal) {
 	const d = !src || src.bgr != null ? src : getUnitDefinition(src);
 	const bmp = unitBitmaps[d && d.bgr != null ? d.bgr : d ? d[5] : 0];
-	pal = pal || (d && (d.pal || typeof d[6] == "string" && d[6]));
+	pal = pal || (d && (d.pal || d[6]));
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
@@ -633,8 +646,8 @@ function drawObjectiveScreen() {
 	gameContext.fillStyle = "#103c";
 	gameContext.fillRect(0, 0, width, height);
 	gameContext.fillStyle = "#fff";
-	gameContext.textAlign = "center";
-	gameContext.textBaseline = "middle";
+	//gameContext.textAlign = "center";
+	//gameContext.textBaseline = "middle";
 	if (battleActive) {
 		txt(battleTitle(), cx, cy - fs * 1.7, fs);
 		txt("Destroy all enemies", cx, cy + fs * 0.7, fs * 0.7);
@@ -663,9 +676,9 @@ function drawObjectiveParts(cx, cy, fs, icon, parts) {
 		total += w;
 	}
 	let x = cx - total / 2;
-	gameContext.textAlign = "left";
-	gameContext.textBaseline = "middle";
 	gameContext.fillStyle = "#fff";
+	//gameContext.textAlign = "left";
+	//gameContext.textBaseline = "middle";
 	for (let i = 0; i < parts.length; i++) {
 		const p = parts[i];
 		if (p.text) {
@@ -1056,12 +1069,12 @@ function drawBoard() {
 	if (showEnd && state > 1) {
 		gameContext.fillStyle = state == 2 ? "#103c" : "#0009";
 		gameContext.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-		gameContext.textAlign = "center";
-		gameContext.textBaseline = "middle";
+		gameContext.fillStyle = "#fff";
+		//gameContext.textAlign = "center";
+		//gameContext.textBaseline = "middle";
 		const cx = gameCanvas.width / 2;
 		const cy = gameCanvas.height / 2;
 		const fs = Math.max(16, size * 0.55 | 0);
-		gameContext.fillStyle = "#fff";
 		txt(state == 2 ? "STAGE CLEAR!" : "STUCK - R", cx, cy - fs * 2.2, fs);
 
 		if (state == 2) {
@@ -1077,8 +1090,8 @@ function drawBoard() {
 			let ix = cx - (ss + 6 + pw + n * gap) / 2;
 			drawSparkle(ix, by - ss / 2, ss, time / 180);
 			ix += ss + 6;
-			gameContext.textAlign = "left";
 			gameContext.fillStyle = "#fff";
+			//gameContext.textAlign = "left";
 			txt("+1", ix, by, psz);
 			ix += pw + gap * 0.35;
 			for (let i = 0; i < n; i++) {

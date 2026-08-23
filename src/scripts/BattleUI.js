@@ -124,8 +124,8 @@ function drawBattle() {
 		gameContext.fillStyle = battleResult == 2 ? "#103c" : "#0009";
 		gameContext.fillRect(0, 0, width, height);
 		gameContext.fillStyle = "#fff";
-		gameContext.textAlign = "center";
-		gameContext.textBaseline = "middle";
+		//gameContext.textAlign = "center";
+		//gameContext.textBaseline = "middle";
 		txt(battleResult == 2 ? "VICTORY!" : "DEFEAT - R", width / 2, height / 2, Math.max(18, tileSize * 0.5 | 0));
 	}
 
@@ -177,9 +177,9 @@ function drawUIUnit(x, y, w, h, fs, u, right) {
 	const fw = pic + 8 + tw;
 	drawFrame(right ? x + w - fw : x, y, fw, Math.max(pic, fs * (u.hero ? 2.2 : 4.6)));
 	u.drawPortrait(px, y, pic);
-	gameContext.textAlign = right ? "right" : "left";
-	gameContext.textBaseline = "top";
 	gameContext.fillStyle = "#fff";
+	//gameContext.textAlign = right ? "right" : "left";
+	//gameContext.textBaseline = "top";
 	const tx = right ? px - 8 : x + pic + 8;
 	txt("HP " + Math.max(0, u.hp) + "/" + u.hpMax, tx, y, fs);
 	txt("Dmg " + u.dmg, tx, y + fs * 1.2, fs);
@@ -196,8 +196,8 @@ function drawMenuBtn(x, y, w, h, label, on, fn, cur) {
 	gameContext.lineWidth = cur ? 4 : 2;
 	gameContext.strokeRect(cur ? x - 2 : x, cur ? y - 2 : y, cur ? w + 4 : w, cur ? h + 4 : h);
 	gameContext.fillStyle = on ? "#120028" : "#fff";
-	gameContext.textAlign = "center";
-	gameContext.textBaseline = "middle";
+	//gameContext.textAlign = "center";
+	//gameContext.textBaseline = "middle";
 	txt(label, x + w / 2, y + h / 2 + 1, h * 0.42 | 0);
 	menuHits.push({x, y, w, h, fn});
 }
@@ -212,8 +212,8 @@ function drawPickScreen() {
 	gameContext.fillStyle = "#103c";
 	gameContext.fillRect(0, 0, width, height);
 	gameContext.fillStyle = "#fff";
-	gameContext.textAlign = "center";
-	gameContext.textBaseline = "middle";
+	//gameContext.textAlign = "center";
+	//gameContext.textBaseline = "middle";
 	txt(battleTitle(), cx, cy - icon * 2.15, fs);
 	const ls = fs * 0.78 | 0;
 	txt("Destroy all enemies", cx, cy - icon * 1.45, ls);
@@ -279,9 +279,9 @@ function drawPickInfo(cx, y, fs) {
 	const moveN = u.range;
 	const atkN = u.around || u.reach;
 	const ls = fs * 0.78 | 0;
-	gameContext.textAlign = "center";
-	gameContext.textBaseline = "top";
 	gameContext.fillStyle = "#fff";
+	//gameContext.textAlign = "center";
+	//gameContext.textBaseline = "top";
 	txt(u.name, cx, y, fs);
 	txt("HP:" + u.hpMax + "  Dmg:" + u.dmg, cx, y + fs * 1.15, ls);
 	txt("Move:" + moveN + " " + rayStyle(u.moveRays()), cx, y + fs * 2.05, ls);
@@ -306,8 +306,8 @@ function drawUpgradeScreen() {
 	gameContext.fillStyle = "#103c";
 	gameContext.fillRect(0, 0, width, height);
 	gameContext.fillStyle = "#fff";
-	gameContext.textAlign = "center";
-	gameContext.textBaseline = "middle";
+	//gameContext.textAlign = "center";
+	//gameContext.textBaseline = "middle";
 	txt("VICTORY!", width / 2, height * 0.1, fs * 1.4 | 0);
 	txt("Choose a bonus", width / 2, height * 0.1 + fs * 1.7, fs);
 	const rowH = icon + fs * 1.1 + btnH + 18;
@@ -328,11 +328,11 @@ function drawUpgradeScreen() {
 		const tw = Math.max(kinds.length, 1) * (btnW + 8) - 8;
 		const rowW = icon + 16 + Math.max(tw, fs * 18);
 		let x = width / 2 - rowW / 2;
-		if (fallen) gameContext.globalAlpha = 0.45;
+		if (fallen) gameContext.globalAlpha = 0.5;
 		drawUnitIcon(u, x + icon / 2, y + icon / 2, icon);
-		gameContext.globalAlpha = 1;
-		gameContext.textAlign = "left";
 		gameContext.fillStyle = "#fff";
+		gameContext.globalAlpha = 1;
+		//gameContext.textAlign = "left";
 		if (fallen) {
 			txt("fallen", x + icon + 12, y + icon / 2, fs);
 		} else {
