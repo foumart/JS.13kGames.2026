@@ -20,7 +20,6 @@ let pickCursor = 0;
 let upgradePicks = {};
 let upgradeCurUnit = 0;
 let upgradeCurOpt = 0;
-let menuHits = [];
 let battleKind = 0; // 1 regular, 2 boss
 
 const battleWidth = 9;
@@ -236,19 +235,6 @@ function applyUpgradePicks() {
 	}
 }
 
-function hitMenu(event) {
-	const x = event.clientX;
-	const y = event.clientY;
-	for (let i = 0; i < menuHits.length; i++) {
-		const h = menuHits[i];
-		if (x >= h.x && y >= h.y && x < h.x + h.w && y < h.y + h.h) {
-			h.fn();
-			return 1;
-		}
-	}
-	return 0;
-}
-
 function battleTitle() {
 	return "World " + worldNumber() + (battleKind == 2 ? " - Boss" : " - Battle");
 }
@@ -328,7 +314,7 @@ function getUnitAt(x, y) {
 }
 
 function isMapEmptyAt(x, y) {
-	return x >= 0 && y >= 0 && x < battleWidth && y < battleHeight && !getUnitAt(x, y) && !hasObstacle(x, y);
+	return inBounds(x, y) && !getUnitAt(x, y) && !hasObstacle(x, y);
 }
 
 function checkForBattleEnd() {
@@ -518,7 +504,7 @@ function rayTarget(u, x, y) {
 	for (let i = 1; i <= u.reach; i++) {
 		const nx = u.x + sx * i;
 		const ny = u.y + sy * i;
-		if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) return null;
+		if (!inBounds(nx, ny)) return null;
 		if (hasObstacle(nx, ny)) return null;
 		const t = getUnitAt(nx, ny);
 		if (t) return t.enemy != u.enemy ? t : null;
@@ -672,15 +658,12 @@ function getPosFromEvent(event) {
 	if (!cellSize) return null;
 	const x = Math.floor((event.clientX - boardOffsetX) / cellSize);
 	const y = Math.floor((event.clientY - boardOffsetY) / cellSize);
-	if (x < 0 || y < 0 || x >= (battleActive ? battleWidth : boardWidth) || y >= (battleActive ? battleHeight : boardHeight)) return null;
+	if (!inBounds(x, y)) return null;
 	return {x, y};
 }
 
 function battleClick(event) {
-	if (showPick || showUpgrade) {
-		hitMenu(event);
-		return;
-	}
+	if (showPick || showUpgrade || showEnd) return;
 	if (showObjective) {
 		dismissObjective();
 		return;
@@ -690,12 +673,6 @@ function battleClick(event) {
 		return;
 	}
 	if (battleResult) return;
-	const edx = event.clientX - endTurnX;
-	const edy = event.clientY - endTurnY;
-	if (!battlePhase && !animating && edx * edx + edy * edy <= endTurnR * endTurnR) {
-		battleEndTurn();
-		return;
-	}
 	if (animating) return;
 	const cell = getPosFromEvent(event);
 	if (!cell) return;

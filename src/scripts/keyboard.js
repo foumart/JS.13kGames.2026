@@ -2,7 +2,9 @@ let debugKeys = 1; // 0 for release zip
 
 function onKeyDown(event) {
 	const k = event.keyCode;
-	if (debugKeys && k == 78) {
+	if (debugKeys && (k == 78 || event.key == "n" || event.key == "N")) {
+		event.preventDefault();
+		if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 		debugAdvance();
 		return;
 	}

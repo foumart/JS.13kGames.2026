@@ -12,7 +12,7 @@
 CanvasRenderingContext2D.prototype.roundRect
 
 /**
- * mainDiv
+ * Main div
  * @type {!HTMLElement}
  */
 var mainDiv
@@ -22,3 +22,51 @@ var mainDiv
  * @type {!HTMLCanvasElement}
  */
 var gameCanvas
+
+/**
+ * Left panel - player stats
+ * @type {!HTMLElement}
+ */
+var L
+
+/**
+ * Score panel
+ * @type {!HTMLElement}
+ */
+var S
+
+/**
+ * Right panel - enemy stats
+ * @type {!HTMLElement}
+ */
+var R
+
+/**
+ * overlay
+ * @type {!HTMLElement}
+ */
+var ov
+
+/**
+ * msg
+ * @type {!HTMLElement}
+ */
+var msg
+
+/**
+ * btnWrap
+ * @type {!HTMLElement}
+ */
+var btnWrap
+
+/**
+ * retryBtn
+ * @type {!HTMLButtonElement}
+ */
+var retryBtn
+
+/**
+ * nextBtn
+ * @type {!HTMLButtonElement}
+ */
+var nextBtn

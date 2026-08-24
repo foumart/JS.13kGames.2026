@@ -3,8 +3,8 @@ function getProbability(x, y, wantEnemy) {
 	for (let i = 0; i < battleUnits.length; i++) {
 		const t = battleUnits[i];
 		if (t.hp <= 0 || t.enemy != wantEnemy) continue;
-		p += battleWidth - Math.min(battleWidth - 1, Math.abs(t.x - x));
-		p += battleHeight - Math.min(battleHeight - 1, Math.abs(t.y - y));
+		p += boardWidth - Math.min(boardWidth - 1, Math.abs(t.x - x));
+		p += boardHeight - Math.min(boardHeight - 1, Math.abs(t.y - y));
 	}
 	return p;
 }

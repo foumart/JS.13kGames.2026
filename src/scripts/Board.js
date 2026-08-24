@@ -4,6 +4,7 @@ let cellSize = 1;
 let boardOffsetX = 0;
 let boardOffsetY = 0;
 let portrait;
+let iconContext;
 
 let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
 let obstacles = [];
@@ -241,8 +242,8 @@ function anyDying() {
 
 function countAliveLeprechaunsOfKind(k) {
 	let n = 0;
-	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
+	for (let y = 0; y < enemies.length; y++) {
+		for (let x = 0; x < enemies[y].length; x++) {
 			if (enemies[y][x] == k) n ++;
 		}
 	}
@@ -444,8 +445,12 @@ function collectCoin(x, y) {
 	return [x, y, 0, -1];
 }
 
+function getCurrentContext() {
+	return iconContext || gameContext;
+}
+
 function drawSparkle(x, y, s, n) {
-	gameContext.drawImage(objectBitmaps[3 + (n & 1)], 0, 0, tileWidth, tileWidth, x, y, s, s);
+	getCurrentContext().drawImage(objectBitmaps[3 + (n & 1)], 0, 0, tileWidth, tileWidth, x, y, s, s);
 }
 
 function pickRescueBmp() {
@@ -484,7 +489,7 @@ function getUnitDefinition(name) {
 }
 
 function makeUnit(data, x, y, type) {
-	if (typeof data == "string") data = getUnitDefinition(data);
+	//if (typeof data == "string") data = getUnitDefinition(data);
 	const unit = new Unit(data, x, y, type);
 	if (!unit.enemy) {
 		const mod = allyMod(data[0]);
@@ -499,10 +504,16 @@ function makeUnit(data, x, y, type) {
 
 function makeFoe(kind, x, y, l) {
 	l = l ? l > 4 ? 4 : l : 1;
+	console.log(l, kind, x, y);
 	return makeUnit([
 		,
-		kind ? kind > 1 ? 6 + l * 4 : l * 3 : l,
-		kind ? 1 + l : (1 + l) * 2,
+		// kind: 1: leprechaun, 2: boss
+		// HP:
+		kind ? kind > 1 ? 6 + l * 4 : l * 3
+			: l * 2 - 1,
+		// DMG
+		kind ? (1 + l) * 2
+			: l,
 		+!kind,
 		2 * !kind,
 		2 + kind,
@@ -591,7 +602,7 @@ function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 	const bounce = bounceSpeed && Math.sin(time * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
 	drawPaletted(
 		bmp, (kind || 1) - 1,
-		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh, gameContext
+		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh, getCurrentContext()
 	);
 }
 
@@ -602,8 +613,8 @@ function drawUnitIcon(src, cx, cy, size, pal) {
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	if (pal) drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, gameContext);
-	else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
+	if (pal) drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, getCurrentContext());
+	else getCurrentContext().drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }
 
 function drawMoveArrows(size) {
@@ -633,62 +644,6 @@ function drawGoldFlies(size) {
 		const px = boardOffsetX + f.x * size + (size - cs) / 2;
 		const py = boardOffsetY + f.y * size + size - cs - size * 0.06;
 		gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, cs, cs);
-	}
-}
-
-function drawObjectiveScreen() {
-	if (!showObjective) return;
-	const size = cellSize || Math.min(width, height) / 12;
-	const fs = Math.max(18, size /2);
-	const icon = Math.max(32, size * 0.9);
-	const cx = width / 2;
-	const cy = height / 2;
-	gameContext.fillStyle = "#103c";
-	gameContext.fillRect(0, 0, width, height);
-	gameContext.fillStyle = "#fff";
-	//gameContext.textAlign = "center";
-	//gameContext.textBaseline = "middle";
-	if (battleActive) {
-		txt(battleTitle(), cx, cy - fs * 1.7, fs);
-		txt("Destroy all enemies", cx, cy + fs * 0.7, fs * 0.7);
-	} else {
-		const lh = fs * 2;
-		const ic = icon * 1.2;
-		let y = height / 4;
-		txt("World: " + worldNumber() + "-" + shadowNumber(), cx, y, fs);
-		txt("Stage: " + stageNumber(), cx, y + lh, fs);
-		if (stageCaptive) drawObjectiveParts(cx, y*2, fs, ic, [
-			{ text: "Rescue " }, { bmp: stageCaptive }, { text: stageCaptive }
-		]);
-		drawObjectiveParts(cx + ic * 0.4, y*2 + lh * (stageCaptive ? 1.35 : 0.55), fs, ic, [
-			{ text: "Proceed to " }, { sparkle: 1 }
-		]);
-	}
-}
-
-function drawObjectiveParts(cx, cy, fs, icon, parts) {
-	const gap = icon * 0.2;
-	let total = 0;
-	const widths = [];
-	for (let i = 0; i < parts.length; i++) {
-		const w = parts[i].text ? txt(parts[i].text, null, 0, fs) : icon + gap;
-		widths.push(w);
-		total += w;
-	}
-	let x = cx - total / 2;
-	gameContext.fillStyle = "#fff";
-	//gameContext.textAlign = "left";
-	//gameContext.textBaseline = "middle";
-	for (let i = 0; i < parts.length; i++) {
-		const p = parts[i];
-		if (p.text) {
-			txt(p.text, x, cy, fs);
-		} else if (p.sparkle) {
-			drawSparkle(x + gap / 2, cy - icon / 2, icon, time / 180);
-		} else {
-			drawUnitIcon(p.bmp, x + (icon + gap) / 2, cy, icon);
-		}
-		x += widths[i];
 	}
 }
 
@@ -733,16 +688,20 @@ function hideEndButtons() {
 
 function ensureEndButtons() {
 	if (endBtnWrap) return;
-	endBtnWrap = document.createElement("div");
-	endBtnWrap.id = "btnWrap";
-	endRetryBtn = document.createElement("button");
-	endRetryBtn.id = "retryBtn";
-	endRetryBtn.textContent = "RETRY";
-	endBtnWrap.appendChild(endRetryBtn);
-	endNextBtn = document.createElement("button");
-	endNextBtn.id = "nextBtn";
-	endBtnWrap.appendChild(endNextBtn);
-	mainDiv.appendChild(endBtnWrap);
+	endBtnWrap = btnWrap;
+	endRetryBtn = retryBtn;
+	endNextBtn = nextBtn;
+}
+
+function showBattleTurnButton() {
+	ensureEndButtons();
+	const on = !battlePhase && !animating && !thinking;
+	endRetryBtn.style.display = "none";
+	endNextBtn.style.display = "block";
+	endNextBtn.textContent = "END";
+	endNextBtn.style.opacity = on ? "1" : "0.35";
+	endNextBtn.onclick = battleEndTurn;
+	endBtnWrap.style.display = "flex";
 }
 
 function showEndButtons() {
@@ -770,6 +729,7 @@ function showObjectiveButtons() {
 	endNextBtn.textContent = "START";
 	endNextBtn.onclick = showPick ? confirmParty : dismissObjective;
 	endNextBtn.style.display = "block";
+	endNextBtn.style.opacity = "1";
 	endBtnWrap.style.display = "flex";
 	syncPickButton();
 }
@@ -884,21 +844,21 @@ function debugAdvance() {
 	if (moving) return;
 	showObjective = 0;
 	hideEndButtons();
-	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
+	for (let y = 0; y < enemies.length; y++) {
+		for (let x = 0; x < enemies[y].length; x++) {
 			if (enemies[y][x]) {
 				enemies[y][x] = 0;
-				fillData[y][x] = 1;
+				if (fillData[y]) fillData[y][x] = 1;
 			}
-			if (coins[y][x]) {
+			if (coins[y] && coins[y][x]) {
 				coins[y][x] = 0;
 				coinsCollected ++;
 			}
-			const k = rescues[y][x];
+			const k = rescues[y] && rescues[y][x];
 			if (k) {
 				rescues[y][x] = 0;
-				rescueDying[y][x] = 0;
-				fillData[y][x] = 1;
+				if (rescueDying[y]) rescueDying[y][x] = 0;
+				if (fillData[y]) fillData[y][x] = 1;
 				if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
 			}
 		}
@@ -953,8 +913,6 @@ function fitBoard(cols, rows) {
 function drawEdgeTiles(size, bmp) {
 	const ox = boardOffsetX;
 	const oy = boardOffsetY;
-	const cols = battleActive ? battleWidth : boardWidth;
-	const rows = battleActive ? battleHeight : boardHeight;
 	const gx0 = Math.floor(-ox / size);
 	const gy0 = Math.floor(-oy / size);
 	const gx1 = Math.ceil((width - ox) / size);
@@ -962,7 +920,7 @@ function drawEdgeTiles(size, bmp) {
 	const rock = objectBitmaps[0];
 	for (let gy = gy0; gy < gy1; gy++) {
 		for (let gx = gx0; gx < gx1; gx++) {
-			if (gx >= 0 && gx < cols && gy >= 0 && gy < rows) continue;
+			if (inBounds(gx, gy)) continue;
 			const px = ox + gx * size;
 			const py = oy + gy * size;
 			gameContext.drawImage(bmp, 0, 0, tileWidth, tileWidth, px, py, size, size);
@@ -1063,46 +1021,5 @@ function drawBoard() {
 
 	player.resize();
 	player.draw();
-
-	if (!showObjective && !showEnd) drawUI(size);
-
-	if (showEnd && state > 1) {
-		gameContext.fillStyle = state == 2 ? "#103c" : "#0009";
-		gameContext.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
-		gameContext.fillStyle = "#fff";
-		//gameContext.textAlign = "center";
-		//gameContext.textBaseline = "middle";
-		const cx = gameCanvas.width / 2;
-		const cy = gameCanvas.height / 2;
-		const fs = Math.max(16, size * 0.55 | 0);
-		txt(state == 2 ? "STAGE CLEAR!" : "STUCK - R", cx, cy - fs * 2.2, fs);
-
-		if (state == 2) {
-			const icon = Math.max(28, size * 0.7 | 0);
-			if (isPerfect()) txt("Perfect!", cx, cy - fs * 0.9, fs * 0.72 | 0);
-
-			const by = cy + fs * 0.55;
-			const ss = icon;
-			const psz = fs * 0.85 | 0;
-			const pw = txt("+1", null, 0, psz);
-			const n = rescuedUnits.length;
-			const gap = icon * 1.4;
-			let ix = cx - (ss + 6 + pw + n * gap) / 2;
-			drawSparkle(ix, by - ss / 2, ss, time / 180);
-			ix += ss + 6;
-			gameContext.fillStyle = "#fff";
-			//gameContext.textAlign = "left";
-			txt("+1", ix, by, psz);
-			ix += pw + gap * 0.35;
-			for (let i = 0; i < n; i++) {
-				ix += gap;
-				drawUnitIcon(rescuedUnits[i], ix, by, icon);
-			}
-		} else {
-			txt("SCORE " + currentScore() + "  MOVES " + moveCount, cx, cy - fs * 0.4, fs * 0.7 | 0);
-		}
-	}
-
-	drawObjectiveScreen();
-	if (showObjective || showEnd) drawUI(size);
+	updateUI();
 }

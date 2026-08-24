@@ -1,39 +1,113 @@
 * {
 	padding: 0;
 	margin: 0;
-	/* -webkit-touch-callout: none; */
 }
 
 body {
-	/* background: #124; */
-	/* color: #fff; */
 	overflow: hidden;
 }
 
-/* div, canvas {
+#mainDiv, #gameCanvas, #ui {
 	position: absolute;
-	touch-action: none;
-	user-select: none;
-	-webkit-user-select: none;
-	-webkit-tap-highlight-color: transparent;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+#ui {
+	pointer-events: none;
+}
+
+#L, #S, #R {
+	position: absolute;
+	top: 1vmin;
+	display: none;
+	color: #fff;
+	font: 900 3vmin system-ui;
+	background: #546d;
+	padding: 1vmin 2vmin;
+	gap: 1vmin;
+	z-index: 2;
+}
+
+#L {
+	left: 1vmin;
+	/* flex-direction: column; */
+	align-items: flex-start;
+}
+
+#R {
+	right: 1vmin;
+	/* flex-direction: column; */
+	align-items: flex-end;
+}
+
+#S {
+	/*left: 50%;
+	transform: translateX(-50%);*/
+	left: 45%;
+	align-items: center;
+}
+
+#ov {
+	position: absolute;
+	inset: 0;
+	display: none;
+	background: #103c;
+	pointer-events: none;
+	/*z-index: 1;*/
+}
+
+#msg {
+	/*position: absolute;
+	inset: 0;
+	display: flex;*/
+	/*flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1.2vmin;*/
+	color: #fff;
+	font: 900 7vmin arial;
+	text-align: center;
+	padding: 20% 0;
+}
+
+#msg .s {
+	font-size: 2.8vmin;
+}
+
+.g {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2vmin;
+}
+
+.on {
+	outline: .4vmin solid #fff;
+}
+
+.cur {
+	outline: .5vmin solid #6e6;
+}
+
+#ui canvas {
 	image-rendering: pixelated;
-} */
+}
 
 #btnWrap {
-	/* display: none; */
+	display: none;
 	position: absolute;
 	right: 5vmin;
 	bottom: 5vmin;
-	/* left: auto; */
-	/* transform: none; */
 	gap: 2vmin;
-	/* z-index: 2; */
-	/* align-items: center; */
-	/* justify-content: flex-end; */
+	pointer-events: auto;
+	/*z-index: 9;*/
+	/*align-items: center;*/
 }
 
 button {
-	/* position: relative; */
 	padding: 1.2vmin 4vmin;
 	font: 900 4vmin system-ui;
 	border: 0.6vmin solid #fff;
@@ -41,14 +115,10 @@ button {
 	cursor: pointer;
 	color: #103;
 	background: #fd6;
+	pointer-events: auto;
 }
 
-/*#nextBtn {
-	color: #103;
-	background: #fd6;
+#msg button {
+	font-size: 2.4vmin;
+	padding: .8vmin 2vmin;
 }
-
-#retryBtn {
-	color: #fff;
-	background: #456;
-}*/

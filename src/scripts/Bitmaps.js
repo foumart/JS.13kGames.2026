@@ -46,17 +46,17 @@ const backgroundsData = [
 ];
 
 const objectsData = [
-	"fffffafd0867465243deeabc", // color bank
-	"345", // obstacle
-	"124", // coin
-	"064", // cloudX
-	, // sparkleA
-	, // sparkleB
-	"067", // prison
-	, // up
-	, // right
-	, // down
-	, // left
+	"ffeffafd0867465243deeabc789", // color bank
+	"345678", // obstacle
+	"124674", // coin
+	"064124", // cloudX
+	"012435", // sparkleA
+	"012435", // sparkleB
+	"067123", // prison
+	"012", // up
+	"012", // right
+	"012", // down
+	"012", // left
 	"UEifywyvUuxoH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|@L@C@@@@p@p@sL|Cp@p@L@OL@p@@@"
 ];
 

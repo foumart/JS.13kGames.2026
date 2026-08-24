@@ -261,10 +261,11 @@ function makeRandomLevel(slot) {
 		}
 		sealDead();
 
-		// Levels 1-5 reject cloud-cross; later maps use tile 7
+		// Levels 1-5 reject cloud-cross; later maps use it
 		if (progress < 5 && eachCross()) continue;
 
 		// Fill 1 0 1 only in a pocket (map rim or against a wall)
+		// TODO: still validating 11101 structures alon a wall
 		for (let y = height; y--;) {
 			for (let x = width; x--;) {
 				if (isCrossSite(x, y)) continue;

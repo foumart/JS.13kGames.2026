@@ -5,7 +5,7 @@ let height;
 
 function init() {
 	window.addEventListener("resize", resize);
-	document.addEventListener("keydown", onKeyDown);
+	document.addEventListener("keydown", onKeyDown, true);
 	gameCanvas.addEventListener("pointerdown", battleClick);
 	gameCanvas.addEventListener("pointermove", battleHover);
 	gameCanvas.addEventListener("pointerleave", battleHover);

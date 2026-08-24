@@ -8,7 +8,7 @@ class Unit {
 		this.mv = d[i++];
 		this.atk = d[i++];
 		this.bgr = d[i++];
-		this.pal = typeof d[i] == "number" || typeof d[i] == "string" ? d[i++] : 0;
+		this.palette = typeof d[i] == "number" || typeof d[i] == "string" ? d[i++] : 0;
 		this.x = x;
 		this.y = y;
 		this.type = type || (UNITS.indexOf(d) ? 1 : 0);
@@ -64,7 +64,7 @@ class Unit {
 				for (let i = 1; i <= this.around; i++) {
 					const nx = ox + rays[r][0] * i;
 					const ny = oy + rays[r][1] * i;
-					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					if (!inBounds(nx, ny)) break;
 					if (hasObstacle(nx, ny)) break;
 					const t = getUnitAt(nx, ny);
 					if (t) {
@@ -81,7 +81,7 @@ class Unit {
 			for (let i = 1; i <= this.reach; i++) {
 				const nx = ox + rays[r][0] * i;
 				const ny = oy + rays[r][1] * i;
-				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+				if (!inBounds(nx, ny)) break;
 				if (hasObstacle(nx, ny)) break;
 				const t = getUnitAt(nx, ny);
 				if (t) {
@@ -111,7 +111,7 @@ class Unit {
 				for (let i = 1; i <= this.around; i++) {
 					const nx = this.x + rays[r][0] * i;
 					const ny = this.y + rays[r][1] * i;
-					if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+					if (!inBounds(nx, ny)) break;
 					if (hasObstacle(nx, ny)) break;
 					const t = getUnitAt(nx, ny);
 					if (t && t.enemy == this.enemy) break;
@@ -130,7 +130,7 @@ class Unit {
 			for (let i = 1; i <= this.reach; i++) {
 				const nx = this.x + rays[r][0] * i;
 				const ny = this.y + rays[r][1] * i;
-				if (nx < 0 || ny < 0 || nx >= battleWidth || ny >= battleHeight) break;
+				if (!inBounds(nx, ny)) break;
 				if (hasObstacle(nx, ny)) break;
 				const t = getUnitAt(nx, ny);
 				if (!t) {
@@ -165,8 +165,9 @@ class Unit {
 		gameContext.save();
 		gameContext.translate(px + size / 2, py + size / 2 - hop);
 		gameContext.scale(this.face, 1);
-		if (this.pal) drawPaletted(bmp, this.pal, -dw / 2, -dh / 2, dw, dh, gameContext);
-		else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
+		//if (this.palette) drawPaletted(bmp, this.palette, -dw / 2, -dh / 2, dw, dh, gameContext);
+		//else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
+		drawPaletted(bmp, this.palette, -dw / 2, -dh / 2, dw, dh, gameContext);
 		gameContext.restore();
 	}
 
