@@ -106,7 +106,7 @@ function enemyCard(U) {
 	d.style.textAlign = "right";
 	d.appendChild(document.createTextNode("Vail " + (levelIndex / 3 | 1)));
 	const list = [];
-	if (!isBossBattle()) list.push([4, 1]);
+	if (!isBossBattle()) list.push([shadowNumber() > 1 ? 4 : 2, 1]);
 	for (let k = 0; k < 3; k++) {
 		const n = leftoverKinds[k] + countAliveLeprechaunsOfKind(k + 1);
 		if (n) list.push([k + 1, n]);

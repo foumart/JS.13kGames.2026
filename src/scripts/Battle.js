@@ -193,7 +193,7 @@ function defaultUpgradePicks() {
 }
 
 function setUpgrade(id, kind) {
-	upgradePicks[id] = upgradePicks[id] == kind ? 0 : kind;
+	upgradePicks[id] = kind;
 	const rows = upgradeRows();
 	for (let i = 0; i < rows.length; i++) {
 		if (rows[i].id != id) continue;
@@ -256,7 +256,7 @@ function spawnEnemies() {
 			put(makeFoe(1, cx + 2, 0, last ? 4 : 3), cx + 2);
 		}
 	} else {
-		put(makeFoe(0, cx, 0, 4), cx);
+		put(makeFoe(0, cx, 0, shadowNumber() > 1 ? 4 : 2), cx);
 		if (w > 1) put(makeFoe(1, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
 		if (w > 3) put(makeFoe(2, cx + 2, 0, w - 3 > 3 ? 3 : w - 3), cx + 2);
 	}

@@ -34,8 +34,7 @@ function jailEnemy(grid, enemies, slot) {
 function makeRandomLevel(slot) {
 	const D = genDirs;
 	const progress = slot || 0;
-	let grow = (progress - 3) / 27;
-	if (grow < 0) grow = 0;
+	let grow = progress / 27;
 	if (grow > 1) grow = 1;
 	let width;
 	let height;
@@ -127,7 +126,7 @@ function makeRandomLevel(slot) {
 		return 1;
 	}
 
-	// Turn leftover 1-exit empties into rocks
+	// Turn leftover 1-exit empties into rocks (border only before stage 5)
 	function sealDead() {
 		let hit = 1;
 		while (hit) {
@@ -135,6 +134,7 @@ function makeRandomLevel(slot) {
 			for (let y = height; y--;) {
 				for (let x = width; x--;) {
 					if (grid[y][x] == "0" && walkOpen(x, y) < 2) {
+						if (progress < 5 && x && y && x < width - 1 && y < height - 1) continue;
 						grid[y][x] = "3";
 						hit = 1;
 					}
@@ -186,19 +186,16 @@ function makeRandomLevel(slot) {
 		return 0;
 	}
 
-	// First maps are 9x8; later maps grow
-	width = 9;
-	height = 8;
-	if (progress >= 3) {
-		const widthMin = 9 + (grow * 1 | 0);
-		const heightMin = 8 + (grow * 1 | 0);
-		width = widthMin + R(11 + (grow * 4 | 0) - widthMin + 1);
-		height = heightMin + R(10 + (grow * 3 | 0) - heightMin + 1);
-	}
+	// Stage size
+	const widthMin = 8 + (grow * 1 | 0);
+	const heightMin = 7 + (grow * 1 | 0);
+	width = progress < 2 ? 8 : widthMin + R(10 + (grow * 5 | 0) - widthMin + 1);
+	height = progress < 2 ? 7 : heightMin + R(9 + (grow * 4 | 0) - heightMin + 1);
 
 	// Spawn count from progress, not area - growing a row/column loosens the map
 	let enemyMin = 6 + (progress / 21 | 0);
 	let enemyMax = progress < 6 ? 6 : 7 + (progress / 14 | 0);
+	if (progress < 3) enemyMin = enemyMax = 4 + progress;
 	if (enemyMax < enemyMin) enemyMax = enemyMin;
 	if (enemyMax > 12) enemyMax = 12;
 	const enemyNeed = enemyMin + R(enemyMax - enemyMin + 1);
@@ -256,8 +253,10 @@ function makeRandomLevel(slot) {
 			const e = R(4);
 			if (tryRock(e < 2 ? R(width) : e == 2 ? 0 : width - 1, e < 2 ? (e ? height - 1 : 0) : R(height))) obstacleCount --;
 		}
-		for (let extra = 1 + (width * height / 48 | 0) + R(2); extra--;) {
-			tryRock(1 + R(width - 2), 1 + R(height - 2));
+		if (progress >= 5) {
+			for (let extra = 1 + (width * height / 48 | 0) + R(2); extra--;) {
+				tryRock(1 + R(width - 2), 1 + R(height - 2));
+			}
 		}
 		sealDead();
 

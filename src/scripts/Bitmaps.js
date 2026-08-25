@@ -24,25 +24,25 @@ function encodeBitmap(group, dest) {
 
 const unitData = [
 	"feff8bec0776433edac9054149b3592159c6392c44834", // color bank
-	, // unicorn idle
-	, // unicorn jump
+	"012", // unicorn idle
+	"012", // unicorn jump
 	"09a0ba0da01a", // leprechaun
 	"6e419a1d42b3", // hydra
 	"bc489ade41de", // serpent
-	"267bc72872de", // merlin
-	"5d75c4", // fiona
-	"5345c759a", // random
-	"1d46ea", // bleys
-	"29a537", // caine
-	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@|@`jBljNk{zkUzljNp@Cp@C@@@`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK@PpfSrUSlkPXVRjfdzzD|pGL@G`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfhkj@s@`sB"
+	"267bc72872de", // merlin / julian
+	"5d75c4194", // fiona / flora
+	"53459a5c7", // gerard / eric
+	"1d459a5c7", // bleys / brand
+	"29a5375de", // caine / corwin
+	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@|@`jBljNk{zkUzljNp@Cp@C@@@`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK@?PpfSrUSlkPXVRjfdzzD|pGL@G`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfhkj@s@`sB"
 ];
 
 const backgroundsData = [
 	"3853954a568d68cfffcdf8cf49b", // color bank
 	"348", // swamp
-	, // grass
+	"012345", // grass
 	"674", // clouds
-	"yYgm^vg[vmmWnuo{e{~{^Yn[zfiYffY[fy"
+	"yYgm^vg[vmmWnuo{e{~{^Yn?[zfiYffY[f?y"
 ];
 
 const objectsData = [
@@ -57,7 +57,7 @@ const objectsData = [
 	"012", // right
 	"012", // down
 	"012", // left
-	"UEifywyvUuxoH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|@L@C@@@@p@p@sL|Cp@p@L@OL@p@@@"
+	"UEifywyvUuxoH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
 ];
 
 encodeBitmap(unitData, unitBitmaps);

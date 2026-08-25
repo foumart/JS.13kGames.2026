@@ -40,9 +40,6 @@ let totalScore = 0;
 let scoreStart = 0;
 let scoreBanked = 0;
 let revealPlayerTile = 0;
-let endBtnWrap = null;
-let endNextBtn = null;
-let endRetryBtn = null;
 
 let leftoverEnemies = 0;
 let leftTotalThisLevel = 0;
@@ -60,19 +57,24 @@ const UNITS = [
 	// name,     hp,dm,mv,at,bm[pa,rn,rc] - move/atk: 0:* 1:+ 2:x 3:knight
 	["Unicorn",  5, 2, 3, 1, 0],
 	["Corwin",   9, 2, 0, 3, 9, 1, 0],
-	["Merlin",   5, 3, 0, 1, 5],
+	["Merlin",   5, 2, 0, 1, 5, 2],
 	["Benedict", 10,3, 2, 0, 8, 1, 1, 0],
-	["Fiona",    3, 2, 0, 2, 6],
-	["Random",   8, 2, 1, 1, 7],
+	["Fiona",    4, 2, 0, 2, 6],
+	["Random",   8, 2, 1, 1, 5],
 	["Bleys",    7, 2, 1, 1, 8],
-	["Julian",   7, 2, 2, 0, 6, 1],
+	["Julian",   7, 2, 2, 0, 5, 1],
 	["Caine",    9, 2, 2, 2, 9],
-	["Gerard",   12,3, 1, 1, 7, 1, 1, 0]
+	["Gerard",   12,3, 1, 1, 7, 1, 1, 0],
+	
+	["Eric",     11,2, 1, 0, 7],
+	["Flora",    4, 1, 1, 1, 6, 1, 0],
+	["Martin",   5, 2, 1, 0, 7, 2, 0],
+	["Deirdre",  3, 1, 0, 1, 6, 2, 1, 0],
 
-	//["Brand",  20,5, 9, 2, 8, 1]
+	["Brand",    8, 2, 9, 2, 8, 2, 1, 0]
 
 	// Rest of Amberites (except Oberon and Dworkin)
-	//["Eric",   10,2, 0, 1, 7, 2, 0],
+	
 	//["Flora",  4, 1, 0, 1, 7, 2, 0]
 	//["Deirdre",3, 1, 0, 1, 7, 2, 0]
 	//["Martin", 3, 1, 0, 1, 7, 2, 0]
@@ -504,7 +506,6 @@ function makeUnit(data, x, y, type) {
 
 function makeFoe(kind, x, y, l) {
 	l = l ? l > 4 ? 4 : l : 1;
-	console.log(l, kind, x, y);
 	return makeUnit([
 		,
 		// kind: 1: leprechaun, 2: boss
@@ -609,12 +610,13 @@ function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 function drawUnitIcon(src, cx, cy, size, pal) {
 	const d = !src || src.bgr != null ? src : getUnitDefinition(src);
 	const bmp = unitBitmaps[d && d.bgr != null ? d.bgr : d ? d[5] : 0];
-	pal = pal || (d && (d.pal || d[6]));
+	if (pal == null) pal = d && (d.palette != null ? d.palette : d.pal != null ? d.pal : d[6]);
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	if (pal) drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, getCurrentContext());
-	else getCurrentContext().drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
+	if (typeof pal == "string" ? pal : pal != null && bmp.pal) {
+		drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, getCurrentContext());
+	} else getCurrentContext().drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }
 
 function drawMoveArrows(size) {
@@ -683,61 +685,51 @@ function checkCaptures(flushAcc) {
 }
 
 function hideEndButtons() {
-	if (endBtnWrap) endBtnWrap.style.display = "none";
-}
-
-function ensureEndButtons() {
-	if (endBtnWrap) return;
-	endBtnWrap = btnWrap;
-	endRetryBtn = retryBtn;
-	endNextBtn = nextBtn;
+	btnWrap.style.display = "none";
 }
 
 function showBattleTurnButton() {
-	ensureEndButtons();
 	const on = !battlePhase && !animating && !thinking;
-	endRetryBtn.style.display = "none";
-	endNextBtn.style.display = "block";
-	endNextBtn.textContent = "END";
-	endNextBtn.style.opacity = on ? "1" : "0.35";
-	endNextBtn.onclick = battleEndTurn;
-	endBtnWrap.style.display = "flex";
+	retryBtn.style.display = "none";
+	nextBtn.style.display = "block";
+	nextBtn.textContent = "END";
+	nextBtn.style.opacity = on ? "1" : "0.35";
+	nextBtn.onclick = battleEndTurn;
+	btnWrap.style.display = "flex";
 }
 
 function showEndButtons() {
-	ensureEndButtons();
-	endRetryBtn.style.display = "block";
-	endRetryBtn.onclick = () => {
+	retryBtn.style.display = "block";
+	retryBtn.onclick = () => {
 		if (battleActive) resetBattle();
 		else {
 			skipObjective = 1;
 			resetLevel();
 		}
 	};
-	endNextBtn.style.opacity = "1";
-	endNextBtn.onclick = battleActive ? afterBattleWin : nextLevel;
-	endNextBtn.textContent = battleActive
+	nextBtn.style.opacity = "1";
+	nextBtn.onclick = battleActive ? afterBattleWin : nextLevel;
+	nextBtn.textContent = battleActive
 		? (levelIndex < campaignLength - 1 ? "NEXT LEVEL" : "REPLAY")
 		: (levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL");
-	endNextBtn.style.display = state == 2 ? "block" : "none";
-	endBtnWrap.style.display = "flex";
+	nextBtn.style.display = state == 2 ? "block" : "none";
+	btnWrap.style.display = "flex";
 }
 
 function showObjectiveButtons() {
-	ensureEndButtons();
-	endRetryBtn.style.display = "none";
-	endNextBtn.textContent = "START";
-	endNextBtn.onclick = showPick ? confirmParty : dismissObjective;
-	endNextBtn.style.display = "block";
-	endNextBtn.style.opacity = "1";
-	endBtnWrap.style.display = "flex";
+	retryBtn.style.display = "none";
+	nextBtn.textContent = "START";
+	nextBtn.onclick = showPick ? confirmParty : dismissObjective;
+	nextBtn.style.display = "block";
+	nextBtn.style.opacity = "1";
+	btnWrap.style.display = "flex";
 	syncPickButton();
 }
 
 function syncPickButton() {
-	if (!showPick || !endNextBtn) return;
+	if (!showPick || !nextBtn) return;
 	const need = Math.min(2, livingRescueCount());
-	endNextBtn.style.opacity = battleParty.length >= need ? "1" : "0.35";
+	nextBtn.style.opacity = battleParty.length >= need ? "1" : "0.35";
 }
 
 function dismissObjective() {

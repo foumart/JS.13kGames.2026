@@ -13,10 +13,10 @@ function previewTiles(unit, attack, then) {
 	const epoch = battleEpoch;
 	battleSelect = unit;
 	showTiles(unit, attack);
-	setTimeout(() => {
+	waitDelay(()=> {
 		if (battleResult || epoch != battleEpoch) return;
 		then();
-	}, 99);
+	}, 9);
 }
 
 function nextUnitInQueue(list, then) {
@@ -34,7 +34,8 @@ function nextUnitInQueue(list, then) {
 		battleThink(u, () => {
 			if (battleResult || epoch != battleEpoch) return;
 			if (checkForBattleEnd()) return;
-			setTimeout(next, 280);
+
+			waitDelay(next, 20);
 		});
 	};
 	next();

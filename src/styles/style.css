@@ -85,7 +85,10 @@ body {
 }
 
 .on {
-	outline: .4vmin solid #fff;
+	background: #fff;
+	color: #103;
+	padding: .4vmin;
+	outline: .4vmin solid #fe8;
 }
 
 .cur {
