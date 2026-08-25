@@ -5,6 +5,9 @@ let rainbowAnim = 0;
 let rainbowStart = 0;
 let rainbowDone = 0;
 let rainbowWait = 0;
+let retractX = -1;
+let retractY = -1;
+let hopping = 0;
 
 // N=1 E=2 S=4 W=8
 function dirMask(dx, dy) {
@@ -46,6 +49,38 @@ function isPrevPath(x, y) {
 	if (!canRetract()) return 0;
 	const p = pathTrail[pathTrail.length - 2];
 	return p[0] == x && p[1] == y;
+}
+
+function isTrail(x, y) {
+	for (let i = pathTrail.length - 1; i--;) {
+		if (pathTrail[i][0] == x && pathTrail[i][1] == y) return 1;
+	}
+	return 0;
+}
+
+// retrace back to the older trail tile, one hop per rendered frame
+function startRetract(x, y) {
+	if (!player || moving || state != 1 || showObjective || showEnd || !isTrail(x, y)) return;
+	retractX = x;
+	retractY = y;
+	moving = 1;
+	hopping = 1;
+	stepRetract();
+}
+
+function stepRetract() {
+	// stop the chain in the middle or when reaching exit
+	if (retractX < 0 || state != 1 || (player.x == retractX && player.y == retractY) || !canRetract()) {
+		retractX = -1;
+		hopping = 0;
+		moving = 0;
+		drawBoard();
+		return;
+	}
+	const p = pathTrail[pathTrail.length - 2];
+	player.hopBack(p[0] - player.x, p[1] - player.y);
+	drawBoard();
+	requestAnimationFrame(stepRetract);
 }
 
 // Pull trail + tip floor off immediately so undo never flashes rainbow under the hop

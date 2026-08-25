@@ -118,6 +118,8 @@ function initBoard() {
 	pathTrail = [];
 	moveLog = [];
 	pathCount = 0;
+	retractX = -1;
+	hopping = 0;
 	enemiesTotal = 0;
 	enemiesCleared = 0;
 	coinsCollected = 0;

@@ -4,6 +4,7 @@ function act(dx, dy) {
 	const ny = player.y + dy;
 	if (isPassable(nx, ny, dx, dy)) player.moveTo(dx, dy);
 	else if (isPrevPath(nx, ny)) player.retractTo(dx, dy);
+	else startRetract(nx, ny);
 }
 
 function puzzleMoveAt(x, y) {
@@ -19,6 +20,7 @@ function puzzleClick(event) {
 	if (!cell) return;
 	const dir = puzzleMoveAt(cell.x, cell.y);
 	if (dir) act(dir[0], dir[1]);
+	else startRetract(cell.x, cell.y);
 }
 
 function redraw() {

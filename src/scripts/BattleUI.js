@@ -10,7 +10,7 @@ function battleHover(event) {
 	}
 	if (!battleActive) {
 		const cell = getPosFromEvent(event);
-		gameCanvas.style.cursor = cell && puzzleMoveAt(cell.x, cell.y) ? "pointer" : "";
+		gameCanvas.style.cursor = cell && (puzzleMoveAt(cell.x, cell.y) || isTrail(cell.x, cell.y)) ? "pointer" : "";
 		return;
 	}
 	if (battleResult || animating) {

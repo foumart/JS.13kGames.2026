@@ -62,6 +62,19 @@ class Player {
 		});
 	}
 
+	hopBack(dx, dy) {
+		if (dx < 0 || dy < 0) this.face = 1;
+		if (dx > 0 || dy > 0) this.face = -1;
+
+		beginRetractPath();
+		this.x += dx;
+		this.y += dy;
+		moveCount ++;
+		restoreFlushed(moveLog.pop() || []);
+		reviveDyingEnemies();
+		checkCaptures();
+	}
+
 	draw() {
 		const cell = this.width;
 		const bmp = unitBitmaps[moving ? 1 : 0];
@@ -71,7 +84,7 @@ class Player {
 		const cx = boardOffsetX + (this.x + this.offsetX) * cell + cell / 2;
 		const cy = boardOffsetY + (this.y + this.offsetY) * cell + cell / 2;
 		const hop = moving
-			? Math.sin(Math.PI * Math.max(Math.abs(this.offsetX), Math.abs(this.offsetY))) * cell * 0.22
+			? (hopping ? 1 : Math.sin(Math.PI * Math.max(Math.abs(this.offsetX), Math.abs(this.offsetY)))) * cell * 0.22
 			: 0;
 
 		gameContext.save();
