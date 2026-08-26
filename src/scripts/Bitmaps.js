@@ -23,17 +23,17 @@ function encodeBitmap(group, dest) {
 }
 
 const unitData = [
-	"feff8bec0776433edac9054149b3592159c6392c44834", // color bank
-	"012", // unicorn idle
-	"012", // unicorn jump
-	"09a0ba0da01a", // leprechaun
-	"6e419a1d42b3", // hydra
-	"bc489ade41de", // serpent
-	"267bc72872de", // merlin / julian
-	"5d75c4194", // fiona / flora
-	"53459a5c7", // gerard / eric
-	"1d459a5c7", // bleys / brand
-	"29a5375de", // caine / corwin
+	"eda776433ec049b3592159c6c90392feff8bf59c44834", // color bank
+	"ab3ac3", // unicorn idle
+	"ab3ac3", // unicorn jump
+	"b52", // leprechaun
+	"712", // hydra
+	"792", // serpent
+	"08e", // merlin / julian
+	"b56", // fiona / flora
+	"be2", // gerard / eric
+	"bd2", // bleys / brand
+	"8e2", // caine / corwin
 	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@|@`jBljNk{zkUzljNp@Cp@C@@@`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK@?PpfSrUSlkPXVRjfdzzD|pGL@G`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfhkj@s@`sB"
 ];
 
@@ -65,7 +65,6 @@ encodeBitmap(backgroundsData, backgroundsBitmaps);
 encodeBitmap(objectsData, objectBitmaps);
 
 function drawPalettedBitmap(src, ref) {
-	ref = ref || "012";
 	if (!src.palettes) src.palettes = {};
 	if (src.palettes[ref]) return src.palettes[ref];
 	const bank = src.bank;
@@ -92,9 +91,14 @@ function drawPalettedBitmap(src, ref) {
 	return src.palettes[ref] = c;
 }
 
+// Shared palette variations, 3 slots each, indexed after a tile's own ones
+//const PALS = "0120463560793920de3823e2abe";
+
 function drawPaletted(src, i, dx, dy, dw, dh, ctx) {
-	const w = src.palW || 3;
-	const ref = typeof i == "string" ? i : (src.pal || "012").substr((i || 0) * w, w) || "012";
+	//const w = src.palW || 3;
+	// index 0 is the tile's main palette; once its own run out, continue into PALS
+	//const o = (i || 0) * w;
+	const ref = i.length > 1 ? i : src.pal;//src.pal.substr(o, w) || PALS.substr(o - src.pal.length, w) || "012";
 	const bmp = drawPalettedBitmap(src, ref);
 	ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, dx, dy, dw, dh);
 }

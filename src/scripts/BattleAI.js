@@ -41,23 +41,29 @@ function nextUnitInQueue(list, then) {
 	next();
 }
 
+// Highest scoring entry, ties randomly
+function bestByScore(list, scoreFn) {
+	let best = -1;
+	let bestS = -999;
+	for (let i = 0; i < list.length; i++) {
+		const s = scoreFn(list[i]);
+		if (s > bestS || (s == bestS && Math.random() < 0.5)) {
+			bestS = s;
+			best = i;
+		}
+	}
+	return [best, bestS];
+}
+
 function battleThink(u, done) {
 	const want = u.enemy ? 0 : 1;
 	const stayHits = u.hits(u.x, u.y);
 
-	if (stayHits.length) {//u.strikeFirst && 
+	if (stayHits.length) {//u.strikeFirst &&
 		previewTiles(u, 1, () => performAttack(u, stayHits, () => {
 			if (checkForBattleEnd()) return;
 			const moves = u.moves();
-			let best = -1;
-			let bestS = -999;
-			for (let i = 0; i < moves.length; i++) {
-				const s = getProbability(moves[i].x, moves[i].y, want);
-				if (s > bestS || (s == bestS && Math.random() < 0.5)) {
-					bestS = s;
-					best = i;
-				}
-			}
+			const [best] = bestByScore(moves, m => getProbability(m.x, m.y, want));
 			if (best < 0) {
 				u.moved = 1;
 				done();
@@ -71,15 +77,7 @@ function battleThink(u, done) {
 	const moves = u.moves();
 	let stayS = stayHits.length * 10 + getProbability(u.x, u.y, want);
 	if (u.advance) stayS = -1;
-	let best = -1;
-	let bestS = -999;
-	for (let i = 0; i < moves.length; i++) {
-		const s = u.hits(moves[i].x, moves[i].y).length * 10 + getProbability(moves[i].x, moves[i].y, want);
-		if (s > bestS || (s == bestS && Math.random() < 0.5)) {
-			bestS = s;
-			best = i;
-		}
-	}
+	const [best, bestS] = bestByScore(moves, m => u.hits(m.x, m.y).length * 10 + getProbability(m.x, m.y, want));
 	if (stayS > bestS && stayHits.length) {
 		previewTiles(u, 1, () => performAttack(u, stayHits, done));
 	} else if (best < 0 || stayS > bestS || (stayS == bestS && Math.random() < 0.5)) {

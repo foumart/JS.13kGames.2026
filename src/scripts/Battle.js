@@ -22,9 +22,6 @@ let upgradeCurUnit = 0;
 let upgradeCurOpt = 0;
 let battleKind = 0; // 1 regular, 2 boss
 
-const battleWidth = 9;
-const battleHeight = 9;
-let battleObstacles = [];
 
 function startBattle() {
 	const skip = skipObjective;
@@ -45,11 +42,8 @@ function startBattle() {
 	battleTiles = [];
 	battleHints = [];
 	battleControl = null;
-	boardWidth = battleWidth;
-	boardHeight = battleHeight;
 	totalScore = scoreStart;
 	battleUnits = [];
-	battleObstacles = [];
 	if (!skip) {
 		battleParty = [];
 		if (livingRescueCount() <= 2) {
@@ -75,13 +69,23 @@ function startBattle() {
 	showObjectiveButtons();
 }
 
+// used when placing enemies for battle
+function clearRock(x, y) {
+	if (obstacles[y]) obstacles[y][x] = 0;
+}
+
 function spawnBattleParty() {
-	battleUnits = [makeUnit(getUnitDefinition(UNITS[0][0]), 4, 7)];
+	// using the puzzle's stage for battle
+	const cx = boardWidth / 2 | 0;
+	const row = boardHeight - 2;
+	clearRock(cx, row);
+	battleUnits = [makeUnit(getUnitDefinition(UNITS[0][0]), cx, row)];
 	for (let i = 0; i < battleParty.length && i < 2; i++) {
-		battleUnits.push(makeUnit(getUnitDefinition(battleParty[i]), i ? 6 : 2, 7));
+		const x = cx + (i ? 2 : -2);
+		clearRock(x, row);
+		battleUnits.push(makeUnit(getUnitDefinition(battleParty[i]), x, row));
 	}
 	spawnEnemies();
-	spawnBattleRocks();
 	beginRound();
 }
 
@@ -92,7 +96,7 @@ function confirmParty() {
 	showPick = 0;
 	hideEndButtons();
 	spawnBattleParty();
-	redraw();
+	drawBoard();
 }
 
 function isDeadBmp(bmp) {
@@ -118,7 +122,7 @@ function movePickCursor(dir) {
 	const n = rescuedUnits.length;
 	if (!n) return;
 	pickCursor = (pickCursor + dir + n) % n;
-	redraw();
+	drawBoard();
 }
 
 function pickPartyBmp(bmp) {
@@ -127,7 +131,7 @@ function pickPartyBmp(bmp) {
 	if (i >= 0) battleParty.splice(i, 1);
 	else if (battleParty.length < 2) battleParty.push(bmp);
 	syncPickButton();
-	redraw();
+	drawBoard();
 }
 
 function pickCursorUnit() {
@@ -148,19 +152,11 @@ function toggleParty(bmp) {
 	pickPartyBmp(bmp);
 }
 
-function battleSurvivors() {
+function battleRoster(aliveOnly) {
 	const list = [];
 	for (let i = 0; i < battleUnits.length; i++) {
 		const unit = battleUnits[i];
-		if (unit.hp > 0 && !unit.enemy) list.push(unit);
-	}
-	return list;
-}
-
-function battleRoster() {
-	const list = [];
-	for (let i = 0; i < battleUnits.length; i++) {
-		if (!battleUnits[i].enemy) list.push(battleUnits[i]);
+		if (!unit.enemy && (!aliveOnly || unit.hp > 0)) list.push(unit);
 	}
 	return list;
 }
@@ -201,20 +197,31 @@ function setUpgrade(id, kind) {
 		const j = rows[i].kinds.indexOf(kind);
 		if (j >= 0) upgradeCurOpt = j;
 	}
-	redraw();
+	drawBoard();
 }
 
+// After the last unit comes RETRY / NEXT buttons
 function moveUpgradeCursor(dx, dy) {
 	const rows = upgradeRows();
 	if (!rows.length) return;
-	upgradeCurUnit = (upgradeCurUnit + dy + rows.length) % rows.length;
+	const last = rows.length;
+	upgradeCurUnit = (upgradeCurUnit + dy + last + 1) % (last + 1);
+	if (upgradeCurUnit == last) {
+		moveEndCursor(dx);
+		drawBoard();
+		return;
+	}
 	const n = rows[upgradeCurUnit].kinds.length;
 	upgradeCurOpt = dx ? (upgradeCurOpt + dx + n) % n : Math.min(upgradeCurOpt, n - 1);
-	redraw();
+	drawBoard();
 }
 
 function pickUpgradeCursor() {
 	const rows = upgradeRows();
+	if (upgradeCurUnit >= rows.length) {
+		activateEndButton();
+		return;
+	}
 	const row = rows[upgradeCurUnit];
 	if (!row) return;
 	const kind = row.kinds[upgradeCurOpt];
@@ -222,7 +229,7 @@ function pickUpgradeCursor() {
 }
 
 function applyUpgradePicks() {
-	const list = battleSurvivors();
+	const list = battleRoster(1);
 	for (let i = 0; i < list.length; i++) {
 		const unit = list[i];
 		const k = upgradePicks[upgradeId(unit)];
@@ -240,25 +247,26 @@ function battleTitle() {
 }
 
 function spawnEnemies() {
-	const cx = (battleWidth / 2) | 0;
+	const cx = boardWidth / 2 | 0;
 	const w = worldNumber();
 	const last = battleKind == 2 && levelIndex >= campaignLength - 1;
 	const taken = {};
 	const put = (u, x) => {
 		battleUnits.push(u);
 		taken[x] = 1;
+		clearRock(x, 0);
 	};
 	if (battleKind == 2) {
-		if (w < 3) put(makeFoe(1, cx, 0, w), cx);
+		if (w < 3) put(createEnemy(1, cx, 0, w), cx);
 		else {
-			put(makeFoe(2, cx, 0, last ? 4 : w - 2 > 3 ? 3 : w - 2), cx);
-			put(makeFoe(1, cx - 2, 0, last ? 4 : 3), cx - 2);
-			put(makeFoe(1, cx + 2, 0, last ? 4 : 3), cx + 2);
+			put(createEnemy(2, cx, 0, last ? 4 : w - 2 > 3 ? 3 : w - 2), cx);
+			put(createEnemy(1, cx - 2, 0, last ? 4 : 3), cx - 2);
+			put(createEnemy(1, cx + 2, 0, last ? 4 : 3), cx + 2);
 		}
 	} else {
-		put(makeFoe(0, cx, 0, shadowNumber() > 1 ? 4 : 2), cx);
-		if (w > 1) put(makeFoe(1, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
-		if (w > 3) put(makeFoe(2, cx + 2, 0, w - 3 > 3 ? 3 : w - 3), cx + 2);
+		put(createEnemy(0, cx, 0, shadowNumber() > 1 ? 4 : 2), cx);
+		if (w > 1) put(createEnemy(1, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
+		if (w > 3) put(createEnemy(2, cx + 2, 0, w - 3 > 3 ? 3 : w - 3), cx + 2);
 	}
 	const queue = [];
 	for (let k = 0; k < 3; k++) {
@@ -267,8 +275,8 @@ function spawnEnemies() {
 	let n = queue.length;
 	const spots = [];
 	for (let y = 0; y < 3; y++) {
-		for (let x = 0; x < battleWidth; x++) {
-			if (!y && taken[x]) continue;
+		for (let x = 0; x < boardWidth; x++) {
+			if (!y && taken[x] || hasObstacle(x, y)) continue;
 			spots.push([x, y]);
 		}
 	}
@@ -280,25 +288,12 @@ function spawnEnemies() {
 		spots[j] = t;
 	}
 	for (let i = 0; i < n; i++) {
-		battleUnits.push(makeFoe(0, spots[i][0], spots[i][1], queue[i]));
-	}
-}
-
-function spawnBattleRocks() {
-	battleObstacles = [];
-	for (let y = 0; y < battleHeight; y++) battleObstacles[y] = [];
-	let n = 2 + (Math.random() * 2 | 0);
-	for (let t = n * 8; t-- && n;) {
-		const x = 1 + (Math.random() * (battleWidth - 2) | 0);
-		const y = 2 + (Math.random() * 4 | 0);
-		if (getUnitAt(x, y) || battleObstacles[y][x]) continue;
-		battleObstacles[y][x] = 1;
-		n --;
+		battleUnits.push(createEnemy(0, spots[i][0], spots[i][1], queue[i]));
 	}
 }
 
 function hasObstacle(x, y) {
-	return battleObstacles[y] && battleObstacles[y][x];
+	return obstacles[y] && obstacles[y][x];
 }
 
 function resetBattle() {
@@ -326,7 +321,7 @@ function checkForBattleEnd() {
 		if (u.hp <= 0) continue;
 		if (u.enemy) {
 			e ++;
-			if (u.advance && u.y >= battleHeight - 1) breach = 1;
+			if (u.advance && u.y >= boardHeight - 1) breach = 1;
 		} else p ++;
 	}
 	if (!p || breach) {
@@ -739,13 +734,10 @@ function battleKey(event) {
 		return;
 	}
 
-	let dx = 0;
-	let dy = 0;
-	if (k == 38 || k == 87) dy = -1;
-	else if (k == 40 || k == 83) dy = 1;
-	else if (k == 37 || k == 65) dx = -1;
-	else if (k == 39 || k == 68) dx = 1;
-	else return;
+	const d = arrowDXY(k);
+	if (!d) return;
+	const dx = d[0];
+	const dy = d[1];
 
 	if (u.moved && !u.acted) {
 		if (u.hits(u.x, u.y).length) playerAttack(u, u.x + dx, u.y + dy);

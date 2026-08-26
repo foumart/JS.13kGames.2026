@@ -66,12 +66,12 @@ const UNITS = [
 	["Caine",    9, 2, 2, 2, 9],
 	["Gerard",   12,3, 1, 1, 7, 1, 1, 0],
 	
-	["Eric",     11,2, 1, 0, 7],
+	/*["Eric",     11,2, 1, 0, 7],
 	["Flora",    4, 1, 1, 1, 6, 1, 0],
 	["Martin",   5, 2, 1, 0, 7, 2, 0],
 	["Deirdre",  3, 1, 0, 1, 6, 2, 1, 0],
 
-	["Brand",    8, 2, 9, 2, 8, 2, 1, 0]
+	["Brand",    8, 2, 9, 2, 8, 2, 1, 0]*/
 
 	// Rest of Amberites (except Oberon and Dworkin)
 	
@@ -89,6 +89,23 @@ const UNITS = [
 	//["Luke",    3, 1, 0, 1, 7, 2, 0]
 	//["Ghostwheel",    3, 1, 0, 1, 7, 2, 0]
 ];
+
+const EnemyPalettes = [
+	["d72", "3d2", "d32", "eb2"],
+	["396", "bd2", "382", "bce"],
+	["456" ,"ce2", "382", "bde"]
+]
+
+const UP = [0, -1];
+const RIGHT = [1, 0];
+const DOWN = [0, 1];
+const LEFT = [-1, 0];
+
+const ROOK = [UP, RIGHT, DOWN, LEFT];
+const BISHOP = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+const QUEEN = [...ROOK, ...BISHOP];
+const KNIGHT = [[1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
+const RAY = [QUEEN, ROOK, BISHOP, KNIGHT];
 
 const tileWidth = 6;
 const unitScale = 0.665;
@@ -220,7 +237,7 @@ function useSparkAbility() {
 	fillData[y][x] = 2;
 	fillCharges --;
 	checkCaptures();
-	redraw();
+	drawBoard();
 }
 
 function leprechaunType(v) {
@@ -352,7 +369,7 @@ function getClusters() {
 				const cx = cur[0];
 				const cy = cur[1];
 				cluster.push(cur);
-				const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+				const dirs = ROOK;
 				for (let i = 0; i < 4; i++) {
 					const nx = cx + dirs[i][0];
 					const ny = cy + dirs[i][1];
@@ -372,10 +389,9 @@ function isClusterSurrounded(cluster) {
 	for (let i = 0; i < cluster.length; i++) {
 		const x = cluster[i][0];
 		const y = cluster[i][1];
-		const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 		for (let d = 0; d < 4; d++) {
-			const nx = x + dirs[d][0];
-			const ny = y + dirs[d][1];
+			const nx = x + ROOK[d][0];
+			const ny = y + ROOK[d][1];
 			if (!inBounds(nx, ny)) continue;
 			if (obstacles[ny][nx] || rescues[ny][nx]) continue; // wall / cell seals this side
 			let inCluster = 0;
@@ -430,6 +446,7 @@ function restoreFlushed(flushed) {
 		if (bmp) {
 			rescues[y][x] = bmp;
 			rescueDying[y][x] = 0;
+			obstacles[y][x] = 0;
 			const k = rescuedUnits.indexOf(bmp);
 			if (k >= 0) rescuedUnits.splice(k, 1);
 		} else if (flushed[i][3] < 0) {
@@ -506,24 +523,28 @@ function makeUnit(data, x, y, type) {
 	return unit;
 }
 
-function makeFoe(kind, x, y, l) {
+function getEnemyPalette(kind, l) {
+	return l > 1 ? EnemyPalettes[kind][l - 2] : unitData[kind + 3];
+}
+
+function createEnemy(unitType, x, y, l) {
 	l = l ? l > 4 ? 4 : l : 1;
 	return makeUnit([
 		,
-		// kind: 1: leprechaun, 2: boss
+		// unitType: 1: leprechaun, 2: hydra, 3: serpent
 		// HP:
-		kind ? kind > 1 ? 6 + l * 4 : l * 3
-			: l * 2 - 1,
+		unitType ? unitType > 1 ? 6 + l * 4 : l * 3
+			: l + 1,
 		// DMG
-		kind ? (1 + l) * 2
-			: l,
-		+!kind,
-		2 * !kind,
-		2 + kind,
-		l - 1,
-		1 + (kind > 1),
-		1 + (!kind && l > 3)
-	], x, y, kind ? 4 : 3);
+		unitType ? (1 + l) * 2
+			: l < 3 ? 1 : 2,
+		+!unitType,
+		2 * !unitType,
+		2 + unitType,
+		getEnemyPalette(unitType, l),
+		1 + (unitType > 1),
+		1 + (!unitType && l > 3)
+	], x, y, unitType ? 4 : 3);
 }
 
 function collectRescue(x, y) {
@@ -532,6 +553,7 @@ function collectRescue(x, y) {
 	rescues[y][x] = 0;
 	rescueDying[y][x] = 0;
 	fillData[y][x] = 1;
+	obstacles[y][x] = 1; // the emptied cage stays put, and blocks in the battle too
 	if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
 	return [x, y, k];
 }
@@ -592,8 +614,9 @@ function scheduleEndScreen() {
 		}
 
 		showEnd = 1;
+		endBtnCur = 1; // start on NEXT; clamps back to RETRY when it is the only one
 		showEndButtons();
-		redraw();
+		drawBoard();
 	});
 }
 
@@ -604,7 +627,7 @@ function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
 	const dh = bmp.height * scale;
 	const bounce = bounceSpeed && Math.sin(time * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
 	drawPaletted(
-		bmp, (kind || 1) - 1,
+		bmp, getEnemyPalette(0, kind || 1),
 		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh, getCurrentContext()
 	);
 }
@@ -623,13 +646,10 @@ function drawUnitIcon(src, cx, cy, size, pal) {
 
 function drawMoveArrows(size) {
 	if (moving || state != 1 || showObjective || showEnd) return;
-	const dirs = [[0, -1], [1, 0], [0, 1], [-1, 0]];
 	const showGold = (time / 1000 | 0) % 2;
 	for (let i = 0; i < 4; i++) {
-		const dx = dirs[i][0];
-		const dy = dirs[i][1];
-		const nx = player.x + dx;
-		const ny = player.y + dy;
+		const nx = player.x + ROOK[i][0];
+		const ny = player.y + ROOK[i][1];
 		if (!puzzleMoveAt(nx, ny) || isPrevPath(nx, ny)) continue;
 		if ((coins[ny][nx] || exits[ny][nx]) && showGold) continue;
 		const bmp = objectBitmaps[6 + i];
@@ -690,6 +710,35 @@ function hideEndButtons() {
 	btnWrap.style.display = "none";
 }
 
+// Keyboard focus across the RETRY / NEXT buttons
+let endBtnCur = 0;
+
+function endButtons() {
+	const a = [];
+	if (retryBtn.style.display != "none") a.push(retryBtn);
+	if (nextBtn.style.display != "none") a.push(nextBtn);
+	return a;
+}
+
+function syncEndCursor() {
+	const a = endButtons();
+	if (endBtnCur >= a.length) endBtnCur = a.length - 1;
+	const on = showUpgrade ? upgradeCurUnit >= upgradeRows().length : showEnd;
+	for (let i = 0; i < a.length; i++) a[i].className = on && i == endBtnCur ? "cur" : "";
+}
+
+function moveEndCursor(dx) {
+	const n = endButtons().length;
+	if (!n || !dx) return;
+	endBtnCur = (endBtnCur + dx + n) % n;
+	drawBoard();
+}
+
+function activateEndButton() {
+	const b = endButtons()[endBtnCur];
+	if (b) b.onclick();
+}
+
 function showBattleTurnButton() {
 	const on = !battlePhase && !animating && !thinking;
 	retryBtn.style.display = "none";
@@ -698,6 +747,7 @@ function showBattleTurnButton() {
 	nextBtn.style.opacity = on ? "1" : "0.35";
 	nextBtn.onclick = battleEndTurn;
 	btnWrap.style.display = "flex";
+	syncEndCursor();
 }
 
 function showEndButtons() {
@@ -716,6 +766,7 @@ function showEndButtons() {
 		: (levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL");
 	nextBtn.style.display = state == 2 ? "block" : "none";
 	btnWrap.style.display = "flex";
+	syncEndCursor();
 }
 
 function showObjectiveButtons() {
@@ -725,6 +776,7 @@ function showObjectiveButtons() {
 	nextBtn.style.display = "block";
 	nextBtn.style.opacity = "1";
 	btnWrap.style.display = "flex";
+	syncEndCursor();
 	syncPickButton();
 }
 
@@ -738,7 +790,7 @@ function dismissObjective() {
 	if (!showObjective) return;
 	showObjective = 0;
 	hideEndButtons();
-	redraw();
+	drawBoard();
 }
 
 function nextLevel() {
@@ -757,15 +809,19 @@ function nextLevel() {
 	}
 }
 
-function afterBattleWin() {
-	applyUpgradePicks();
-	markHeroesDead();
+function clearLeftovers() {
 	leftoverEnemies = 0;
 	leftTotalThisLevel = 0;
 	leftoverKinds = [0, 0, 0];
 	leftUnitsThisLevel = [0, 0, 0];
 	leftGoldThisLevel = 0;
 	leftUnitConverted = 0;
+}
+
+function afterBattleWin() {
+	applyUpgradePicks();
+	markHeroesDead();
+	clearLeftovers();
 	showUpgrade = 0;
 	upgradePicks = {};
 	showPick = 0;
@@ -783,12 +839,7 @@ function afterBattleWin() {
 }
 
 function restartCampaign() {
-	leftoverEnemies = 0;
-	leftTotalThisLevel = 0;
-	leftoverKinds = [0, 0, 0];
-	leftUnitsThisLevel = [0, 0, 0];
-	leftGoldThisLevel = 0;
-	leftUnitConverted = 0;
+	clearLeftovers();
 	rescuedUnits = [];
 	deadUnits = [];
 	levelCaptives = [];

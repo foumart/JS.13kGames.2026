@@ -30,6 +30,16 @@ function battleHover(event) {
 	gameCanvas.style.cursor = tile ? "pointer" : "";
 }
 
+function outlineUnit(u, size, col, lw, inset) {
+	gameContext.strokeStyle = col;
+	gameContext.lineWidth = Math.max(2, size * lw);
+	gameContext.strokeRect(
+		boardOffsetX + u.x * size + inset,
+		boardOffsetY + u.y * size + inset,
+		size - inset * 2, size - inset * 2
+	);
+}
+
 function battleHinted(x, y) {
 	for (let i = 0; i < battleHints.length; i++) {
 		if (battleHints[i].x == x && battleHints[i].y == y) return 1;
@@ -74,22 +84,10 @@ function drawBattle() {
 	}
 
 	if (battleControl && battleControl.hp > 0) {
-		gameContext.strokeStyle = "#fff";
-		gameContext.lineWidth = Math.max(2, tileSize * 0.06);
-		gameContext.strokeRect(
-			boardOffsetX + battleControl.x * tileSize + 1,
-			boardOffsetY + battleControl.y * tileSize + 1,
-			tileSize - 2, tileSize - 2
-		);
+		outlineUnit(battleControl, tileSize, "#fff", 0.06, 1);
 	}
 	if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {
-		gameContext.strokeStyle = battleSelect.enemy ? "#f89" : "#fe6";
-		gameContext.lineWidth = Math.max(2, tileSize * 0.05);
-		gameContext.strokeRect(
-			boardOffsetX + battleSelect.x * tileSize + 2,
-			boardOffsetY + battleSelect.y * tileSize + 2,
-			tileSize - 4, tileSize - 4
-		);
+		outlineUnit(battleSelect, tileSize, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);
 	}
 
 	const order = battleUnits.slice().sort((a, b) => a.y - b.y);
@@ -122,12 +120,12 @@ function getBattleUIFoe() {
 	return pink || fallback;
 }
 
-function rayStyle(rays) {
-	if (rays == Unit.KNIGHT) return "+";
-	if (rays == Unit.BISHOP) return "X";
-	if (rays == Unit.QUEEN) return "*";
+/*function rayStyle(rays) {
+	if (rays == KNIGHT) return "+";
+	if (rays == BISHOP) return "X";
+	if (rays == QUEEN) return "*";
 	return "*";
-}
+}*/
 
 function upgradeLabel(kind) {
 	if (kind == "hp") return "HP +2";

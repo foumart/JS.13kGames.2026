@@ -49,11 +49,11 @@ class Unit {
 	}
 
 	attackRays() {
-		return Unit.RAY[this.atk] || Unit.QUEEN;
+		return RAY[this.atk] || QUEEN;
 	}
 
 	moveRays() {
-		return Unit.RAY[this.mv] || Unit.QUEEN;
+		return RAY[this.mv] || QUEEN;
 	}
 
 	hits(ox, oy) {
@@ -175,9 +175,3 @@ class Unit {
 		drawUnitIcon(this, x + pic / 2, y + pic / 2, pic);
 	}
 }
-
-Unit.ROOK = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-Unit.BISHOP = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-Unit.QUEEN = [...Unit.ROOK, ...Unit.BISHOP];
-Unit.KNIGHT = [[1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
-Unit.RAY = [Unit.QUEEN, Unit.ROOK, Unit.BISHOP, Unit.KNIGHT];

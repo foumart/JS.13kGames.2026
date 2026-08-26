@@ -1,21 +1,17 @@
 // Random puzzle map generator
 
-// Cache per slot so retrying a stage keeps the same layout
 let generatedLevels = [];
-const genDirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const genDirs = ROOK;
 
-// World-boss puzzle: last of each 9-map world (3 shadows × 3 stages)
 function isBossStage(slot) {
 	return slot % 9 == 8;
 }
 
-// Rescue on the 3rd stage of shadows 1 and 2, not on the world-boss map
 function hasRescue(slot) {
 	const n = slot % 9;
-	return n == 2 || n == 5;
+	return n == 2 || n == 5 || n == 8 && slot < 18;
 }
 
-// Boss battle after the last puzzle of a world
 function isBossBattle() {
 	return isBossStage(levelIndex);
 }
@@ -24,7 +20,7 @@ function getLevelData(slot) {
 	return generatedLevels[slot] || (generatedLevels[slot] = makeRandomLevel(slot));
 }
 
-// Replace one spawned enemy with a jailed hero
+// Replace one spawned enemy with a hero for rescue
 function jailEnemy(grid, enemies, slot) {
 	if (!hasRescue(slot) || !enemies.length) return;
 	const i = Math.random() * enemies.length | 0;

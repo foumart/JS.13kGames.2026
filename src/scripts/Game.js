@@ -23,12 +23,6 @@ function puzzleClick(event) {
 	else startRetract(cell.x, cell.y);
 }
 
-function redraw() {
-	//if (battleActive) drawBattle();
-	//else
-	drawBoard();
-}
-
 function gameStart() {
 	cancelAnimationFrame(gameLoop);
 	doAnimationFrame();
@@ -36,7 +30,7 @@ function gameStart() {
 
 function doAnimationFrame() {
 	time = Date.now();
-	redraw();
+	drawBoard();
 	gameLoop = requestAnimationFrame(doAnimationFrame);
 }
 

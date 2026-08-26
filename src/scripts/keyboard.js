@@ -1,7 +1,26 @@
 let debugKeys = 1; // 0 for release zip
 
+// arrow keys / WASD -> [dx, dy], else 0
+function arrowDXY(k) {
+	if (k == 38 || k == 87) return UP;
+	if (k == 40 || k == 83) return DOWN;
+	if (k == 37 || k == 65) return LEFT;
+	if (k == 39 || k == 68) return RIGHT;
+	return 0;
+}
+
+// R - restart whatever is running
+function resetHere() {
+	if (battleActive) resetBattle();
+	else {
+		skipObjective = 1;
+		resetLevel();
+	}
+}
+
 function onKeyDown(event) {
 	const k = event.keyCode;
+	const d = arrowDXY(k);
 	if (debugKeys && (k == 78 || event.key == "n" || event.key == "N")) {
 		event.preventDefault();
 		if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -13,8 +32,7 @@ function onKeyDown(event) {
 		return;
 	}
 	if (showPick) {
-		if (k == 37 || k == 65) movePickCursor(-1);
-		else if (k == 39 || k == 68) movePickCursor(1);
+		if (d && d[0]) movePickCursor(d[0]);
 		else if (k == 32) pickCursorUnit();
 		else if (k == 13) confirmParty();
 		else if (k == 82) {
@@ -23,10 +41,7 @@ function onKeyDown(event) {
 		return;
 	}
 	if (showUpgrade) {
-		if (k == 37 || k == 65) moveUpgradeCursor(-1, 0);
-		else if (k == 39 || k == 68) moveUpgradeCursor(1, 0);
-		else if (k == 38 || k == 87) moveUpgradeCursor(0, -1);
-		else if (k == 40 || k == 83) moveUpgradeCursor(0, 1);
+		if (d) moveUpgradeCursor(d[0], d[1]);
 		else if (k == 32) {
 			event.preventDefault();
 			pickUpgradeCursor();
@@ -37,13 +52,16 @@ function onKeyDown(event) {
 	}
 	if (showObjective) {
 		if (k == 13 || k == 32) dismissObjective();
-		else if (k == 82) {
-			if (battleActive) resetBattle();
-			else {
-				skipObjective = 1;
-				resetLevel();
-			}
+		else if (k == 82) resetHere();
+		return;
+	}
+	if (showEnd) {
+		if (d && d[0]) moveEndCursor(d[0]);
+		else if (k == 13 || k == 32) {
+			event.preventDefault();
+			activateEndButton();
 		}
+		else if (k == 82) resetHere();
 		return;
 	}
 	if (battleActive) {
@@ -54,28 +72,11 @@ function onKeyDown(event) {
 
 		battleKey(event);
 	}
-	else if (k == 82) { // R reset current stage
-		skipObjective = 1;
-		resetLevel();
-	}
+	else if (k == 82) resetHere();
 	else if (k == 32) {
+		// showEnd returned above, so this is always the in-play spark
 		event.preventDefault();
-		if (showEnd && state == 2) nextLevel();
-		else useSparkAbility();
+		useSparkAbility();
 	}
-	else if (k == 13) {
-		if (showEnd && state == 2) nextLevel();
-	}
-	else if (k == 38 || k == 87) { // up / W
-		act(0, -1);
-	}
-	else if (k == 40 || k == 83) { // down / S
-		act(0, 1);
-	}
-	else if (k == 37 || k == 65) { // left / A
-		act(-1, 0);
-	}
-	else if (k == 39 || k == 68) { // right / D
-		act(1, 0);
-	}
+	else if (d) act(d[0], d[1]);
 }

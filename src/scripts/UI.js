@@ -24,7 +24,7 @@ function row() {
 }
 
 function uiSize() {
-	return Math.max(20, Math.min(width, height) * 0.07 | 0);
+	return Math.max(20, Math.min(width, height) * 0.1 | 0);
 }
 
 function updateUI() {
@@ -112,7 +112,7 @@ function enemyCard(U) {
 		if (n) list.push([k + 1, n]);
 	}
 	for (let i = 0; i < list.length; i++) {
-		const sz = i ? U * 0.55 | 0 : U;
+		const sz = i ? U * 0.5 : U;
 		const r = row();
 		r.style.justifyContent = "flex-end";
 		r.appendChild(document.createTextNode(list[i][1]));
@@ -206,7 +206,7 @@ function fillPick() {
 			g.moveTo(U - 4, 4);
 			g.lineTo(4, U - 4);
 			g.stroke();
-			wrap.onclick = () => { pickCursor = i; redraw(); };
+			wrap.onclick = () => { pickCursor = i; drawBoard(); };
 		} else wrap.onclick = toggleParty.bind(null, bmp);
 		wrap.appendChild(c);
 		r.appendChild(wrap);
@@ -217,8 +217,8 @@ function fillPick() {
 	const u = makeUnit(getUnitDefinition(name), 0, 0);
 	msg.appendChild(line(u.name));
 	msg.appendChild(line("HP:" + u.hpMax + "  Dmg:" + u.dmg, "s"));
-	msg.appendChild(line("Move:" + u.range + " " + rayStyle(u.moveRays()), "s"));
-	msg.appendChild(line("Range:" + (u.around || u.reach) + " " + rayStyle(u.attackRays()), "s"));
+	msg.appendChild(line("Move:" + u.range/* + " " + rayStyle(u.moveRays())*/, "s"));
+	msg.appendChild(line("Range:" + (u.around || u.reach)/* + " " + rayStyle(u.attackRays())*/, "s"));
 }
 
 function fillUpgrade() {

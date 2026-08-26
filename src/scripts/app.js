@@ -26,5 +26,5 @@ function resize() {
 	gameCanvas.width = width;
 	gameCanvas.height = height;
 	gameContext.imageSmoothingEnabled = false;
-	redraw();
+	drawBoard();
 }
