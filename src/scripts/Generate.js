@@ -9,7 +9,7 @@ function isBossStage(slot) {
 
 function hasRescue(slot) {
 	const n = slot % 9;
-	return n == 2 || n == 5 || n == 8 && slot < 18;
+	return n == 2 || n == 5;
 }
 
 function isBossBattle() {
@@ -20,330 +20,205 @@ function getLevelData(slot) {
 	return generatedLevels[slot] || (generatedLevels[slot] = makeRandomLevel(slot));
 }
 
-// Replace one spawned enemy with a hero for rescue
-function jailEnemy(grid, enemies, slot) {
-	if (!hasRescue(slot) || !enemies.length) return;
-	const i = Math.random() * enemies.length | 0;
-	grid[enemies[i][1]][enemies[i][0]] = "A";
-}
-
+// the trail the generator walks is the solution - pockets are filled with enemies
 function makeRandomLevel(slot) {
 	const D = genDirs;
 	const progress = slot || 0;
 	let grow = progress / 27;
 	if (grow > 1) grow = 1;
-	let width;
-	let height;
-	let grid;
-	let enemies;
-	let reserved;
 
 	function R(n) { return Math.random() * n | 0; }
+
+	const width = progress < 2 ? 8 : 8 + R(3 + (grow * 2 | 0));
+	const height = progress < 2 ? 7 : 7 + R(3 + (grow | 0));
+	const area = width * height;
+	let want = progress < 3 ? 4 + progress : 6 + R(3 + (progress / 12 | 0));
+	if (want > 12) want = 12;
+	if (hasRescue(progress)) want ++;
+
 	function inMap(x, y) { return (x | y) >= 0 && x < width && y < height; }
 	function id(x, y) { return x + y * width; }
-	// Obstacle, enemy, or captive - not walkable
-	function solid(t) { return "13A".indexOf(t) >= 0; }
-	function isOf(x, y, s, oob) { return inMap(x, y) ? s.indexOf(grid[y][x]) >= 0 : oob; }
-	function isLeprechaun(t) { return t == "1" || t == "A"; }
 
-	// Count walkable adjacent neighbors
-	function walkOpen(x, y) {
-		let n = 0;
-		for (let d = 4; d--;) {
-			const nx = x + D[d][0];
-			const ny = y + D[d][1];
-			if (inMap(nx, ny) && !solid(grid[ny][nx])) n ++;
+	// keep seeds a tile apart so each one becomes its own pocket
+	function hasRoom(seed, x, y) {
+		for (let d = 9; d--;) {
+			const ax = x + d % 3 - 1;
+			const ay = y + (d / 3 | 0) - 1;
+			if (inMap(ax, ay) && seed[id(ax, ay)]) return 0;
 		}
-		return n;
-	}
-
-	// Flood tiles matching ok; fills seen; returns size
-	function flood(sx, sy, ok, seen) {
-		const stack = [[sx, sy]];
-		seen[id(sx, sy)] = 1;
-		let n = 0;
-		while (stack.length) {
-			const c = stack.pop();
-			n ++;
-			for (let d = 4; d--;) {
-				const x = c[0] + D[d][0];
-				const y = c[1] + D[d][1];
-				const k = id(x, y);
-				if (seen[k] || !inMap(x, y) || !ok(grid[y][x])) continue;
-				seen[k] = 1;
-				stack.push([x, y]);
-			}
-		}
-		return n;
-	}
-
-	// Try tile - if a neighbor would be pinned (or leprechaun cluster > 3)
-	function wouldPin(x, y, tile) {
-		grid[y][x] = tile;
-		let bad = 0;
-		for (let d = 4; d--;) {
-			const nx = x + D[d][0];
-			const ny = y + D[d][1];
-			if (inMap(nx, ny) && !solid(grid[ny][nx]) && walkOpen(nx, ny) < 2) bad = 1;
-		}
-		if (tile == "1" && flood(x, y, isLeprechaun, {}) > 3) bad = 1;
-		grid[y][x] = "0";
-		return bad;
-	}
-
-	// Empty cell that won't pin
-	function canAdd(x, y, allowNeighbor) {
-		if (!inMap(x, y) || grid[y][x] != "0") return 0;
-		if (!allowNeighbor) for (let d = 4; d--;) {
-			const nx = x + D[d][0];
-			const ny = y + D[d][1];
-			if (!inMap(nx, ny) || isOf(nx, ny, "3", 1)) return 0;
-		}
-		return !wouldPin(x, y, "1");
-	}
-
-	// Gap fill: pin is sealed after; skip fills that would make a cluster > 3
-	function canGap(x, y) {
-		if (!inMap(x, y) || grid[y][x] != "0") return 0;
-		grid[y][x] = "1";
-		const big = flood(x, y, isLeprechaun, {}) > 3;
-		grid[y][x] = "0";
-		return !big;
-	}
-
-	function putLeprechaun(x, y) {
-		grid[y][x] = "1";
-		enemies.push([x, y]);
-	}
-
-	function tryRock(x, y) {
-		if (grid[y][x] != "0" || reserved[id(x, y)] || wouldPin(x, y, "3")) return;
-		grid[y][x] = "3";
 		return 1;
 	}
 
-	// Turn leftover 1-exit empties into rocks (border only before stage 5)
-	function sealDead() {
-		let hit = 1;
-		while (hit) {
-			hit = 0;
-			for (let y = height; y--;) {
-				for (let x = width; x--;) {
-					if (grid[y][x] == "0" && walkOpen(x, y) < 2) {
-						if (progress < 5 && x && y && x < width - 1 && y < height - 1) continue;
-						grid[y][x] = "3";
-						hit = 1;
-					}
-				}
-			}
+	function scatterSeeds() {
+		const seed = [];
+		let tint = 0;
+		function plant(x, y, kind) {
+			const shade = (x + y & 1) * 2 - 1;
+			if (tint * shade > 0 || !hasRoom(seed, x, y)) return 0;
+			seed[id(x, y)] = kind;
+			tint += shade;
+			return 1;
 		}
-	}
-
-	// Cloud-cross: empty plus, 3+ blocked corners
-	function isCrossSite(cx, cy) {
-		if ((cx < 3 || cx >= width - 3) && (cy < 3 || cy >= height - 3)) return 0;
-		const t = grid[cy][cx];
-		if (t != "0" && t != "4") return 0;
-		let corners = 0;
-		let plus = 1;
-		for (let d = 4; d--;) {
-			const dx = D[d][0];
-			const dy = D[d][1];
-			if (isOf(cx + dx, cy + dy, "13A", 0)) plus = 0;
-			if (isOf(cx + dx - dy, cy + dy + dx, "13A", 0)) corners ++;
+		for (let n = want * 30, left = want; n -- && left;) {
+			if (plant(1 + R(width - 2), 1 + R(height - 2), 1)) left --;
 		}
-		return plus && corners >= 3;
-	}
-
-	// Any cloud-cross; stamp 7 on later stages. Returns how many sites.
-	function eachCross(stamp) {
-		let hit = 0;
-		for (let y = 1; y < height - 1; y++) {
-			for (let x = 1; x < width - 1; x++) {
-				if (!isCrossSite(x, y)) continue;
-				hit ++;
-				if (stamp) grid[y][x] = "7";
-			}
-		}
-		return hit;
-	}
-
-	function near(x, y, a, b) {
-		return Math.abs(x - a) < 2 && Math.abs(y - b) < 2;
-	}
-
-	function pocketGap(x, y) {
-		if (x < 2 || y < 2 || x >= width - 2 || y >= height - 2) return 1;
-		for (let d = 4; d--;) {
-			const nx = x + D[d][0];
-			const ny = y + D[d][1];
-			if (!inMap(nx, ny) || grid[ny][nx] == "3") return 1;
-		}
-		return 0;
-	}
-
-	// Stage size
-	const widthMin = 8 + (grow * 1 | 0);
-	const heightMin = 7 + (grow * 1 | 0);
-	width = progress < 2 ? 8 : widthMin + R(10 + (grow * 5 | 0) - widthMin + 1);
-	height = progress < 2 ? 7 : heightMin + R(9 + (grow * 4 | 0) - heightMin + 1);
-
-	// Spawn count from progress, not area - growing a row/column loosens the map
-	let enemyMin = 6 + (progress / 21 | 0);
-	let enemyMax = progress < 6 ? 6 : 7 + (progress / 14 | 0);
-	if (progress < 3) enemyMin = enemyMax = 4 + progress;
-	if (enemyMax < enemyMin) enemyMax = enemyMin;
-	if (enemyMax > 12) enemyMax = 12;
-	const enemyNeed = enemyMin + R(enemyMax - enemyMin + 1);
-
-	// 100 tries at this size, then add a row or column and try again
-	for (;;) {
-	for (let attempt = 100; attempt--;) {
-		grid = [];
-		for (let y = 0; y < height; y++) {
-			grid[y] = [];
-			for (let x = 0; x < width; x++) grid[y][x] = "0";
-		}
-
-		// Place Player and exit
-		const playerX = 1 + R(width - 2);
-		const playerY = height - 1 - R(height / 2);
-		let exitX;
-		let exitY;
-		let exitTries = 0;
-		do {
-			exitX = 1 + R(width - 2);
-			exitY = R(height / 2);
-		} while (++exitTries < 24 && Math.abs(exitX - playerX) + Math.abs(exitY - playerY) < width);
-		grid[playerY][playerX] = "2";
-		grid[exitY][exitX] = "8";
-
-		// Enemies stay off the edge and at 2 squares from the player, exit, and each other
-		enemies = [];
-		for (let tryPlace = enemyNeed * 32; tryPlace-- && enemies.length < enemyNeed;) {
-			const x = 1 + R(width - 2);
-			const y = 1 + R(height - 2);
-			if (grid[y][x] != "0" || near(x, y, playerX, playerY) || near(x, y, exitX, exitY)) continue;
-			let tooClose = 0;
-			for (let n = enemies.length; n--;) if (near(x, y, enemies[n][0], enemies[n][1])) tooClose = 1;
-			if (tooClose) continue;
-			putLeprechaun(x, y);
-		}
-		if (enemies.length < enemyNeed) continue;
-
-		// Keep start, exit, enemies, and the four surround tiles beside each enemy
-		reserved = {};
-		reserved[id(playerX, playerY)] = 1;
-		reserved[id(exitX, exitY)] = 1;
-		for (let n = enemies.length; n--;) {
-			reserved[id(enemies[n][0], enemies[n][1])] = 1;
-			for (let d = 4; d--;) reserved[id(enemies[n][0] + D[d][0], enemies[n][1] + D[d][1])] = 1;
-		}
-
-		// Place more edge rocks on large sparse maps - avoid blocking walkable cells
-		let obstacleCount = 4 + ((width * height - enemies.length * 8) / 8 | 0);
-		if (obstacleCount < 3) obstacleCount = 3;
-		const obsCap = 8 + (width * height / 12 | 0);
-		if (obstacleCount > obsCap) obstacleCount = obsCap;
-		for (let tries = obstacleCount * 6; tries-- && obstacleCount;) {
+		let stones = 2 + R(3) + ((area - 56) / 16 | 0) + (progress / 16 | 0);
+		for (let n = stones * 8; n -- && stones;) {
+			const rim = progress < 5 || R(2);
 			const e = R(4);
-			if (tryRock(e < 2 ? R(width) : e == 2 ? 0 : width - 1, e < 2 ? (e ? height - 1 : 0) : R(height))) obstacleCount --;
+			const x = rim ? (e < 2 ? R(width) : e == 2 ? 0 : width - 1) : 1 + R(width - 2);
+			const y = rim ? (e < 2 ? (e ? height - 1 : 0) : R(height)) : 1 + R(height - 2);
+			if (plant(x, y, 2)) stones --;
 		}
-		if (progress >= 5) {
-			for (let extra = 1 + (width * height / 48 | 0) + R(2); extra--;) {
-				tryRock(1 + R(width - 2), 1 + R(height - 2));
+		return seed;
+	}
+
+	// never crosses the trail itself, keeps walking through free tiles
+	function carveTrail(seed) {
+		const at = [];
+		let head;
+		do {
+			head = R(area);
+		} while (seed[head]);
+		const trail = [head];
+		at[head] = 0;
+		for (let n = area * 40; n --;) {
+			if (R(2)) {
+				trail.reverse();
+				for (let i = trail.length; i --;) at[trail[i]] = i;
 			}
-		}
-		sealDead();
-
-		// Levels 1-5 reject cloud-cross; later maps use it
-		if (progress < 5 && eachCross()) continue;
-
-		// Fill 1 0 1 only in a pocket (map rim or against a wall)
-		// TODO: still validating 11101 structures alon a wall
-		for (let y = height; y--;) {
-			for (let x = width; x--;) {
-				if (isCrossSite(x, y)) continue;
-				const gaps = [];
-				for (let d = 4; d--;) {
-					const dx = D[d][0];
-					const dy = D[d][1];
-					const mx = x + dx;
-					const my = y + dy;
-					if (isOf(x + dx - dy, y + dy + dx, "1", 0)
-						&& isOf(x + dx + dy, y + dy - dx, "1", 0)
-						&& inMap(mx, my) && grid[my][mx] == "0" && pocketGap(mx, my) && canGap(mx, my)) gaps.push([mx, my]);
+			const last = trail.length - 1;
+			const d = D[R(4)];
+			const x = trail[last] % width + d[0];
+			const y = (trail[last] / width | 0) + d[1];
+			if (!inMap(x, y)) continue;
+			const k = id(x, y);
+			if (seed[k]) continue;
+			const j = at[k];
+			if (j == null) {
+				at[k] = trail.length;
+				trail.push(k);
+			} else if (j < last - 1) {
+				for (let a = j + 1, b = last; a < b; a ++, b --) {
+					const t = trail[a];
+					trail[a] = trail[b];
+					trail[b] = t;
+					at[trail[a]] = a;
+					at[trail[b]] = b;
 				}
-				if (gaps.length) {
-					const p = gaps[R(gaps.length)];
-					putLeprechaun(p[0], p[1]);
-				}
 			}
 		}
-		sealDead();
-
-		// Wall hug: every other 300/301/300 in the center band (4th-5th on a 9-wide map)
-		/*let hugN = 0;
-		const hugFrom = enemies.length;
-		for (let i = 0; i < hugFrom; i++) {
-			const ex = enemies[i][0];
-			const ey = enemies[i][1];
-			for (let d = 4; d--;) {
-				const dx = D[d][0];
-				const dy = D[d][1];
-				const gx = ex + dx;
-				const gy = ey + dy;
-				const wx = ex + dx * 2;
-				const wy = ey + dy * 2;
-				const mid = dx ? gy : gx;
-				const span = dx ? height : width;
-				if (!isOf(wx, wy, "3", 1) || !isOf(wx - dy, wy + dx, "3", 1) || !isOf(wx + dy, wy - dx, "3", 1)) continue;
-				if (mid < (span >> 1) - 1 || mid > span >> 1 || !canAdd(gx, gy, 1)) continue;
-				if (++hugN & 1) putLeprechaun(gx, gy);
-			}
-		}*/
-
-		if (progress < 5) {
-			if (eachCross()) continue;
-		} else if (eachCross(1) > 1 + (progress / 27 | 0)) continue;
-
-		// place coins
-		for (let coins = 2 + R(3); coins--;) {
-			const x = R(width);
-			const y = R(height);
-			if (grid[y][x] == "0") grid[y][x] = "4";
+		for (let gap; gap = Math.abs(trail[0] - trail[trail.length - 1]), gap == 1 || gap == width;) {
+			trail.pop();
 		}
+		return trail;
+	}
 
-		// Ensure Player can reach the exit
-		const reachable = {};
-		flood(playerX, playerY, function(t) { return !solid(t); }, reachable);
-		if (!reachable[id(exitX, exitY)]) continue;
-
-		// Avoid 1-exit cells, keep enemies walkable from all four sides, clusters max 3
-		let valid = 1;
-		const seen = {};
-		for (let y = height; y-- && valid;) {
-			for (let x = width; x--;) {
-				const t = grid[y][x];
-				if (!solid(t) && t != "2" && t != "8" && walkOpen(x, y) < 2) valid = 0;
-				if (isLeprechaun(t) && !seen[id(x, y)] && flood(x, y, isLeprechaun, seen) > 3) valid = 0;
+	// pocket - sealed tile where every tile around it is trail
+	function floodPocket(k, on, seen) {
+		const stack = [k];
+		const cells = [];
+		seen[k] = 1;
+		while (stack.length) {
+			const c = stack.pop();
+			cells.push(c);
+			for (let d = 4; d --;) {
+				const x = c % width + D[d][0];
+				const y = (c / width | 0) + D[d][1];
+				const n = id(x, y);
+				if (!inMap(x, y) || on[n] || seen[n]) continue;
+				seen[n] = 1;
+				stack.push(n);
 			}
 		}
-		for (let n = enemies.length; n-- && valid;) {
-			for (let d = 4; d--;) {
-				const x = enemies[n][0] + D[d][0];
-				const y = enemies[n][1] + D[d][1];
-				if (!inMap(x, y) || isOf(x, y, "13A", 0)) continue;
-				if (!reachable[id(x, y)]) valid = 0;
-			}
-		}
-		if (!valid) continue;
+		return cells;
+	}
 
-		jailEnemy(grid, enemies, progress);
+	// Best carve: the one that fills the map and leaves the most spawns
+	let trail;
+	let seed;
+	let holes;
+	let best = 0;
+	for (let tries = 12; tries --;) {
+		const s = scatterSeeds();
+		const t = carveTrail(s);
+		const on = [];
 		const rows = [];
-		for (let y = 0; y < height; y++) rows[y] = grid[y].join("");
-		return rows;
+		const cols = [];
+		for (let i = t.length; i --;) {
+			on[t[i]] = 1;
+			rows[t[i] / width | 0] = 1;
+			cols[t[i] % width] = 1;
+		}
+		let walls = 0;
+		for (let y = height; y --;) if (!rows[y]) walls ++;
+		for (let x = width; x --;) if (!cols[x]) walls ++;
+		const seen = [];
+		const p = [];
+		let spawns = 0;
+		let waste = 0;
+		for (let k = area; k --;) {
+			if (on[k] || seen[k]) continue;
+			const cells = floodPocket(k, on, seen);
+			p.push(cells);
+			if (cells.length > 3) waste += cells.length * cells.length;
+			else if (s[cells[0]] != 2) spawns += cells.length;
+		}
+		const score = (spawns < want ? spawns : want) * 9 - waste - walls * area;
+		if (!holes || score > best) {
+			best = score;
+			trail = t;
+			seed = s;
+			holes = p;
+		}
+		if (spawns >= want && !waste) break;
 	}
-	width <= height ? width ++ : height ++;
+
+	const grid = [];
+	for (let y = 0; y < height; y++) {
+		grid[y] = [];
+		for (let x = 0; x < width; x++) grid[y][x] = "0";
 	}
+
+	// The trail runs from the Player to the exit - start at its lower end
+	const tail = trail[trail.length - 1];
+	const from = trail[0] > tail ? trail[0] : tail;
+	const to = trail[0] > tail ? tail : trail[0];
+	const exitX = to % width;
+	const exitY = to / width | 0;
+
+	// Pockets of 3 or less spawn leprechauns, the rest turn to blocks.
+	// Tiles touching the exit turn to blocks too.
+	const enemies = [];
+	for (let i = holes.length; i --;) {
+		const cells = holes[i];
+		let rock = cells.length > 3 || enemies.length + cells.length > want;
+		for (let j = cells.length; j --;) if (seed[cells[j]] == 2) rock = 1;
+		for (let j = cells.length; j --;) {
+			const x = cells[j] % width;
+			const y = cells[j] / width | 0;
+			const beside = Math.abs(x - exitX) + Math.abs(y - exitY) < 2;
+			const stone = rock || beside;
+			grid[y][x] = stone ? (cells.length == 1 && !R(3) ? "4" : "3") : "1";
+			if (!stone) enemies.push([x, y]);
+		}
+	}
+
+	grid[from / width | 0][from % width] = "2";
+	grid[to / width | 0][to % width] = "8";
+
+	for (let drops = 3 + R(3); drops --;) {
+		const k = trail[R(trail.length)];
+		const x = k % width;
+		const y = k / width | 0;
+		if (grid[y][x] == "0") grid[y][x] = "4";
+	}
+
+	if (hasRescue(progress) && enemies.length) {
+		const jail = enemies[R(enemies.length)];
+		grid[jail[1]][jail[0]] = "A";
+	}
+	const rows = [];
+	for (let y = 0; y < height; y++) rows[y] = grid[y].join("");
+	return rows;
 }
