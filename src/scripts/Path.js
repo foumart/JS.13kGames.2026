@@ -171,7 +171,7 @@ function drawPurifiedTile(x, y) {
 	const w = cellSize;
 	const px = boardOffsetX + x * w;
 	const py = boardOffsetY + y * w;
-	gameContext.imageSmoothingEnabled = false;
+	//gameContext.imageSmoothingEnabled = false;
 	gameContext.drawImage(
 		rainbowCanvas,
 		x * tileWidth, y * tileWidth, tileWidth, tileWidth,
@@ -260,7 +260,7 @@ function drawFlowingPath() {
 
 function drawFillNiches() {
 	const w = cellSize;
-	gameContext.imageSmoothingEnabled = false;
+	//gameContext.imageSmoothingEnabled = false;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (fillData[y][x] != 2 || (player.x == x && player.y == y)) continue;

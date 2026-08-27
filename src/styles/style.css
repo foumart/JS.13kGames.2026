@@ -1,5 +1,5 @@
 body {
-	margin: 0;
+	/*margin: 0;*/
 	overflow: hidden;
 	color: #fff;
 }
@@ -13,7 +13,7 @@ body {
 	pointer-events: none;
 }
 
-#L, #S, #R {
+#L, #R {
 	position: absolute;
 	display: none;
 	font: 900 3vmin system-ui;
@@ -34,12 +34,6 @@ body {
 	align-items: flex-end;
 }
 
-#S {
-	left: 50%;
-	transform: translateX(-50%);
-	align-items: center;
-}
-
 #ov {
 	display: none;
 	background: #103c;
@@ -54,6 +48,17 @@ body {
 
 #msg .s {
 	font-size: 3vmin;
+	line-height: 5vmin;
+}
+
+#msg .l {
+	font-size: 5vmin;
+	line-height: 7vmin;
+}
+
+#msg .e {
+	font-size: 7vmin;
+	line-height: 9vmin;
 }
 
 .g {
@@ -75,13 +80,13 @@ body {
 }
 
 /* already switched on, so the cursor ring only needs to be thin */
-.on.cur {
+/*.on.cur {
 	outline-width: .5vmin;
-}
+}*/
 
-#ui canvas {
+/*#ui canvas {
 	image-rendering: pixelated;
-}
+}*/
 
 #btnWrap {
 	display: none;
@@ -89,7 +94,7 @@ body {
 	left: 50%;
 	transform: translateX(-50%);
 	bottom: 5vmin;
-	gap: 2vmin;
+	gap: 5vmin;
 	pointer-events: auto;
 }
 

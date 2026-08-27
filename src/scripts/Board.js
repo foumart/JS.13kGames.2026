@@ -23,6 +23,7 @@ let moving = 0;
 let gameLoop;
 let time = 0;
 let pathCount = 0;
+let hiscore = 0;
 
 let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;

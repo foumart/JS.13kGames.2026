@@ -91,14 +91,8 @@ function drawPalettedBitmap(src, ref) {
 	return src.palettes[ref] = c;
 }
 
-// Shared palette variations, 3 slots each, indexed after a tile's own ones
-//const PALS = "0120463560793920de3823e2abe";
-
 function drawPaletted(src, i, dx, dy, dw, dh, ctx) {
-	//const w = src.palW || 3;
-	// index 0 is the tile's main palette; once its own run out, continue into PALS
-	//const o = (i || 0) * w;
-	const ref = i.length > 1 ? i : src.pal;//src.pal.substr(o, w) || PALS.substr(o - src.pal.length, w) || "012";
+	const ref = i.length > 1 ? i : src.pal;
 	const bmp = drawPalettedBitmap(src, ref);
 	ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, dx, dy, dw, dh);
 }

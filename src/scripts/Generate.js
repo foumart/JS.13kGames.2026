@@ -3,37 +3,34 @@
 let generatedLevels = [];
 const genDirs = ROOK;
 
-function isBossStage(slot) {
-	return slot % 9 == 8;
+function isBossStage(stage) {
+	return stage % 9 == 8;
 }
 
-function hasRescue(slot) {
-	const n = slot % 9;
-	return n == 2 || n == 5;
+function hasRescue(stage) {
+	return stage < 9 ? stage % 3 == 2 : stage % 9 == 8;
 }
 
 function isBossBattle() {
 	return isBossStage(levelIndex);
 }
 
-function getLevelData(slot) {
-	return generatedLevels[slot] || (generatedLevels[slot] = makeRandomLevel(slot));
+function getLevelData(stage) {
+	return generatedLevels[stage] || (generatedLevels[stage] = makeRandomLevel(stage));
 }
 
 // the trail the generator walks is the solution - pockets are filled with enemies
-function makeRandomLevel(slot) {
+function makeRandomLevel(stage) {
 	const D = genDirs;
-	const progress = slot || 0;
-	let grow = progress / 27;
-	if (grow > 1) grow = 1;
+	const progress = stage || 0;
 
-	function R(n) { return Math.random() * n | 0; }
+	function RNG(n) { return Math.random() * n | 0; }
 
-	const width = progress < 2 ? 8 : 8 + R(3 + (grow * 2 | 0));
-	const height = progress < 2 ? 7 : 7 + R(3 + (grow | 0));
+	const width = progress < 2 ? 7 : 8 + RNG(2 + (progress / 27 | 0));
+	const height = progress < 2 ? 6 : 7 + RNG(2 + (progress / 27 | 0));
 	const area = width * height;
-	let want = progress < 3 ? 4 + progress : 6 + R(3 + (progress / 12 | 0));
-	if (want > 12) want = 12;
+	let want = progress < 3 ? 3 + progress : 6 + RNG(3 + (progress / 12 | 0));
+	//if (want > 16) want = 16;
 	if (hasRescue(progress)) want ++;
 
 	function inMap(x, y) { return (x | y) >= 0 && x < width && y < height; }
@@ -60,14 +57,14 @@ function makeRandomLevel(slot) {
 			return 1;
 		}
 		for (let n = want * 30, left = want; n -- && left;) {
-			if (plant(1 + R(width - 2), 1 + R(height - 2), 1)) left --;
+			if (plant(1 + RNG(width - 2), 1 + RNG(height - 2), 1)) left --;
 		}
-		let stones = 2 + R(3) + ((area - 56) / 16 | 0) + (progress / 16 | 0);
+		let stones = 2 + RNG(3) + ((area - 56) / 16 | 0) + (progress / 16 | 0);
 		for (let n = stones * 8; n -- && stones;) {
-			const rim = progress < 5 || R(2);
-			const e = R(4);
-			const x = rim ? (e < 2 ? R(width) : e == 2 ? 0 : width - 1) : 1 + R(width - 2);
-			const y = rim ? (e < 2 ? (e ? height - 1 : 0) : R(height)) : 1 + R(height - 2);
+			const rim = progress < 5 || RNG(2);
+			const e = RNG(4);
+			const x = rim ? (e < 2 ? RNG(width) : e == 2 ? 0 : width - 1) : 1 + RNG(width - 2);
+			const y = rim ? (e < 2 ? (e ? height - 1 : 0) : RNG(height)) : 1 + RNG(height - 2);
 			if (plant(x, y, 2)) stones --;
 		}
 		return seed;
@@ -78,17 +75,17 @@ function makeRandomLevel(slot) {
 		const at = [];
 		let head;
 		do {
-			head = R(area);
+			head = RNG(area);
 		} while (seed[head]);
 		const trail = [head];
 		at[head] = 0;
 		for (let n = area * 40; n --;) {
-			if (R(2)) {
+			if (RNG(2)) {
 				trail.reverse();
 				for (let i = trail.length; i --;) at[trail[i]] = i;
 			}
 			const last = trail.length - 1;
-			const d = D[R(4)];
+			const d = D[RNG(4)];
 			const x = trail[last] % width + d[0];
 			const y = (trail[last] / width | 0) + d[1];
 			if (!inMap(x, y)) continue;
@@ -199,7 +196,7 @@ function makeRandomLevel(slot) {
 			const y = cells[j] / width | 0;
 			const beside = Math.abs(x - exitX) + Math.abs(y - exitY) < 2;
 			const stone = rock || beside;
-			grid[y][x] = stone ? (cells.length == 1 && !R(3) ? "4" : "3") : "1";
+			grid[y][x] = stone ? (cells.length == 1 && !RNG(4) ? "4" : "3") : "1";
 			if (!stone) enemies.push([x, y]);
 		}
 	}
@@ -207,15 +204,15 @@ function makeRandomLevel(slot) {
 	grid[from / width | 0][from % width] = "2";
 	grid[to / width | 0][to % width] = "8";
 
-	for (let drops = 3 + R(3); drops --;) {
-		const k = trail[R(trail.length)];
+	for (let drops = 2 + RNG(2); drops --;) {
+		const k = trail[RNG(trail.length)];
 		const x = k % width;
 		const y = k / width | 0;
 		if (grid[y][x] == "0") grid[y][x] = "4";
 	}
 
 	if (hasRescue(progress) && enemies.length) {
-		const jail = enemies[R(enemies.length)];
+		const jail = enemies[RNG(enemies.length)];
 		grid[jail[1]][jail[0]] = "A";
 	}
 	const rows = [];
