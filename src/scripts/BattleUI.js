@@ -50,7 +50,7 @@ function battleHinted(x, y) {
 function drawBattle() {
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	const tileSize = fitBoard(boardWidth, boardHeight);
-	portrait = height > width;
+	//portrait = height > width;
 	drawEdgeTiles(tileSize, groundBmp());
 
 	for (let y = 0; y < boardHeight; y++) {

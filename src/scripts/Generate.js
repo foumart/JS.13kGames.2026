@@ -26,8 +26,13 @@ function makeRandomLevel(stage) {
 
 	function RNG(n) { return Math.random() * n | 0; }
 
-	const width = progress < 2 ? 7 : 8 + RNG(2 + (progress / 27 | 0));
-	const height = progress < 2 ? 6 : 7 + RNG(2 + (progress / 27 | 0));
+	let width = progress < 2 ? 7 : 8 + RNG(2 + (progress / 27 | 0));
+	let height = progress < 2 ? 6 : 7 + RNG(2 + (progress / 27 | 0));
+	if (portrait && width > height || !portrait && width < height) {
+		const w = width;
+		width = height;
+		height = w;
+	}
 	const area = width * height;
 	let want = progress < 3 ? 3 + progress : 6 + RNG(3 + (progress / 12 | 0));
 	//if (want > 16) want = 16;

@@ -1,9 +1,10 @@
 let boardWidth;
 let boardHeight;
 let cellSize = 1;
+let zoom = 1;
 let boardOffsetX = 0;
 let boardOffsetY = 0;
-let portrait;
+//let portrait;
 let iconContext;
 
 let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
@@ -946,7 +947,7 @@ function debugSkipToBattle() {
 }
 
 function fitBoard(cols, rows) {
-	const size = Math.min(width / (cols + 1), height / (rows + 1));
+	const size = Math.min(width / (cols + zoom), height / (rows + zoom));
 	cellSize = size;
 	boardOffsetX = (width - cols * size) / 2;
 	boardOffsetY = (height - rows * size) / 2;
@@ -986,7 +987,6 @@ function drawBoard() {
 	}
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	const size = fitBoard(boardWidth, boardHeight);
-	portrait = height > width;
 	drawEdgeTiles(size, groundBmp());
 	rainbowPulse = anyDying();
 	scrollRainbow();

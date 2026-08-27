@@ -45,11 +45,6 @@ function line(t, c = "l") {
 	return d;
 }
 
-/*function addLineBreak() {
-	const b = document.createElement("br");
-	return b;
-}*/
-
 function row() {
 	const d = document.createElement("div");
 	d.className = "g";
@@ -67,29 +62,27 @@ function updateUI() {
 	else if (showUpgrade || showEnd) showEndButtons();
 	else if (battleActive && !battleResult) showBattleTurnButton();
 	else hideEndButtons();
+	msg.style.top = portrait ? "35%" : stageCaptive ? "20%" : "25%";
 }
 
 function updateHud() {
 	const sc = currentScore();
-	//L.textContent = (sc ? "Score: " + sc : "");
-	//L.style.display = sc ? "flex" : "none";
 	const briefing = showPick || showObjective;
 	const ally = battleActive && !briefing ? getBattleUIAlly() : 0;
 	const foe = battleActive && !briefing ? getBattleUIFoe() : 0;
+	const initial = !sc && briefing;
 
-	L.textContent = sc || moveCount ? "Score: " + currentScore() : "Welcome to The Fourth Labyrinth!";
-	//L.appendChild(addLineBreak());
-	R.textContent = sc || moveCount ? "" : "Hi-score: " + hiscore;
+	L.textContent = initial ? "Welcome to The Fourth Labyrinth!" : "Score: " + currentScore();
+	R.textContent = initial ? "Hi-score: " + hiscore : "";
 	const size = uiSize();
 	if (battleActive && !briefing) {
 		if (ally) L.appendChild(unitCard(ally, size, 0));
 		if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
-	} else {
+	} else if (!initial) {
 		L.appendChild(playerCard(size));
 		R.appendChild(enemyCard(size));
 	}
-	//L.style.display = L.firstChild ? "flex" : "none";
-	L.style.display = L.firstChild ? "block" : "none";
+	L.style.display = L.firstChild ? "flex" : "none";
 	R.style.display = R.firstChild ? "flex" : "none";
 }
 
@@ -97,11 +90,6 @@ function unitCard(unit, size, right) {
 	const div = row();
 	if (right) div.style.flexDirection = "row-reverse";
 	div.appendChild(createIcon(unit, size));
-	/*const txt = document.createElement("div");
-	txt.style.textAlign = right ? "right" : "left";
-	txt.style.whiteSpace = "pre";
-	txt.textContent = "HP " + Math.max(0, unit.hp) + "/" + unit.hpMax + "\nDmg " + unit.dmg
-		+ "\nMove " + unit.range + "\nRange " + unit.reach;*/
 	div.appendChild(createUnitStatsText(unit));
 	return div;
 }
@@ -126,6 +114,10 @@ function playerCard(U) {
 
 function enemyCard(U) {
 	const d = document.createElement("div");
+	d.style.textAlign = "right";
+	d.appendChild(document.createTextNode("Vail " + shadowNumber()));
+	const w = worldNumber();
+
 	/*d.style.textAlign = "right";
 	d.appendChild(document.createTextNode("Vail " + shadowNumber()));
 	const w = worldNumber();
@@ -171,33 +163,28 @@ function updateOverlay() {
 function fillBrief() {
 	const size = uiSize() * 1.2 | 0;
 	if (battleActive) {
-		msg.appendChild(line(battleTitle()));
-		msg.appendChild(line("Destroy all enemies", "s"));
+		msg.appendChild(line(battleTitle(), "e"));
+		//msg.appendChild(line("Destroy all enemies", "s"));
 		return;
 	}
 	msg.appendChild(line("World: " + worldNumber() + "-" + shadowNumber(), "e"));
 	msg.appendChild(line("Stage: " + stageNumber()));
-	//msg.appendChild(addLineBreak());
 	if (stageCaptive) {
 		const r = row();
-		//r.appendChild(addLineBreak());
 		r.appendChild(line("Rescue "));
 		r.appendChild(createIcon(stageCaptive, size));
 		r.appendChild(line(stageCaptive));
-		//r.appendChild(addLineBreak());
 		msg.appendChild(r);
 	}
 
-	const p = row();
-	p.appendChild(createSparkAnim(size)).style.marginTop = "8vmin";
-	msg.appendChild(p);
+	msg.appendChild(createSparkAnim(size));
 }
 
 function fillPick() {
 	const size = Math.max(40, Math.min(width / (rescuedUnits.length + 1), height * 0.14) | 0);
 	const need = Math.min(2, livingRescueCount());
-	msg.appendChild(line(battleTitle()));
-	msg.appendChild(line("Destroy all enemies"));
+	msg.appendChild(line(battleTitle(), "e"));
+	//msg.appendChild(line("Destroy all enemies"));
 	msg.appendChild(line(need > 1 ? "Pick " + need + " allies" : "Your ally", "s"));
 	const r = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
@@ -268,7 +255,6 @@ function fillUpgrade() {
 			live++;
 		}
 		r.appendChild(col);
-		//r.appendChild(addLineBreak());
 		msg.appendChild(r);
 	}
 }
@@ -285,7 +271,6 @@ function fillEnd() {
 		const row1 = row();
 		if (isPerfect()) {
 			msg.appendChild(line("Perfect!"));
-			//msg.appendChild(addLineBreak());
 			row1.appendChild(createSparkAnim(size));
 			row1.appendChild(line("+1", "e"));
 		}
