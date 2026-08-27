@@ -18,7 +18,7 @@ function createSparkAnim(size) {
 
 function pulseSparkles() {
 	const t = time / 180 | 0;
-	if (spr && spr.t != t) {
+	if (self.spr && spr.parentNode && spr.t != t) {
 		spr.innerHTML = "";
 		spr.appendChild(createSpriteIcon(spr.s, s => drawSparkle(0, 0, s, t)));
 		spr.t = t;
