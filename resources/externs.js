@@ -60,19 +60,13 @@ var spr
 var msg
 
 /**
- * btnWrap
- * @type {!HTMLElement}
- */
-var btnWrap
-
-/**
- * retryBtn
+ * retry
  * @type {!HTMLButtonElement}
  */
-var retryBtn
+var Y
 
 /**
- * nextBtn
+ * next
  * @type {!HTMLButtonElement}
  */
-var nextBtn
+var N

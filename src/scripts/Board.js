@@ -708,7 +708,7 @@ function checkCaptures(flushAcc) {
 }
 
 function hideEndButtons() {
-	btnWrap.style.display = "none";
+	Y.style.display = N.style.display = "none";
 }
 
 // Keyboard focus across the RETRY / NEXT buttons
@@ -716,8 +716,8 @@ let endBtnCur = 0;
 
 function endButtons() {
 	const a = [];
-	if (retryBtn.style.display != "none") a.push(retryBtn);
-	if (nextBtn.style.display != "none") a.push(nextBtn);
+	if (Y.style.display != "none") a.push(Y);
+	if (N.style.display != "none") a.push(N);
 	return a;
 }
 
@@ -742,49 +742,46 @@ function activateEndButton() {
 
 function showBattleTurnButton() {
 	const on = !battlePhase && !animating && !thinking;
-	retryBtn.style.display = "none";
-	nextBtn.style.display = "block";
-	nextBtn.textContent = "END";
-	nextBtn.style.opacity = on ? "1" : "0.35";
-	nextBtn.onclick = battleEndTurn;
-	btnWrap.style.display = "flex";
+	Y.style.display = "none";
+	N.style.display = "block";
+	N.textContent = "END";
+	N.style.opacity = on ? "1" : "0.35";
+	N.onclick = battleEndTurn;
 	syncEndCursor();
 }
 
 function showEndButtons() {
-	retryBtn.style.display = "block";
-	retryBtn.onclick = () => {
+	Y.style.display = "block";
+	Y.onclick = () => {
 		if (battleActive) resetBattle();
 		else {
 			skipObjective = 1;
 			resetLevel();
 		}
 	};
-	nextBtn.style.opacity = "1";
-	nextBtn.onclick = battleActive ? afterBattleWin : nextLevel;
-	nextBtn.textContent = battleActive
+	N.style.opacity = "1";
+	N.onclick = battleActive ? afterBattleWin : nextLevel;
+	N.textContent = battleActive
 		? (levelIndex < campaignLength - 1 ? "NEXT LEVEL" : "REPLAY")
 		: (levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL");
-	nextBtn.style.display = state == 2 ? "block" : "none";
-	btnWrap.style.display = "flex";
+	N.style.display = state == 2 ? "block" : "none";
 	syncEndCursor();
 }
 
 function showObjectiveButtons() {
-	retryBtn.style.display = "none";
-	nextBtn.textContent = "START";
-	nextBtn.onclick = showPick ? confirmParty : dismissObjective;
-	nextBtn.style.display = "block";
-	nextBtn.style.opacity = "1";
-	btnWrap.style.display = "flex";
+	Y.style.display = "none";
+	N.textContent = "START";
+	N.onclick = showPick ? confirmParty : dismissObjective;
+	N.style.display = "block";
+	N.style.opacity = "1";
 	syncEndCursor();
 	syncPickButton();
 }
 
 function syncPickButton() {
-	if (!showPick || !nextBtn) return;
+	if (!showPick) return;
 	const need = Math.min(2, livingRescueCount());
-	nextBtn.style.opacity = battleParty.length >= need ? "1" : "0.35";
+	N.style.opacity = battleParty.length >= need ? "1" : "0.35";
 }
 
 function dismissObjective() {

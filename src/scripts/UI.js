@@ -154,8 +154,9 @@ function enemyCard(U) {
 
 function updateOverlay() {
 	const fade = showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
-	ov.style.display = fade ? "block" : "none";
+	ov.style.background = fade ? "#103c" : "";
 	if (!fade) {
+		msg.textContent = "";
 		return;
 	}
 
@@ -188,7 +189,7 @@ function fillBrief() {
 	}
 
 	const p = row();
-	p.appendChild(createSparkAnim(size)).style.marginTop = "9vmin";
+	p.appendChild(createSparkAnim(size)).style.marginTop = "8vmin";
 	msg.appendChild(p);
 }
 

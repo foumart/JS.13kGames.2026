@@ -35,12 +35,16 @@ body {
 }
 
 #ov {
-	display: none;
-	background: #103c;
+	display: flex;
+	justify-content: center;
+	align-items: flex-end;
+	padding-bottom: 8vmax;
+	gap: 5vmin;
 }
 
 #msg {
-	position: relative;
+	position: absolute;
+	inset: 0;
 	top: 30%;
 	font: 900 7vmin arial;
 	text-align: center;
@@ -88,14 +92,8 @@ body {
 	image-rendering: pixelated;
 }*/
 
-#btnWrap {
+#Y, #N {
 	display: none;
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
-	bottom: 5vmin;
-	gap: 5vmin;
-	pointer-events: auto;
 }
 
 button {
