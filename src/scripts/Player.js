@@ -36,7 +36,7 @@ class Player {
 			checkCaptures(flushed);
 			moveLog.push(flushed);
 			moving = 0;
-			drawBoard();
+			redraw();
 		});
 	}
 
@@ -58,7 +58,7 @@ class Player {
 			reviveDyingEnemies();
 			checkCaptures();
 			moving = 0;
-			drawBoard();
+			redraw();
 		});
 	}
 

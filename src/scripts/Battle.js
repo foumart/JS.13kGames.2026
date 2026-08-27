@@ -62,11 +62,13 @@ function startBattle() {
 	if (livingRescueCount() && !skip) {
 		showPick = 1;
 		showObjectiveButtons();
+		updateUI();
 		return;
 	}
 	spawnBattleParty();
 	showObjective = 1;
 	showObjectiveButtons();
+	updateUI();
 }
 
 // used when placing enemies for battle
@@ -96,7 +98,7 @@ function confirmParty() {
 	showPick = 0;
 	hideEndButtons();
 	spawnBattleParty();
-	drawBoard();
+	redraw();
 }
 
 function isDeadBmp(bmp) {
@@ -122,7 +124,7 @@ function movePickCursor(dir) {
 	const n = rescuedUnits.length;
 	if (!n) return;
 	pickCursor = (pickCursor + dir + n) % n;
-	drawBoard();
+	redraw();
 }
 
 function pickPartyBmp(bmp) {
@@ -131,7 +133,7 @@ function pickPartyBmp(bmp) {
 	if (i >= 0) battleParty.splice(i, 1);
 	else if (battleParty.length < 2) battleParty.push(bmp);
 	syncPickButton();
-	drawBoard();
+	redraw();
 }
 
 function pickCursorUnit() {
@@ -197,7 +199,7 @@ function setUpgrade(id, kind) {
 		const j = rows[i].kinds.indexOf(kind);
 		if (j >= 0) upgradeCurOpt = j;
 	}
-	drawBoard();
+	redraw();
 }
 
 // After the last unit comes RETRY / NEXT buttons
@@ -208,12 +210,12 @@ function moveUpgradeCursor(dx, dy) {
 	upgradeCurUnit = (upgradeCurUnit + dy + last + 1) % (last + 1);
 	if (upgradeCurUnit == last) {
 		moveEndCursor(dx);
-		drawBoard();
+		redraw();
 		return;
 	}
 	const n = rows[upgradeCurUnit].kinds.length;
 	upgradeCurOpt = dx ? (upgradeCurOpt + dx + n) % n : Math.min(upgradeCurOpt, n - 1);
-	drawBoard();
+	redraw();
 }
 
 function pickUpgradeCursor() {
@@ -381,6 +383,7 @@ function selectUnit(u) {
 	battleHints = [];
 	if (battleControl) activateUnitTiles(battleControl);
 	else if (u) activateUnitTiles(u);
+	updateUI();
 }
 
 function showTiles(u, attack) {
@@ -459,6 +462,7 @@ function nextRoundPhase() {
 		if (u.hp > 0 && !u.enemy && !u.hero) q.push(u);
 	}
 	nextUnitInQueue(q, startEnemyPhase);
+	updateUI();
 }
 
 function playerMove(u, x, y) {
@@ -525,6 +529,7 @@ function startEnemyPhase() {
 		}
 	}
 	nextUnitInQueue(q, beginRound);
+	updateUI();
 }
 
 function performMove(u, x, y, done) {
@@ -538,8 +543,10 @@ function performMove(u, x, y, done) {
 	u.moved = 1;
 	battleTiles = [];
 	battleHints = [];
+	updateUI();
 	TweenFX.to(u, 8, {offsetX: 0, offsetY: 0}, drawBattle, () => {
 		animating = 0;
+		updateUI();
 		done();
 	});
 }
@@ -562,6 +569,7 @@ function performAttack(u, hits, done) {
 	animating = 1;
 	battleTiles = [];
 	battleHints = [];
+	updateUI();
 	const t = hits[0];
 	const dx = t ? (t.x - u.x) : 0;
 	const dy = t ? (t.y - u.y) : 0;
@@ -575,10 +583,12 @@ function performAttack(u, hits, done) {
 				if (hits[i].hp <= 0) totalScore += 100 * mul;
 			}
 		}
+		updateUI();
 		hitShake(hits, () => {
 			TweenFX.to(u, 5, {offsetX: 0, offsetY: 0}, drawBattle, () => {
 				u.acted = 1;
 				animating = 0;
+				updateUI();
 				done();
 			});
 		});
@@ -647,6 +657,7 @@ function battleEndTurn() {
 	battleHints = [];
 	battleControl = null;
 	startEnemyPhase();
+	updateUI();
 }
 
 function getPosFromEvent(event) {
@@ -678,6 +689,7 @@ function battleClick(event) {
 		else {
 			battleSelect = occ;
 			activateUnitTiles(occ);
+			updateUI();
 		}
 		return;
 	}
@@ -694,6 +706,7 @@ function battleClick(event) {
 		}
 		battleSelect = occ;
 		activateUnitTiles(occ);
+		updateUI();
 		return;
 	}
 

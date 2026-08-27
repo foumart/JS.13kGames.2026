@@ -94,8 +94,6 @@ function drawBattle() {
 	for (let i = 0; i < order.length; i++) {
 		if (order[i].hp > 0 || order[i].shake) order[i].draw(tileSize);
 	}
-
-	updateUI();
 }
 
 function getBattleUIAlly() {

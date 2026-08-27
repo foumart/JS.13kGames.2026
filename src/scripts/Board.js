@@ -238,7 +238,7 @@ function useSparkAbility() {
 	fillData[y][x] = 2;
 	fillCharges --;
 	checkCaptures();
-	drawBoard();
+	redraw();
 }
 
 function leprechaunType(v) {
@@ -471,8 +471,8 @@ function getCurrentContext() {
 	return iconContext || gameContext;
 }
 
-function drawSparkle(x, y, s, n) {
-	getCurrentContext().drawImage(objectBitmaps[3 + (n & 1)], 0, 0, tileWidth, tileWidth, x, y, s, s);
+function drawSparkle(x, y, size, frame) {
+	getCurrentContext().drawImage(objectBitmaps[3 + (frame & 1)], 0, 0, tileWidth, tileWidth, x, y, size, size);
 }
 
 function pickRescueBmp() {
@@ -617,7 +617,7 @@ function scheduleEndScreen() {
 		showEnd = 1;
 		endBtnCur = 1; // start on NEXT; clamps back to RETRY when it is the only one
 		showEndButtons();
-		drawBoard();
+		redraw();
 	});
 }
 
@@ -732,7 +732,7 @@ function moveEndCursor(dx) {
 	const n = endButtons().length;
 	if (!n || !dx) return;
 	endBtnCur = (endBtnCur + dx + n) % n;
-	drawBoard();
+	redraw();
 }
 
 function activateEndButton() {
@@ -791,7 +791,7 @@ function dismissObjective() {
 	if (!showObjective) return;
 	showObjective = 0;
 	hideEndButtons();
-	drawBoard();
+	redraw();
 }
 
 function nextLevel() {
@@ -931,7 +931,7 @@ function debugClearLevel() {
 	revealPlayerTile = 1;
 	state = 2;
 	if (!goldFlies.length) scheduleEndScreen();
-	drawBoard();
+	redraw();
 }
 
 function debugSkipToBattle() {
@@ -1067,5 +1067,4 @@ function drawBoard() {
 
 	player.resize();
 	player.draw();
-	updateUI();
 }

@@ -1,17 +1,28 @@
-//let uiK, hudK;
-
 function createSpriteIcon(s, fn) {
 	const c = document.createElement("canvas");
 	c.width = c.height = s;
 	iconContext = c.getContext("2d");
 	iconContext.imageSmoothingEnabled = 0;
-	fn(s);
+	if (fn) fn(s);
 	iconContext = 0;
 	return c;
 }
 
 function createSparkAnim(size) {
-	return createSpriteIcon(size, s => drawSparkle(0, 0, s, time / 180));
+	const d = row();
+	d.id = "spr";
+	d.s = size;
+	d.t = 0;
+	return d;
+}
+
+function pulseSparkles() {
+	const t = time / 180 | 0;
+	if (spr && spr.t != t) {
+		spr.innerHTML = "";
+		spr.appendChild(createSpriteIcon(spr.s, s => drawSparkle(0, 0, s, t)));
+		spr.t = t;
+	}
 }
 
 function createIcon(unit, size) {
@@ -34,10 +45,10 @@ function line(t, c = "l") {
 	return d;
 }
 
-function addLineBreak() {
+/*function addLineBreak() {
 	const b = document.createElement("br");
 	return b;
-}
+}*/
 
 function row() {
 	const d = document.createElement("div");
@@ -52,7 +63,6 @@ function uiSize() {
 function updateUI() {
 	updateHud();
 	updateOverlay();
-	//pulseSparkles();
 	if (showPick || showObjective) showObjectiveButtons();
 	else if (showUpgrade || showEnd) showEndButtons();
 	else if (battleActive && !battleResult) showBattleTurnButton();
@@ -66,19 +76,9 @@ function updateHud() {
 	const briefing = showPick || showObjective;
 	const ally = battleActive && !briefing ? getBattleUIAlly() : 0;
 	const foe = battleActive && !briefing ? getBattleUIFoe() : 0;
-	/*const k = [
-		battleActive, briefing, fillCharges, rescuedUnits.join(), leftoverKinds.join(),
-		isBossBattle(), levelIndex,
-		battleActive ? 0 : countAliveLeprechaunsOfKind(1),
-		battleActive ? 0 : countAliveLeprechaunsOfKind(2),
-		battleActive ? 0 : countAliveLeprechaunsOfKind(3),
-		ally && ally.name, ally && ally.hp, ally && ally.dmg, ally && ally.range, ally && ally.reach,
-		foe && foe.name, foe && foe.hp, foe && foe.dmg, foe && foe.range, foe && foe.reach
-	].join("|");
-	if (k == hudK) return;
-	hudK = k;*/
+
 	L.textContent = sc || moveCount ? "Score: " + currentScore() : "Welcome to The Fourth Labyrinth!";
-	L.appendChild(addLineBreak());
+	//L.appendChild(addLineBreak());
 	R.textContent = sc || moveCount ? "" : "Hi-score: " + hiscore;
 	const size = uiSize();
 	if (battleActive && !briefing) {
@@ -152,35 +152,14 @@ function enemyCard(U) {
 	return d;
 }
 
-/*function pulseSparkles() {
-	const list = document.querySelectorAll("#ui canvas.sp");
-	for (let i = 0; i < list.length; i++) {
-		const c = list[i];
-		iconContext = c.getContext("2d");
-		iconContext.clearRect(0, 0, c.width, c.height);
-		drawSparkle(0, 0, c.width, time / 180);
-		iconContext = 0;
-	}
-}*/
-
 function updateOverlay() {
 	const fade = showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
 	ov.style.display = fade ? "block" : "none";
 	if (!fade) {
-		//uiK = "";
 		return;
 	}
-	//const dark = (state == 3 || battleResult == 3) && !showUpgrade && !showPick && !showObjective;
-	//ov.style.background = dark ? "#0009" : "#103c";
+
 	msg.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
-	/*const k = [
-		showPick, showUpgrade, showObjective, showEnd, state, battleResult,
-		pickCursor, battleParty.join(), JSON.stringify(upgradePicks),
-		upgradeCurUnit, upgradeCurOpt, rescuedUnits.join(), stageCaptive,
-		isPerfect(), moveCount, currentScore()
-	].join("|");
-	if (k == uiK) return;
-	uiK = k;*/
 	msg.textContent = "";
 	if (showPick) fillPick();
 	else if (showUpgrade) fillUpgrade();
@@ -200,11 +179,11 @@ function fillBrief() {
 	//msg.appendChild(addLineBreak());
 	if (stageCaptive) {
 		const r = row();
-		r.appendChild(addLineBreak());
+		//r.appendChild(addLineBreak());
 		r.appendChild(line("Rescue "));
 		r.appendChild(createIcon(stageCaptive, size));
 		r.appendChild(line(stageCaptive));
-		r.appendChild(addLineBreak());
+		//r.appendChild(addLineBreak());
 		msg.appendChild(r);
 	}
 
@@ -305,7 +284,7 @@ function fillEnd() {
 		const row1 = row();
 		if (isPerfect()) {
 			msg.appendChild(line("Perfect!"));
-			msg.appendChild(addLineBreak());
+			//msg.appendChild(addLineBreak());
 			row1.appendChild(createSparkAnim(size));
 			row1.appendChild(line("+1", "e"));
 		}

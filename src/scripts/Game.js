@@ -31,10 +31,16 @@ function gameStart() {
 function doAnimationFrame() {
 	time = Date.now();
 	drawBoard();
+	pulseSparkles();
 	gameLoop = requestAnimationFrame(doAnimationFrame);
+}
+
+function redraw() {
+	drawBoard();
+	updateUI();
 }
 
 function resetLevel() {
 	initBoard();
-	drawBoard();
+	redraw();
 }

@@ -13,6 +13,7 @@ function previewTiles(unit, attack, then) {
 	const epoch = battleEpoch;
 	battleSelect = unit;
 	showTiles(unit, attack);
+	updateUI();
 	waitDelay(()=> {
 		if (battleResult || epoch != battleEpoch) return;
 		then();

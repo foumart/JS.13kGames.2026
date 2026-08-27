@@ -48,6 +48,12 @@ var R
 var ov
 
 /**
+ * sparkle
+ * @type {!HTMLElement}
+ */
+var spr
+
+/**
  * msg
  * @type {!HTMLElement}
  */
