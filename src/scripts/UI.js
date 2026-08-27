@@ -34,7 +34,7 @@ function createUnitStatsText(unit, textAlign = "left", sep = "\n") {
 	txt.style.textAlign = textAlign || "right";
 	txt.style.whiteSpace = "pre";
 	txt.textContent = "HP " + Math.max(0, unit.hp) + "/" + unit.hpMax + sep + "Dmg " + unit.dmg
-		+ sep + "Move " + unit.range + sep + "Range " + unit.reach;
+		+ sep + "Move " + unit.mvMax + sep + "Range " + unit.atkMax;
 	return txt;
 }
 
@@ -246,7 +246,7 @@ function fillUpgrade() {
 			const curRow = live == upgradeCurUnit;
 			for (let k = 0; k < kinds.length; k++) {
 				const b = document.createElement("button");
-				b.textContent = upgradeLabel(kinds[k]);
+				b.textContent = upgradeLabel(kinds[k], unit);
 				b.className = (pick == kinds[k] ? "on" : "") + (curRow && k == upgradeCurOpt ? " cur" : "");
 				b.onclick = setUpgrade.bind(null, id, kinds[k]);
 				btns.appendChild(b);

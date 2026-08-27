@@ -54,7 +54,7 @@ let rescuedUnits = [];
 let deadUnits = [];
 let levelCaptives = [];
 let rescueDying = [];
-let unitMods = {}; // name -> [hp, att, range, reach]
+let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken]
 const UNITS = [
 	// name,     hp,dm,mv,at,bm[pa,rn,rc] - move/atk: 0:* 1:+ 2:x 3:knight
 	["Unicorn",  5, 2, 3, 1, 0],
@@ -104,10 +104,35 @@ const DOWN = [0, 1];
 const LEFT = [-1, 0];
 
 const ROOK = [UP, RIGHT, DOWN, LEFT];
-const BISHOP = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-const QUEEN = [...ROOK, ...BISHOP];
-const KNIGHT = [[1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
-const RAY = [QUEEN, ROOK, BISHOP, KNIGHT];
+// 4 rook dirs, 4 bishop dirs, 8 knight leaps - a unit's rays are a mask over these
+const DIRS = [...ROOK, [1, 1], [1, -1], [-1, 1], [-1, -1], [1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
+// move/atk type -> how far rook, bishop and knight reach: 0:* 1:+ 2:x 3:knight
+const RAYBASE = [[1, 1, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]];
+
+// [dx, dy, steps] per live direction, so rook and bishop can reach different distances
+function rayList(g) {
+	const out = [];
+	for (let i = 0; i < 16; i++) {
+		const n = g[i < 4 ? 0 : i < 8 ? 1 : 2];
+		if (n) out.push([DIRS[i][0], DIRS[i][1], n]);
+	}
+	return out;
+}
+
+// Each upgrade lengthens the shorter ray, giving R1 -> B1 -> R2 -> B2 ... The third
+// attack step grants the knight leap instead, unless the unit already leaps.
+function growRay(t, len, n, atk) {
+	const base = RAYBASE[t] || RAYBASE[0];
+	let r = base[0] * len;
+	let b = base[1] * len;
+	let k = base[2];
+	for (let i = 0; i < n; i++) {
+		if (atk && i == 2 && !k) k = 1;
+		else if (b < r) b ++;
+		else r ++;
+	}
+	return [r, b, k];
+}
 
 const tileWidth = 6;
 const unitScale = 0.665;
@@ -519,8 +544,6 @@ function makeUnit(data, x, y, type) {
 		unit.hpMax += mod[0];
 		unit.hp = unit.hpMax;
 		unit.dmg += mod[1];
-		if (!unit.lockRange) unit.range += mod[2];
-		if (!unit.lockReach) unit.reach += mod[3];
 	}
 	return unit;
 }

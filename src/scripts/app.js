@@ -15,14 +15,14 @@ function init() {
 
 	gameCanvas.addEventListener("touchmove", e => {
 		//if (e.touches.length != 2) return;
-		e.preventDefault();
+		//e.preventDefault();
 		const gap = pinchGap(e);
-		if (pinch) zoomBoard((gap - pinch) / 200);
+		if (pinch) zoomBoard(-(gap - pinch) / 99);
 		pinch = gap;
 	}, {passive: 0});
 
 	gameCanvas.addEventListener("wheel", e => {
-		e.preventDefault();
+		//e.preventDefault();
 		zoomBoard(e.deltaY > 0 ? .2 : -.2);
 	}, {passive: 0});
 

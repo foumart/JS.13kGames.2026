@@ -167,9 +167,11 @@ function upgradeId(u) {
 	return u.hero ? 0 : u.name;
 }
 
+// three steps up each ladder and the ray is mastered - that choice drops off the row
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
-	return unit.hero ? ["hp", "att"] : ["hp", "att"].concat(unit.lockRange ? [] : ["range"]).concat(unit.lockReach ? [] : ["reach"]);
+	const m = allyMod(unit.name);
+	return ["hp", "att"].concat(unit.lockRange || m[2] > 2 ? [] : ["range"]).concat(unit.lockReach || m[3] > 2 ? [] : ["reach"]);
 }
 
 function upgradeRows() {
@@ -494,21 +496,6 @@ function playerAttack(u, x, y) {
 		}
 		battleRefreshTiles();
 	});
-}
-
-function rayTarget(u, x, y) {
-	const sx = Math.sign(x - u.x);
-	const sy = Math.sign(y - u.y);
-	if (!sx && !sy) return null;
-	for (let i = 1; i <= u.reach; i++) {
-		const nx = u.x + sx * i;
-		const ny = u.y + sy * i;
-		if (!inBounds(nx, ny)) return null;
-		if (hasObstacle(nx, ny)) return null;
-		const t = getUnitAt(nx, ny);
-		if (t) return t.enemy != u.enemy ? t : null;
-	}
-	return null;
 }
 
 function startEnemyPhase() {
