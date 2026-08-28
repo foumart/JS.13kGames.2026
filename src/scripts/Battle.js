@@ -167,11 +167,11 @@ function upgradeId(u) {
 	return u.hero ? 0 : u.name;
 }
 
-// three steps up each ladder and the ray is mastered - that choice drops off the row
+// each ray type allows a set number of steps
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
-	return ["hp", "att"].concat(unit.lockRange || m[2] > 2 ? [] : ["range"]).concat(unit.lockReach || m[3] > 2 ? [] : ["reach"]);
+	return ["hp", "att"].concat(unit.lockRange || m[2] >= rayCap(unit.mv, 0) ? [] : ["range"]).concat(unit.lockReach || m[3] >= rayCap(unit.atk, 1) ? [] : ["reach"]);
 }
 
 function upgradeRows() {

@@ -56,17 +56,18 @@ let levelCaptives = [];
 let rescueDying = [];
 let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken]
 const UNITS = [
-	// name,     hp,dm,mv,at,bm[pa,rn,rc] - move/atk: 0:* 1:+ 2:x 3:knight
-	["Unicorn",  5, 2, 3, 1, 0],
+	// name,     hp,dm,mv,at,bm[pa,rn,rc] - move/atk: 0:+ 1:x 2:* 3:knight 4:around
+	//           rn/rc of 0 locks that ladder entirely
+	["Unicorn",  5, 2, 3, 4, 0],
 	["Corwin",   9, 2, 0, 3, 9, 1, 0],
-	["Merlin",   5, 2, 0, 1, 5, 2],
-	["Benedict", 10,3, 2, 0, 8, 1, 1, 0],
-	["Fiona",    4, 2, 0, 2, 6],
-	["Random",   8, 2, 1, 1, 5],
-	["Bleys",    7, 2, 1, 1, 8],
-	["Julian",   7, 2, 2, 0, 5, 1],
-	["Caine",    9, 2, 2, 2, 9],
-	["Gerard",   12,3, 1, 1, 7, 1, 1, 0],
+	["Merlin",   5, 2, 2, 0, 5, 2],
+	["Benedict", 10,3, 1, 2, 8, 1, 1, 0],
+	["Fiona",    4, 2, 2, 1, 6],
+	["Random",   8, 2, 1, 0, 5],
+	["Bleys",    7, 2, 0, 0, 8],
+	["Julian",   7, 2, 2, 2, 5, 1],
+	["Caine",    9, 2, 1, 1, 9],
+	["Gerard",   12,3, 0, 0, 7, 1, 1, 0],
 	
 	/*["Eric",     11,2, 1, 0, 7],
 	["Flora",    4, 1, 1, 1, 6, 1, 0],
@@ -106,8 +107,11 @@ const LEFT = [-1, 0];
 const ROOK = [UP, RIGHT, DOWN, LEFT];
 // 4 rook dirs, 4 bishop dirs, 8 knight leaps - a unit's rays are a mask over these
 const DIRS = [...ROOK, [1, 1], [1, -1], [-1, 1], [-1, -1], [1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
-// move/atk type -> how far rook, bishop and knight reach: 0:* 1:+ 2:x 3:knight
-const RAYBASE = [[1, 1, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]];
+// move/atk type - the rays a unit is born with: 0:+, 1:x 2:*, 3:knight, 4:around
+const RAYBASE = [[1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 0]];
+// upgrade steps each type allows, moving / attacking - the type is a restriction,
+// so a rook never learns diagonals and a knight never grows at all
+const rayCap = (t, atk) => +["11303", "35303"][+atk][t] || 0;
 
 // [dx, dy, steps] per live direction, so rook and bishop can reach different distances
 function rayList(g) {
@@ -119,15 +123,19 @@ function rayList(g) {
 	return out;
 }
 
-// Each upgrade lengthens the shorter ray, giving R1 -> B1 -> R2 -> B2 ... The third
-// attack step grants the knight leap instead, unless the unit already leaps.
+// Ladders per type: rook R1->R2->R3->R4, bishop B1->..->B6, queen R1B1->R2->B2->R3,
+// knight none, around R1->B1->R2->K. The mixed types always fill the shorter ray.
 function growRay(t, len, n, atk) {
 	const base = RAYBASE[t] || RAYBASE[0];
 	let r = base[0] * len;
 	let b = base[1] * len;
 	let k = base[2];
+	const cap = rayCap(t, atk);
+	if (n > cap) n = cap;
 	for (let i = 0; i < n; i++) {
-		if (atk && i == 2 && !k) k = 1;
+		if (t == 4 && i == 2) k = 1;
+		else if (t == 1) b ++;
+		else if (!t) r ++;
 		else if (b < r) b ++;
 		else r ++;
 	}
@@ -241,6 +249,7 @@ function initBoard() {
 function isPassable(x, y, dx, dy) {
 	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || fillData[y][x] == 1) return 0;
 	if (rescues[y][x] && !rescueDying[y][x]) return 0;
+	if (exits[y][x] && remainingRescue()) return 0;
 	const cross = clouds[y][x] || fillData[y][x] == 2;
 	if (pathStep[y][x]) {
 		if (cross) {
@@ -563,8 +572,8 @@ function createEnemy(unitType, x, y, l) {
 		// DMG
 		unitType ? (1 + l) * 2
 			: l < 3 ? 1 : 2,
-		+!unitType,
-		2 * !unitType,
+		unitType ? 2 : 0,
+		unitType ? 2 : 1,
 		2 + unitType,
 		getEnemyPalette(unitType, l),
 		1 + (unitType > 1),

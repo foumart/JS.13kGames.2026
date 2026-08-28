@@ -16,7 +16,7 @@ class Unit {
 		this.bmp = this.bgr;
 		this.enemy = this.type > 2;
 		this.hero = !this.type;
-		this.around = this.hero || this.type == 4;
+		this.around = this.hero || this.type == 4 || this.atk == 4;
 		this.advance = this.type == 3;
 		this.lockRange = d[i] == 0;
 		this.lockReach = d[i + 1] == 0;
