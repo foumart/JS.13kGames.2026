@@ -179,7 +179,7 @@ function makeRandomLevel(stage) {
 	const grid = [];
 	for (let y = 0; y < height; y++) {
 		grid[y] = [];
-		for (let x = 0; x < width; x++) grid[y][x] = "0";
+		for (let x = 0; x < width; x++) grid[y][x] = 0;
 	}
 
 	// The trail runs from the Player to the exit - start at its lower end
@@ -201,26 +201,24 @@ function makeRandomLevel(stage) {
 			const y = cells[j] / width | 0;
 			const beside = Math.abs(x - exitX) + Math.abs(y - exitY) < 2;
 			const stone = rock || beside;
-			grid[y][x] = stone ? (cells.length == 1 && !RNG(4) ? "4" : "3") : "1";
+			grid[y][x] = stone ? (cells.length == 1 && !RNG(4) ? 4 : 3) : 1;
 			if (!stone) enemies.push([x, y]);
 		}
 	}
 
-	grid[from / width | 0][from % width] = "2";
-	grid[to / width | 0][to % width] = "8";
+	grid[from / width | 0][from % width] = 2;
+	grid[to / width | 0][to % width] = 8;
 
 	for (let drops = 2 + RNG(2); drops --;) {
 		const k = trail[RNG(trail.length)];
 		const x = k % width;
 		const y = k / width | 0;
-		if (grid[y][x] == "0") grid[y][x] = "4";
+		if (grid[y][x] == 0) grid[y][x] = 4;
 	}
 
 	if (hasRescue(progress) && enemies.length) {
 		const jail = enemies[RNG(enemies.length)];
-		grid[jail[1]][jail[0]] = "A";
+		grid[jail[1]][jail[0]] = 9;
 	}
-	const rows = [];
-	for (let y = 0; y < height; y++) rows[y] = grid[y].join("");
-	return rows;
+	return grid;
 }

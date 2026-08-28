@@ -59,19 +59,19 @@ let levelCaptives = [];
 let rescueDying = [];
 let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken]
 const UNITS = [
-	// name,     hp,dm,mv,at,bm,pa,   rn,  rc - born as 0:+ 1:x 2:* 3:knight 4:around
-	//           |  |  |  |  |  |    |    |    rn/rc cap each ladder: K*100 + maxR*10
-	//           |  |  |  |  |  |    |    |    + maxB, and 0 means it never upgrades
-	["Unicorn",  5, 2, 3, 0, 0, 0,   121, 121],
-	["Corwin",   9, 2, 0, 3, 9, "012", 21, 0],
-	["Merlin",   5, 2, 0, 0, 5, 2,   131, 21],
-	["Benedict", 10,3, 0, 1, 8, 1,   21,  22],
-	["Fiona",    4, 2, 1, 1, 6, 0,   33,  6],
-	["Random",   8, 2, 1, 1, 5, 0,   2,   11],
-	["Bleys",    7, 2, 0, 0, 8, 0,   11,  111],
-	["Julian",   7, 2, 2, 2, 5, 1,   111, 111],
-	["Caine",    9, 2, 0, 0, 9, 0,   20,  40],
-	["Gerard",   12,3, 0, 0, 7, 1,   11,  111],
+	// name,     hp,dm,mv,at,bm,pttrn, rng, rc - born as 0:+ 1:x 2:* 3:knight 4:around
+	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10
+	//           |  |  |  |  |  |      |    |    + maxB, and 0 means it never upgrades
+	["Unicorn",  5, 2, 3, 0, 0, 0,     121, 121],
+	["Corwin",   9, 2, 0, 3, 9, "012", 21,  0],
+	["Merlin",   5, 2, 0, 0, 5, "0d2", 131, 21], // red
+	["Benedict", 10,3, 0, 1, 8, "356", 21,  22], // blue
+	["Fiona",    4, 2, 1, 1, 6, 0,     33,  6],
+	["Random",   8, 2, 1, 1, 5, 0,     2,   11],
+	["Bleys",    7, 2, 0, 0, 8, 0,     11,  111],
+	["Julian",   7, 2, 2, 2, 5, "392", 111, 111],// green
+	["Caine",    9, 2, 0, 0, 9, 0,     20,  40],
+	["Gerard",   12,3, 0, 0, 7, 0,     11,  111],
 	
 	/*["Eric",     11,2, 1, 0, 7],
 	["Flora",    4, 1, 1, 1, 6, 1, 0],
@@ -214,14 +214,14 @@ function initBoard() {
 		pathStep[y] = [];
 		fillData[y] = [];
 		for (let x = 0; x < boardWidth; x++) {
-			const c = levelData[y].charAt(x);
-			enemies[y][x] = c == "1" ? (levelIndex >= 4 && Math.random() < 0.5 ? 2 : 1) : 0;
-			obstacles[y][x] = c == "3" ? 1 : 0;
-			coins[y][x] = c == "4" ? 1 : 0;
-			clouds[y][x] = c == "7" ? 1 : 0;
-			exits[y][x] = c == "8" ? 1 : 0;
+			const c = levelData[y][x];
+			enemies[y][x] = c == 1 ? (levelIndex >= 4 && Math.random() < 0.5 ? 2 : 1) : 0;
+			obstacles[y][x] = c == 3 ? 1 : 0;
+			coins[y][x] = c == 4 ? 1 : 0;
+			clouds[y][x] = c == 7 ? 1 : 0;
+			exits[y][x] = c == 8 ? 1 : 0;
 			rescues[y][x] = 0;
-			if (c >= "A" && c <= "Z") {
+			if (c == 9) {
 				let bmp = levelCaptives[levelIndex][capIdx];
 				if (!bmp) {
 					bmp = pickRescueBmp();
@@ -232,11 +232,11 @@ function initBoard() {
 				if (!stageCaptive) stageCaptive = bmp;
 			}
 			rescueDying[y][x] = 0;
-			if (c == "1") enemiesTotal ++;
+			if (c == 1) enemiesTotal ++;
 			pathData[y][x] = 0;
 			pathStep[y][x] = 0;
 			fillData[y][x] = 0;
-			if (c == "2") {
+			if (c == 2) {
 				startX = x;
 				startY = y;
 			}
