@@ -9,7 +9,7 @@ function createSpriteIcon(s, fn) {
 }
 
 function createSparkAnim(size) {
-	const d = row();
+	const d = line();
 	d.id = "spr";
 	d.s = size;
 	d.t = 0;
@@ -33,8 +33,8 @@ function createUnitStatsText(unit, textAlign = "left", sep = "\n") {
 	const txt = document.createElement("div");
 	txt.style.textAlign = textAlign || "right";
 	txt.style.whiteSpace = "pre";
-	txt.textContent = "HP " + Math.max(0, unit.hp) + "/" + unit.hpMax + sep + "Dmg " + unit.dmg
-		+ sep + "Move " + unit.mvMax + sep + "Range " + unit.atkMax;
+	txt.textContent = "HP: " + Math.max(0, unit.hp) + "/" + unit.hpMax + sep + "Dmg: " + unit.dmg
+		+ sep + "Move: " + unit.mvMax + sep + "Attack range: " + unit.atkMax;
 	return txt;
 }
 
@@ -62,6 +62,7 @@ function updateUI() {
 	else if (showUpgrade || showEnd) showEndButtons();
 	else if (battleActive && !battleResult) showBattleTurnButton();
 	else hideEndButtons();
+
 	msg.style.top = portrait ? "35%" : stageCaptive ? "20%" : "25%";
 }
 
@@ -174,6 +175,7 @@ function fillBrief() {
 		r.appendChild(line("Rescue "));
 		r.appendChild(createIcon(stageCaptive, size));
 		r.appendChild(line(stageCaptive));
+		r.style.background = "#fff3";
 		msg.appendChild(r);
 	}
 
@@ -215,9 +217,8 @@ function fillPick() {
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
 	msg.appendChild(line(unit.name, "s"));
 	msg.appendChild(line(createUnitStatsText(unit).textContent, "s"));
-	//msg.appendChild(line("HP:" + u.hpMax + "  Dmg:" + u.dmg));
-	//msg.appendChild(line("Move:" + u.range/* + " " + rayStyle(u.moveRays())*/));
-	//msg.appendChild(line("Range:" + (u.around || u.reach)/* + " " + rayStyle(u.attackRays())*/));
+	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
+	msg.appendChild(line(unit.mv == unit.atk ? n[unit.mv] + " move and attack" : n[unit.mv] + " move, " + n[unit.atk] + " attack", "s"));
 }
 
 function fillUpgrade() {

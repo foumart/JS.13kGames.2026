@@ -2,7 +2,8 @@ const gameContext = gameCanvas.getContext("2d");
 
 let width;
 let height;
-let portrait;
+let portrait
+setLayout();
 let pinch;
 
 function init() {
@@ -44,9 +45,7 @@ function pinchGap(e) {
 
 function resize() {
 	//console.log(showPick, showObjective, showUpgrade, showEnd, stageCaptive, battleActive, battleResult);
-	width = window.innerWidth;
-	height = window.innerHeight;
-	portrait = width < height;
+	setLayout();
 	mainDiv.style.width = width + "px";
 	mainDiv.style.height = height + "px";
 	mainDiv.style.left = "0";
@@ -55,4 +54,10 @@ function resize() {
 	gameCanvas.height = height;
 	gameContext.imageSmoothingEnabled = false;
 	redraw();
+}
+
+function setLayout() {
+	width = window.innerWidth;
+	height = window.innerHeight;
+	portrait = width < height;
 }

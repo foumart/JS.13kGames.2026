@@ -167,11 +167,11 @@ function upgradeId(u) {
 	return u.hero ? 0 : u.name;
 }
 
-// each ray type allows a set number of steps
+// a ray choice only appears while that ladder still has a step left in it
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
-	return ["hp", "att"].concat(unit.lockRange || m[2] >= rayCap(unit.mv, 0) ? [] : ["range"]).concat(unit.lockReach || m[3] >= rayCap(unit.atk, 1) ? [] : ["reach"]);
+	return ["hp", "att"].concat(rayStep(unit.mv, unit.range, m[2]) ? ["range"] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? ["reach"] : []);
 }
 
 function upgradeRows() {
@@ -239,15 +239,16 @@ function applyUpgradePicks() {
 		const k = upgradePicks[upgradeId(unit)];
 		if (!k) continue;
 		const m = allyMod(unit.name);
+		// the ceilings gate these already, so a banked step past the top is harmless
 		if (k == "hp") m[0] += 2;
 		else if (k == "att") m[1] += 1;
-		else if (k == "range" && !unit.lockRange) m[2] += 1;
-		else if (k == "reach" && !unit.lockReach) m[3] += 1;
+		else if (k == "range") m[2] += 1;
+		else m[3] += 1;
 	}
 }
 
 function battleTitle() {
-	return "World " + worldNumber() + (battleKind == 2 ? " - Boss" : " - Battle");
+	return "World " + worldNumber() + " - Vail " + (battleKind + 1);
 }
 
 function spawnEnemies() {
@@ -269,7 +270,7 @@ function spawnEnemies() {
 		}
 	} else {
 		put(createEnemy(0, cx, 0, shadowNumber() > 1 ? 4 : 2), cx);
-		if (w > 1) put(createEnemy(1, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
+		if (w > 1) put(createEnemy(2, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
 		if (w > 3) put(createEnemy(2, cx + 2, 0, w - 3 > 3 ? 3 : w - 3), cx + 2);
 	}
 	const queue = [];

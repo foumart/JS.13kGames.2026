@@ -18,18 +18,15 @@ class Unit {
 		this.hero = !this.type;
 		this.around = this.hero || this.type == 4 || this.atk == 4;
 		this.advance = this.type == 3;
-		this.lockRange = d[i] == 0;
-		this.lockReach = d[i + 1] == 0;
-		this.range = d[i] || 1;
-		this.reach = d[i + 1] || 1;
-		// move and attack rays grow apart, so each carries its own reach per direction
-		const up = this.enemy ? [0, 0, 0, 0] : allyMod(this.name);
-		const gm = growRay(this.mv, this.range, up[2], 0);
-		const ga = growRay(this.atk, this.reach, up[3], 1);
-		this.mvRay = rayList(gm);
-		this.atkRay = rayList(ga);
-		this.mvMax = Math.max(gm[0], gm[1]) || 1;
-		this.atkMax = Math.max(ga[0], ga[1]) || 1;
+		this.range = d[i] || 0;
+		this.reach = d[i + 1] || 0;
+		const upgradeLevels = this.enemy ? [0, 0, 9, 9] : allyMod(this.name);
+		const upgradeMove = upgradeRay(this.mv, this.range, upgradeLevels[2]);
+		const upgradeAttack = upgradeRay(this.atk, this.reach, upgradeLevels[3]);
+		this.mvRay = rayList(upgradeMove);
+		this.atkRay = rayList(upgradeAttack);
+		this.mvMax = Math.max(upgradeMove[0], upgradeMove[1]) || 1;
+		this.atkMax = Math.max(upgradeAttack[0], upgradeAttack[1]) || 1;
 		this.moved = 0;
 		this.acted = 0;
 		this.offsetX = 0;

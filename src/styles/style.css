@@ -50,17 +50,18 @@ body {
 	text-align: center;
 }
 
-#msg .s {
+.s {
 	font-size: 3vmin;
 	line-height: 5vmin;
 }
 
-#msg .l {
+.l {
 	font-size: 5vmin;
 	line-height: 7vmin;
+	margin: 1vmin;
 }
 
-#msg .e {
+.e {
 	font-size: 7vmin;
 	line-height: 9vmin;
 }
@@ -70,7 +71,8 @@ body {
 	align-items: center;
 	justify-content: center;
 	gap: 2vmin;
-	padding: 3vmin 0;
+	padding: 2vmin 1vmin;
+	margin: 1vmin;
 }
 
 .on {
@@ -110,5 +112,5 @@ button {
 
 #msg button {
 	font-size: 3vmin;
-	padding: .8vmin 2vmin;
+	padding: 1vmin 2vmin;
 }

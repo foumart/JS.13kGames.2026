@@ -1,10 +1,13 @@
+const tileWidth = 6;
+const unitScale = 0.665;
+const campaignLength = 63;
+
 let boardWidth;
 let boardHeight;
 let cellSize = 1;
 let zoom = 1;
 let boardOffsetX = 0;
 let boardOffsetY = 0;
-//let portrait;
 let iconContext;
 
 let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
@@ -56,18 +59,19 @@ let levelCaptives = [];
 let rescueDying = [];
 let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken]
 const UNITS = [
-	// name,     hp,dm,mv,at,bm[pa,rn,rc] - move/atk: 0:+ 1:x 2:* 3:knight 4:around
-	//           rn/rc of 0 locks that ladder entirely
-	["Unicorn",  5, 2, 3, 4, 0],
-	["Corwin",   9, 2, 0, 3, 9, 1, 0],
-	["Merlin",   5, 2, 2, 0, 5, 2],
-	["Benedict", 10,3, 1, 2, 8, 1, 1, 0],
-	["Fiona",    4, 2, 2, 1, 6],
-	["Random",   8, 2, 1, 0, 5],
-	["Bleys",    7, 2, 0, 0, 8],
-	["Julian",   7, 2, 2, 2, 5, 1],
-	["Caine",    9, 2, 1, 1, 9],
-	["Gerard",   12,3, 0, 0, 7, 1, 1, 0],
+	// name,     hp,dm,mv,at,bm,pa,   rn,  rc - born as 0:+ 1:x 2:* 3:knight 4:around
+	//           |  |  |  |  |  |    |    |    rn/rc cap each ladder: K*100 + maxR*10
+	//           |  |  |  |  |  |    |    |    + maxB, and 0 means it never upgrades
+	["Unicorn",  5, 2, 3, 0, 0, 0,   121, 121],
+	["Corwin",   9, 2, 0, 3, 9, "012", 21, 0],
+	["Merlin",   5, 2, 0, 0, 5, 2,   131, 21],
+	["Benedict", 10,3, 0, 1, 8, 1,   21,  22],
+	["Fiona",    4, 2, 1, 1, 6, 0,   33,  6],
+	["Random",   8, 2, 1, 1, 5, 0,   2,   11],
+	["Bleys",    7, 2, 0, 0, 8, 0,   11,  111],
+	["Julian",   7, 2, 2, 2, 5, 1,   111, 111],
+	["Caine",    9, 2, 0, 0, 9, 0,   20,  40],
+	["Gerard",   12,3, 0, 0, 7, 1,   11,  111],
 	
 	/*["Eric",     11,2, 1, 0, 7],
 	["Flora",    4, 1, 1, 1, 6, 1, 0],
@@ -105,13 +109,10 @@ const DOWN = [0, 1];
 const LEFT = [-1, 0];
 
 const ROOK = [UP, RIGHT, DOWN, LEFT];
-// 4 rook dirs, 4 bishop dirs, 8 knight leaps - a unit's rays are a mask over these
+// 4 rook dirs, 4 bishop dirs, 8 knight hops - a unit's rays are a mask over these
 const DIRS = [...ROOK, [1, 1], [1, -1], [-1, 1], [-1, -1], [1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
-// move/atk type - the rays a unit is born with: 0:+, 1:x 2:*, 3:knight, 4:around
-const RAYBASE = [[1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 0]];
-// upgrade steps each type allows, moving / attacking - the type is a restriction,
-// so a rook never learns diagonals and a knight never grows at all
-const rayCap = (t, atk) => +["11303", "35303"][+atk][t] || 0;
+// move/atk type - the rays a unit is spawned with: 0:+, 1:x 2:*, 3:knight, 4:around
+const RAYBASE = [[1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 1, 1]];
 
 // [dx, dy, steps] per live direction, so rook and bishop can reach different distances
 function rayList(g) {
@@ -123,29 +124,31 @@ function rayList(g) {
 	return out;
 }
 
-// Ladders per type: rook R1->R2->R3->R4, bishop B1->..->B6, queen R1B1->R2->B2->R3,
-// knight none, around R1->B1->R2->K. The mixed types always fill the shorter ray.
-function growRay(t, len, n, atk) {
+// A unit can upgrade its rays until the limits rn/rc set in unit settings are reached.
+// The shorter rays rook/bishop (R/B) are first, knight (K) is last. Summary:
+// knight * 100 + maxRook * 10 + maxBishop, so 121 reads "up to R2/B1, finally K".
+function upgradeRay(t, lim, n) {
 	const base = RAYBASE[t] || RAYBASE[0];
-	let r = base[0] * len;
-	let b = base[1] * len;
+	let r = base[0];
+	let b = base[1];
 	let k = base[2];
-	const cap = rayCap(t, atk);
-	if (n > cap) n = cap;
+	const mr = lim / 10 % 10 | 0;
+	const mb = lim % 10;
 	for (let i = 0; i < n; i++) {
-		if (t == 4 && i == 2) k = 1;
-		else if (t == 1) b ++;
-		else if (!t) r ++;
-		else if (b < r) b ++;
-		else r ++;
+		if (r < mr && (r <= b || b >= mb)) r ++;
+		else if (b < mb) b ++;
+		else if (lim > 99 && !k) k = 1;
+		else break;
 	}
 	return [r, b, k];
 }
 
-const tileWidth = 6;
-const unitScale = 0.665;
-
-const campaignLength = 63;
+// upgrades go like "R~1", "B~1", "K", or 0 once maxed
+function rayStep(t, lim, n) {
+	const a = upgradeRay(t, lim, n);
+	const b = upgradeRay(t, lim, n + 1);
+	return b[0] > a[0] ? "R" + b[0] : b[1] > a[1] ? "B" + b[1] : b[2] > a[2] ? "K" : 0;
+}
 
 function inBounds(x, y) {
 	return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
@@ -576,8 +579,9 @@ function createEnemy(unitType, x, y, l) {
 		unitType ? 2 : 1,
 		2 + unitType,
 		getEnemyPalette(unitType, l),
-		1 + (unitType > 1),
-		1 + (!unitType && l > 3)
+		// enemies never upgrade, so they are simply born at their ceiling
+		unitType > 1 ? 22 : 0,
+		!unitType && l > 3 ? 2 : 0
 	], x, y, unitType ? 4 : 3);
 }
 
