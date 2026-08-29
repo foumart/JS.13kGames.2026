@@ -14,9 +14,7 @@ body {
 
 #L, #R {
 	position: absolute;
-	/*display: none;*/
 	font: 900 3vmin system-ui;
-	/*background: #546d;*/
 	padding: 1vmin;
 	gap: 1vmin;
 }
@@ -28,6 +26,7 @@ body {
 #R {
 	right: 0;
 	/*align-items: flex-end;*/
+	text-align: right;
 }
 
 #ov {
@@ -46,60 +45,66 @@ body {
 	padding: 0 0 6vmin;
 }
 
+.m {
+	font-size: 2vmin;
+	line-height: 5vmin;
+}
+
 .s {
 	font-size: 3vmin;
-	line-height: 5vmin;
+	line-height: 6vmin;
 }
 
 .l {
 	font-size: 5vmin;
-	line-height: 9vmin;
+	line-height: 8vmin;
 }
 
 .e {
 	font-size: 7vmin;
-	line-height: 9vmin;
+	line-height: 12vmin;
 }
 
 .x {
 	font-size: 9vmin;
+	line-height: 15vmin;
 }
 
 .g {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 3vmin;
+	gap: 1vmin;
 	/*padding: 2vmin;*/
 }
 
 .on {
 	background: #fff;
 	color: #103;
-	outline: 1vmin solid #fe8;
+	outline: 2vmin solid #fe8;
+	margin: 2vmin;
 }
 
 .cur {
-	outline: 1vmin solid #6e6;
+	outline: 2vmin solid #6e6;
 }
 
 .in {
 	background: #96f4;
+	/*padding: 2vmin;*/
 	outline: 2vmin solid #96f4;
+	margin: 2vmin;
 }
 
-/* already switched on, so the cursor ring only needs to be thin */
-/*.on.cur {
-	outline-width: .5vmin;
-}*/
+.if {
+	background: #b9f8;
+	padding: 2vmin;
+	/*outline: 2vmin solid #b9f8;*/
+}
 
-/*#ui canvas {
-	image-rendering: pixelated;
-}*/
-
-#Y, #N {
+/*#Y, #N {
 	display: none;
-}
+}*/
 
 button {
 	padding: 2vmin 4vmin;
@@ -115,4 +120,5 @@ button {
 #msg button {
 	font-size: 3vmin;
 	padding: 1vmin 2vmin;
+	margin: 2vmin;
 }

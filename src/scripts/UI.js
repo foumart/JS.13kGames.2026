@@ -29,11 +29,10 @@ function createIcon(unit, size) {
 	return createSpriteIcon(size, s => drawUnitIcon(unit, s / 2, s / 2, s))
 }
 
-function createUnitStatsText(unit, textAlign = "left", sep = "\n") {
+function createUnitStatsText(unit, sep = "\n") {
 	const hp = sep ? Math.max(0, unit.hp) + "/" : "";
 	if (!sep) sep = " | ";
 	const txt = document.createElement("div");
-	txt.style.textAlign = textAlign || "right";
 	txt.style.whiteSpace = "pre";
 	txt.textContent = "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
 		+ sep + "Move: " + unit.mvMax + sep + "Att: " + unit.atkMax;
@@ -43,7 +42,7 @@ function createUnitStatsText(unit, textAlign = "left", sep = "\n") {
 function line(c = 3, t = 0) {
 	if (!t) t = "\xa0";
 	const d = row();
-	d.className = ["x","e","l","s"][c];
+	d.className = ["x","e","l","s","m"][c];
 	d.textContent = t;
 	return d;
 }
@@ -67,21 +66,17 @@ function updateUI() {
 	const initial = !sc && briefing;
 
 	L.textContent = initial ? "Welcome to The Fourth Labyrinth!" : "Score: " + currentScore();
-	R.textContent = initial ? "Hi-score: " + hiscore : "";
+	R.textContent = initial ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
 	const size = uiSize();
-	if (battleActive && !briefing) {
+	if (battleActive && !battleResult && !briefing) {
 		// battle UI
 		if (ally) L.appendChild(unitCard(ally, size, 0));
 		if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
 	} else if (!initial) {
 		// puzzle UI
 		L.appendChild(playerCard(size));
-		R.appendChild(enemyCard(size));
-		
+		if (!battleResult) R.appendChild(enemyCard(size));
 	}
-	
-	//L.style.display = L.firstChild ? "block" : "none";
-	//R.style.display = R.firstChild ? "block" : "none";
 
 	const fade = showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
 	L.style.background = fade ? "" : "#546d";
@@ -115,8 +110,10 @@ function unitCard(unit, size, right) {
 	return div;
 }
 
-function playerCard(U) {
+function playerCard(size) {
 	const d = row();
+	d.appendChild(createSpriteIcon(size * .75, s => drawUnitIcon(1, s / 2, s / 2, s)));
+	d.appendChild(line(3, ": " + fillCharges));
 	/*const top = row();
 	top.appendChild(createSpriteIcon(U, s => drawUnitIcon(0, s / 2, s / 2, s)));
 	const sp = createSpriteIcon(U / 2 | 0, s => drawSparkle(0, 0, s, time / 180));
@@ -133,35 +130,34 @@ function playerCard(U) {
 	return d;
 }
 
-function enemyCard(U) {
-	const d = row();
-	d.style.textAlign = "right";
-	d.appendChild(document.createTextNode("Vail " + shadowNumber() + (" sentry")));
-	const w = worldNumber();
+function foeThumb(v, s) {
+	const k = v / 10 | 0, e = k > 2 && ENEMIES[k - 3];
+	return createSpriteIcon(s, z => drawUnitIcon(
+		e ? {bgr: e[5], palette: e[6]} : {bgr: 2 + k, palette: getEnemyPalette(k, v % 10)},
+		z / 2, z / 2, z));
+}
 
-	/*d.style.textAlign = "right";
-	d.appendChild(document.createTextNode("Vail " + shadowNumber()));
-	const w = worldNumber();
-	const boss = shadowNumber() == 3;
-	const cap = n => n > 3 ? 3 : n;
-	const type = boss ? w < 3 ? 1 : 2 : w > 3 ? 2 : w > 1 ? 1 : 0;
-	const lvl = boss ? w < 3 ? w : levelIndex >= campaignLength - 3 ? 4 : cap(w - 2)
-		: type ? cap(type > 1 ? w - 3 : w - 1) : shadowNumber() > 1 ? 4 : 2;
-	const lead = row();
-	lead.style.justifyContent = "flex-end";
-	lead.appendChild(document.createTextNode(1));
-	lead.appendChild(createSpriteIcon(U, s => drawUnitIcon(
-		{ bgr: 2 + type, palette: getEnemyPalette(type, lvl) }, s / 2, s / 2, s)));
-	d.appendChild(lead);
-	for (let k = 0; k < 3; k++) {
-		const n = leftoverKinds[k] + countAliveLeprechaunsOfKind(k + 1);
-		if (!n) continue;
+function enemyCard(size) {
+	const d = row();
+	d.style.display = "block";
+	d.appendChild(line(4, "upcoming in"));
+	d.appendChild(line(4, (4-stageNumber()) + " puzzles"));
+	const add = (n, v, s) => {
+		if (!n) return;
 		const r = row();
-		r.style.justifyContent = "flex-end";
-		r.appendChild(document.createTextNode(n));
-		r.appendChild(createSpriteIcon(U * 0.5, s => drawLeprechaunSprite(0, 0, s, 0, 0, 0, k + 1)));
+		if (v == 2) r.appendChild(line(3, "!"));
+		r.appendChild(foeThumb(v, s));
+		if (v != 2) r.appendChild(line(4, ": " + n));
 		d.appendChild(r);
-	}*/
+	};
+	const w = BATTLES[levelIndex / 3 | 0];
+	for (let i = 0; i < w.length;) {
+		let n = 1;
+		while (w[i + n] == w[i]) n++;
+		add(n, w[i], size * .75);
+		i += n;
+	}
+	for (let k = 0; k < 3; k++) add(leftoverKinds[k], k + 1, size / 2);
 	return d;
 }
 
@@ -171,7 +167,7 @@ function getTitle(battle) {
 
 function printProgress() {
 	msg.appendChild(line(1 - portrait, getTitle()));
-	msg.appendChild(line(2 - portrait, battleActive ? "Vail " + battleKind + " battle" : "Puzzle " + stageNumber()));
+	msg.appendChild(line(2 - portrait, battleActive ? "Vail " + battleKind + " - battle" : "Puzzle " + stageNumber()));
 }
 
 function fillBrief() {
@@ -179,7 +175,6 @@ function fillBrief() {
 	printProgress();
 
 	msg.appendChild(line(portrait ? 1 : 3));
-	//msg.appendChild(line(3 - portrait, "Objective:"));
 
 	if (stageCaptive) {
 		const r = row();
@@ -205,20 +200,10 @@ function fillPick() {
 		const bmp = rescuedUnits[i];
 		const dead = isDeadBmp(bmp);
 		const wrap = row();
-		wrap.className += (battleParty.indexOf(bmp) >= 0 ? " on" : " in") + (i == pickCursor ? " cur" : "");
+		wrap.className = "g" + (battleParty.indexOf(bmp) >= 0 ? " on" : " in") + (i == pickCursor ? " cur" : "");
 		const c = createIcon(rescuedUnits[i], size);
 		if (dead) {
 			c.style.opacity = "0.5";
-			/*const g = c.getContext("2d");
-			g.strokeStyle = "#e22";
-			g.lineWidth = Math.max(3, U * 0.08);
-			g.beginPath();
-			g.moveTo(4, 4);
-			g.lineTo(U - 4, U - 4);
-			g.moveTo(U - 4, 4);
-			g.lineTo(4, U - 4);
-			g.stroke();*/
-			//wrap.onclick = () => { pickCursor = i; drawBoard(); };
 		} else wrap.onclick = toggleParty.bind(null, bmp);
 		wrap.appendChild(c);
 		r.appendChild(wrap);
@@ -228,7 +213,7 @@ function fillPick() {
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
 	msg.appendChild(line(2, unit.name));
-	msg.appendChild(line(3, createUnitStatsText(unit, 0, 0).textContent));
+	msg.appendChild(line(3, createUnitStatsText(unit).textContent));
 	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
 	msg.appendChild(line(3, unit.mv == unit.atk ? n[unit.mv] : n[unit.mv] + " / " + n[unit.atk]));
 }
@@ -249,12 +234,10 @@ function fillUpgrade() {
 		const ic = createSpriteIcon(size, s => drawUnitIcon(unit, s / 2, s / 2, s));
 		if (fallen) ic.style.opacity = "0.5";
 		r.appendChild(ic);
-		const col = document.createElement("div");
-		col.style.textAlign = "left";
-		col.style.fontSize = "3vmin";
+		const col = line(3);
 		if (fallen) col.textContent = "fallen";
 		else {
-			col.appendChild(createUnitStatsText(unit, 1, 0));
+			col.appendChild(createUnitStatsText(unit, ""));
 			const btns = row();
 			const curRow = live == upgradeCurUnit;
 			for (let k = 0; k < kinds.length; k++) {
@@ -296,10 +279,11 @@ function fillEnd() {
 			row2.appendChild(ic);
 			msg.appendChild(line());
 			msg.appendChild(row2);
-			row2.appendChild(line(3, stageCaptive + " joined!"));
+			row2.appendChild(line(3, stageCaptive + " joined your party!"));
 		}
 
 		const row3 = line(3, "");
+		row3.className = "if";
 		let vailed = 0;
 		for (let kind = 0; kind < 3; kind++) {
 			for (let n = leftUnitsThisLevel[kind]; n--;) {
@@ -310,7 +294,7 @@ function fillEnd() {
 		if (vailed) {
 			msg.appendChild(line());
 			msg.appendChild(row3);
-			row3.appendChild(line(3, "join the vail!"));
+			row3.appendChild(line(3, vailed + "will join the Vail!"));
 		}
 	} else {
 		msg.appendChild(line(2, "STUCK - R"));

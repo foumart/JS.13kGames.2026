@@ -62,11 +62,11 @@ const UNITS = [
 	// name,     hp,dm,mv,at,bm,pttrn, rng, rc - born as 0:+ 1:x 2:* 3:knight 4:around
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
-	["Unicorn",  5, 2, 3, 0, 0, 0,     100, 121],
+	["Unicorn",  6, 2, 3, 0, 0, 0,     100, 121],
 	["Corwin",   9, 1, 0, 3, 9, "012", 121,  0],
-	["Merlin",   5, 1, 0, 0, 5, "0d2", 131, 43], // red
+	["Merlin",   5, 1, 2, 0, 5, "0d2", 131, 43], // red
 	["Benedict", 10,2, 0, 1, 8, "356", 21,  22], // blue
-	["Fiona",    4, 1, 2, 2, 6, 0,     33,  6],
+	["Fiona",    4, 1, 1, 1, 6, 0,     33,  6],
 	["Random",   8, 1, 1, 1, 5, 0,     2,   12],
 	["Bleys",    7, 1, 0, 3, 8, 0,     11,  121],
 	["Julian",   7, 1, 1, 1, 5, "392", 3,   50],// green
@@ -304,16 +304,6 @@ function anyDying() {
 	return 0;
 }
 
-function countAliveLeprechaunsOfKind(k) {
-	let n = 0;
-	for (let y = 0; y < enemies.length; y++) {
-		for (let x = 0; x < enemies[y].length; x++) {
-			if (enemies[y][x] == k) n ++;
-		}
-	}
-	return n;
-}
-
 function countEnemiesLeft() {
 	leftTotalThisLevel = 0;
 	leftUnitsThisLevel = [0, 0, 0];
@@ -489,7 +479,6 @@ function restoreFlushed(flushed) {
 		if (bmp) {
 			rescues[y][x] = bmp;
 			rescueDying[y][x] = 0;
-			obstacles[y][x] = 0;
 			const k = rescuedUnits.indexOf(bmp);
 			if (k >= 0) rescuedUnits.splice(k, 1);
 		} else if (flushed[i][3] < 0) {
@@ -574,7 +563,6 @@ function collectRescue(x, y) {
 	rescues[y][x] = 0;
 	rescueDying[y][x] = 0;
 	fillData[y][x] = 1;
-	obstacles[y][x] = 1; // the emptied cage stays put, and blocks in the battle too
 	if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
 	return [x, y, k];
 }
@@ -611,7 +599,7 @@ function isPerfect() {
 }
 
 function stageScore() {
-	return enemiesCleared * 100 + coinsCollected * 50 + (state == 2 && isPerfect() ? 1000 : 0);
+	return enemiesCleared * 10 + coinsCollected * 5 + (state == 2 && isPerfect() ? 100 : 0);
 }
 
 function currentScore() {
@@ -1005,6 +993,7 @@ function drawBoard() {
 		return;
 	}
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+	zoom = (portrait ? width / 99 | 0 : height / 99 | 0) - (portrait ? boardWidth : boardHeight) / 6 | 0;
 	const size = fitBoard(boardWidth, boardHeight);
 	drawEdgeTiles(size, groundBmp());
 	rainbowPulse = anyDying();
@@ -1056,9 +1045,6 @@ function drawBoard() {
 					gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
 				}
 			} else if (rescues[y][x]) {
-				if (!rescueDying[y][x]) {
-					gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
-				}
 				const bounce = rescueDying[y][x] && Math.sin(time * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
 				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2 - bounce, size * 0.9);
 				if (!rescueDying[y][x]) {

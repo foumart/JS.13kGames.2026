@@ -38,11 +38,11 @@ const unitData = [
 ];
 
 const backgroundsData = [
-	"3853954a568d68cfffcdf8cf49b", // color bank
+	"3853954a578d67c56caad6ac49b", // color bank
 	"348", // swamp
 	"012345", // grass
-	"674", // clouds
-	"yYgm^vg[vmmWnuo{e{~{^Yn?[zfiYffY[f?y"
+	"354", // clouds
+	"ie?zz?Vio~~onuo{e{~{^Yn?UkZumV^gU{iW"
 ];
 
 const objectsData = [
@@ -91,8 +91,15 @@ function drawPalettedBitmap(src, ref) {
 	return src.palettes[ref] = c;
 }
 
+// Shared palette variations, 3 slots each, indexed after a tile's own ones
+//const PALS = "0120463560793920d23823e2abe";
+
 function drawPaletted(src, i, dx, dy, dw, dh, ctx) {
-	const ref = i.length > 1 ? i : src.pal;
-	const bmp = drawPalettedBitmap(src, ref);
+	const w = src.palW || 3;
+	// index 0 is the tile's main palette; once its own run out, continue into PALS
+	const o = (i || 0) * w;
+	//const ref = typeof i == "string" ? i : src.pal.substr(o, w) || PALS.substr(o - src.pal.length, w) || "012";
+	//const bmp = drawPalettedBitmap(src, ref);
+	const bmp = drawPalettedBitmap(src, i.length ? i : src.pal.substr(o, w));
 	ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, dx, dy, dw, dh);
 }

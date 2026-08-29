@@ -81,7 +81,7 @@ function makeRandomLevel(stage) {
 		return seed;
 	}
 
-	// never crosses the trail itself, keeps walking through free tiles
+	// never crosses the trail itself (except cross), keeps walking through free tiles
 	function carveTrail(seed) {
 		const at = [];
 		let head;
@@ -225,15 +225,18 @@ function makeRandomLevel(stage) {
 		}
 	}
 
+	// cross
 	const twice = [];
 	for (let i = trail.length; i --;) {
 		if (twice[trail[i]]) grid[trail[i] / width | 0][trail[i] % width] = 7;
 		twice[trail[i]] = 1;
 	}
 
+	// start / end
 	grid[from / width | 0][from % width] = 2;
 	grid[to / width | 0][to % width] = 8;
 
+	// gold
 	for (let drops = 2 + RNG(2); drops --;) {
 		const k = trail[RNG(trail.length)];
 		const x = k % width;
