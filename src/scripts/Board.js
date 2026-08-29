@@ -150,6 +150,13 @@ function rayStep(t, lim, n) {
 	return b[0] > a[0] ? "R" + b[0] : b[1] > a[1] ? "B" + b[1] : b[2] > a[2] ? "K" : 0;
 }
 
+function rayText(g) {
+	let s = g[0] ? "R" + g[0] : "";
+	if (g[1]) s += (s && "-") + "B" + g[1];
+	if (g[2]) s += (s && "-") + "K";
+	return s;
+}
+
 function inBounds(x, y) {
 	return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
 }

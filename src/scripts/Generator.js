@@ -63,7 +63,7 @@ function makeRandomLevel(stage) {
 		for (let n = want * 30, left = want; n -- && left;) {
 			if (plant(1 + RNG(width - 2), 1 + RNG(height - 2), 1)) left --;
 		}
-		for (let n = 12, left = 1 + RNG(3); n -- && left;) {
+		for (let n = 12, left = progress > 8 ? 1 + RNG(3) : 0; n -- && left;) {
 			const x = 2 + RNG(width - 4);
 			const y = 2 + RNG(height - 4);
 			if (!hasRoom(seed, x, y)) continue;

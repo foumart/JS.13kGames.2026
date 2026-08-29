@@ -25,8 +25,8 @@ class Unit {
 		const upgradeAttack = upgradeRay(this.atk, this.reach, upgradeLevels[3]);
 		this.mvRay = rayList(upgradeMove);
 		this.atkRay = rayList(upgradeAttack);
-		this.mvMax = Math.max(upgradeMove[0], upgradeMove[1]) || 1;
-		this.atkMax = Math.max(upgradeAttack[0], upgradeAttack[1]) || 1;
+		this.mvMax = rayText(upgradeMove);
+		this.atkMax = rayText(upgradeAttack);
 		this.moved = 0;
 		this.acted = 0;
 		this.offsetX = 0;

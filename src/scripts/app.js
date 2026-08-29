@@ -29,6 +29,17 @@ function init() {
 
 	document.oncontextmenu = e => { e.preventDefault(); };
 
+	/*const p = new CPlayer();
+	p.init(song);
+	(function step() {
+		if (p.generate() < 1) return setTimeout(step, 0);
+		const a = new Audio(URL.createObjectURL(new Blob([p.createWave()], {type: "audio/wav"})));
+		a.loop = 1;
+		const go = () => a.play();
+		go();
+		gameCanvas.addEventListener("pointerdown", go, {once: 1});
+	})();*/
+
 	initBoard();
 	resize();
 	gameStart();

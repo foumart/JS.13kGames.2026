@@ -30,11 +30,13 @@ function createIcon(unit, size) {
 }
 
 function createUnitStatsText(unit, textAlign = "left", sep = "\n") {
+	hp = sep ? Math.max(0, unit.hp) + "/" : "";
+	if (!sep) sep = " | ";
 	const txt = document.createElement("div");
 	txt.style.textAlign = textAlign || "right";
-	txt.style.whiteSpace = "pre";
-	txt.textContent = "HP: " + Math.max(0, unit.hp) + "/" + unit.hpMax + sep + "Dmg: " + unit.dmg
-		+ sep + "Move: " + unit.mvMax + sep + "Attack range: " + unit.atkMax;
+	//txt.style.whiteSpace = "pre";
+	txt.textContent = "HP: " + hp + unit.hpMax + sep + "ATT: " + unit.dmg
+		+ sep + "Move: " + unit.mvMax + sep + "ATT: " + unit.atkMax;
 	return txt;
 }
 
@@ -62,8 +64,6 @@ function updateUI() {
 	else if (showUpgrade || showEnd) showEndButtons();
 	else if (battleActive && !battleResult) showBattleTurnButton();
 	else hideEndButtons();
-
-	msg.style.top = portrait ? "35%" : stageCaptive ? "20%" : "25%";
 }
 
 function updateHud() {
@@ -216,9 +216,9 @@ function fillPick() {
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
 	msg.appendChild(line(unit.name, "s"));
-	msg.appendChild(line(createUnitStatsText(unit).textContent, "s"));
+	msg.appendChild(line(createUnitStatsText(unit, 0, 0).textContent, "s"));
 	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
-	msg.appendChild(line(unit.mv == unit.atk ? n[unit.mv] + " move and attack" : n[unit.mv] + " move, " + n[unit.atk] + " attack", "s"));
+	msg.appendChild(line(unit.mv == unit.atk ? n[unit.mv] : n[unit.mv] + " / " + n[unit.atk], "s"));
 }
 
 function fillUpgrade() {
@@ -242,7 +242,7 @@ function fillUpgrade() {
 		col.style.fontSize = "3vmin";
 		if (fallen) col.textContent = "fallen";
 		else {
-			col.appendChild(createUnitStatsText(unit, 0, " "));
+			col.appendChild(createUnitStatsText(unit, 1, 0));
 			const btns = row();
 			const curRow = live == upgradeCurUnit;
 			for (let k = 0; k < kinds.length; k++) {

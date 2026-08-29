@@ -44,6 +44,7 @@ body {
 
 #msg {
 	position: absolute;
+	align-self: center;
 	/*inset: 0;*/
 	/*top: 30%;*/
 	font: 900 7vmin arial;
