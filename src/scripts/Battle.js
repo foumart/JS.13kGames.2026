@@ -248,10 +248,10 @@ function applyUpgradePicks() {
 }
 
 function createEnemy(unitType, x, y, l) {
-	l = l ? l > 4 ? 4 : l : 1;
+	l = l > 5 ? 5 : l || 1;
 	return makeUnit([
 		,
-		// unitType: 1: leprechaun, 2: hydra, 3: serpent, lvl 1-4
+		// unitType: 0 leprechaun, 1 hydra, 2 serpent, lvl 1-5
 		// HP:
 		unitType ? unitType * 3 + l * (4 - unitType)
 			: l + 1,
@@ -270,27 +270,19 @@ function createEnemy(unitType, x, y, l) {
 
 function spawnEnemies() {
 	const cx = boardWidth / 2 | 0;
-	const w = worldNumber();
-	const last = battleKind == 2 && levelIndex >= campaignLength - 1;
 	const taken = {};
 	const put = (u, x) => {
 		battleUnits.push(u);
 		taken[x] = 1;
 		clearRock(x, 0);
 	};
-	if (battleKind == 2) {
-		// vail 3 - boss
-		if (w < 3) put(createEnemy(4, cx, 0, w), cx);
-		else {
-			put(createEnemy(2, cx, 0, last ? 4 : w - 2 > 3 ? 3 : w - 2), cx);
-			put(createEnemy(1, cx - 2, 0, last ? 4 : 3), cx - 2);
-			put(createEnemy(1, cx + 2, 0, last ? 4 : 3), cx + 2);
-		}
-	} else {
-		// vail 1 & 2
-		put(createEnemy(0, cx, 0, shadowNumber() > 1 ? 4 : 2), cx);
-		if (w > 1) put(createEnemy(2, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
-		if (w > 3) put(createEnemy(2, cx + 2, 0, w - 3 > 3 ? 3 : w - 3), cx + 2);
+	const wave = BATTLES[levelIndex / 3 | 0];
+	const xs = wave.length == 2 ? [cx - 2, cx + 2] : [cx, cx - 2, cx + 2];
+	for (let i = 0; i < wave.length; i++) {
+		const v = wave[i];
+		const kind = v / 10 | 0;
+		const x = xs[i];
+		put(kind > 2 ? makeUnit(ENEMIES[kind - 3], x, 0, 5) : createEnemy(kind, x, 0, v % 10), x);
 	}
 	const queue = [];
 	for (let k = 0; k < 3; k++) {
