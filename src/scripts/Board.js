@@ -60,46 +60,40 @@ let rescueDying = [];
 let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken]
 const UNITS = [
 	// name,     hp,dm,mv,at,bm,pttrn, rng, rc - born as 0:+ 1:x 2:* 3:knight 4:around
-	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10
-	//           |  |  |  |  |  |      |    |    + maxB, and 0 means it never upgrades
+	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
+	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
 	["Unicorn",  5, 2, 3, 0, 0, 0,     121, 121],
 	["Corwin",   9, 2, 0, 3, 9, "012", 21,  0],
 	["Merlin",   5, 2, 0, 0, 5, "0d2", 131, 21], // red
 	["Benedict", 10,3, 0, 1, 8, "356", 21,  22], // blue
-	["Fiona",    4, 2, 1, 1, 6, 0,     33,  6],
+	["Fiona",    4, 2, 2, 2, 6, 0,     33,  6],
 	["Random",   8, 2, 1, 1, 5, 0,     2,   11],
 	["Bleys",    7, 2, 0, 0, 8, 0,     11,  111],
-	["Julian",   7, 2, 2, 2, 5, "392", 111, 111],// green
+	["Julian",   7, 2, 1, 1, 5, "392", 111, 111],// green
 	["Caine",    9, 2, 0, 0, 9, 0,     20,  40],
 	["Gerard",   12,3, 0, 0, 7, 0,     11,  111],
-	
+];
+const ENEMIES = [
+	["Manticore",20,5, 2, 1, 1, "cd6", 43,  16],
+	["Guisel",   28,4, 1, 0, 4, "1e2", 21,  21],
+	["Shroud",   16,6, 3, 3, 3, "d65", 300, 111],
+	["Brand",    24,6, 3, 3, 8, "b16", 166, 11]
+
 	/*["Eric",     11,2, 1, 0, 7],
 	["Flora",    4, 1, 1, 1, 6, 1, 0],
 	["Martin",   5, 2, 1, 0, 7, 2, 0],
 	["Deirdre",  3, 1, 0, 1, 6, 2, 1, 0],
 
-	["Brand",    8, 2, 9, 2, 8, 2, 1, 0]*/
-
-	// Rest of Amberites (except Oberon and Dworkin)
-	
-	//["Flora",  4, 1, 0, 1, 7, 2, 0]
-	//["Deirdre",3, 1, 0, 1, 7, 2, 0]
-	//["Martin", 3, 1, 0, 1, 7, 2, 0]
-	
-	// From Chaos
-	//["Jasra",    3, 1, 0, 1, 7, 2, 0]
-	//["Borel",    3, 1, 0, 1, 7, 2, 0]
-	//["Jurt",    3, 1, 0, 1, 7, 2, 0]
-	//["Mandor",    3, 1, 0, 1, 7, 2, 0]
-	//["Dara",    3, 1, 0, 1, 7, 2, 0]
-
 	//["Luke",    3, 1, 0, 1, 7, 2, 0]
-	//["Ghostwheel",    3, 1, 0, 1, 7, 2, 0]
+	//["Ghostwheel",    3, 1, 0, 1, 7, 2, 0]*/
 ];
 
 const EnemyPalettes = [
+	// 2 - leprechaun
 	["d72", "3d2", "d32", "eb2"],
+	// 3 - hydra
 	["396", "bd2", "382", "bce"],
+	// 4 - serpent
 	["456" ,"ce2", "382", "bde"]
 ]
 
@@ -569,27 +563,6 @@ function makeUnit(data, x, y, type) {
 
 function getEnemyPalette(kind, l) {
 	return l > 1 ? EnemyPalettes[kind][l - 2] : unitData[kind + 3];
-}
-
-function createEnemy(unitType, x, y, l) {
-	l = l ? l > 4 ? 4 : l : 1;
-	return makeUnit([
-		,
-		// unitType: 1: leprechaun, 2: hydra, 3: serpent
-		// HP:
-		unitType ? unitType > 1 ? 6 + l * 4 : l * 3
-			: l + 1,
-		// DMG
-		unitType ? (1 + l) * 2
-			: l < 3 ? 1 : 2,
-		unitType ? 2 : 0,
-		unitType ? 2 : 1,
-		2 + unitType,
-		getEnemyPalette(unitType, l),
-		// enemies never upgrade, so they are simply born at their ceiling
-		unitType > 1 ? 22 : 0,
-		!unitType && l > 3 ? 2 : 0
-	], x, y, unitType ? 4 : 3);
 }
 
 function collectRescue(x, y) {

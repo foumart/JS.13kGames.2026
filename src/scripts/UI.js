@@ -40,7 +40,8 @@ function createUnitStatsText(unit, textAlign = "left", sep = "\n") {
 	return txt;
 }
 
-function line(c, t = "\xa0") {
+function line(c = 3, t = 0) {
+	if (!t) t = "\xa0";
 	const d = row();
 	d.className = ["x","e","l","s"][c];
 	d.textContent = t;
@@ -58,15 +59,7 @@ function uiSize() {
 }
 
 function updateUI() {
-	updateHud();
-	updateOverlay();
-	if (showPick || showObjective) showObjectiveButtons();
-	else if (showUpgrade || showEnd) showEndButtons();
-	else if (battleActive && !battleResult) showBattleTurnButton();
-	else hideEndButtons();
-}
-
-function updateHud() {
+	// top left and right panels
 	const sc = currentScore();
 	const briefing = showPick || showObjective;
 	const ally = battleActive && !briefing ? getBattleUIAlly() : 0;
@@ -77,14 +70,41 @@ function updateHud() {
 	R.textContent = initial ? "Hi-score: " + hiscore : "";
 	const size = uiSize();
 	if (battleActive && !briefing) {
+		// battle UI
 		if (ally) L.appendChild(unitCard(ally, size, 0));
 		if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
 	} else if (!initial) {
+		// puzzle UI
 		L.appendChild(playerCard(size));
 		R.appendChild(enemyCard(size));
+		
 	}
-	L.style.display = L.firstChild ? "flex" : "none";
-	R.style.display = R.firstChild ? "flex" : "none";
+	
+	//L.style.display = L.firstChild ? "block" : "none";
+	//R.style.display = R.firstChild ? "block" : "none";
+
+	const fade = showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
+	L.style.background = fade ? "" : "#546d";
+	R.style.background = fade ? "" : "#546d";
+	ov.style.background = fade ? "#103c" : "";
+	if (!fade) {
+		msg.textContent = "";
+		return;
+	}
+
+	// overlay
+	msg.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
+	msg.textContent = "";
+	if (showPick) fillPick();
+	else if (showUpgrade) fillUpgrade();
+	else if (showObjective) fillBrief();
+	else fillEnd();
+
+	// bottom
+	if (showPick || showObjective) showObjectiveButtons();
+	else if (showUpgrade || showEnd) showEndButtons();
+	else if (battleActive && !battleResult) showBattleTurnButton();
+	else hideEndButtons();
 }
 
 function unitCard(unit, size, right) {
@@ -116,7 +136,7 @@ function playerCard(U) {
 function enemyCard(U) {
 	const d = row();
 	d.style.textAlign = "right";
-	d.appendChild(document.createTextNode("Vail " + shadowNumber()));
+	d.appendChild(document.createTextNode("Vail " + shadowNumber() + (" sentry")));
 	const w = worldNumber();
 
 	/*d.style.textAlign = "right";
@@ -145,22 +165,6 @@ function enemyCard(U) {
 	return d;
 }
 
-function updateOverlay() {
-	const fade = showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
-	ov.style.background = fade ? "#103c" : "";
-	if (!fade) {
-		msg.textContent = "";
-		return;
-	}
-
-	msg.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
-	msg.textContent = "";
-	if (showPick) fillPick();
-	else if (showUpgrade) fillUpgrade();
-	else if (showObjective) fillBrief();
-	else fillEnd();
-}
-
 function getTitle(battle) {
 	return "World " + worldNumber() + "-" + shadowNumber();
 }
@@ -184,7 +188,7 @@ function fillBrief() {
 		r.appendChild(line(2, stageCaptive));
 		r.className = "g in";
 		msg.appendChild(r);
-		msg.appendChild(line(3));
+		msg.appendChild(line());
 	}
 
 	msg.appendChild(line(3, (stageCaptive ? "and g" : "G") + "et to"));
@@ -277,31 +281,37 @@ function fillEnd() {
 		const size = uiSize();
 		msg.appendChild(line(1, "STAGE CLEAR!"));
 
-		const row1 = row();
 		if (isPerfect()) {
+			const row1 = row();
 			msg.appendChild(line(2, "Perfect!"));
 			row1.appendChild(createSparkAnim(size));
 			row1.appendChild(line(1, "+1"));
+			msg.appendChild(row1);
 		}
-		msg.appendChild(row1);
 
-		const row2 = line();
 		if (stageCaptive && rescuedUnits.indexOf(stageCaptive) >= 0) {
+			const row2 = line(3, "");
 			const ic = createIcon(stageCaptive, size);
 			ic.className = "in";
 			row2.appendChild(ic);
-			msg.appendChild(line(3));
+			msg.appendChild(line());
 			msg.appendChild(row2);
 			row2.appendChild(line(3, stageCaptive + " joined!"));
 		}
 
-		const row3 = row();
-		for (let k = 0; k < 3; k++) {
-			for (let n = leftUnitsThisLevel[k]; n--;) {
-				row3.appendChild(createSpriteIcon(size, s => drawLeprechaunSprite(0, 0, s, 0, 0, 0, k + 1)));
+		const row3 = line(3, "");
+		let vailed = 0;
+		for (let kind = 0; kind < 3; kind++) {
+			for (let n = leftUnitsThisLevel[kind]; n--;) {
+				row3.appendChild(createSpriteIcon(size, s => drawLeprechaunSprite(0, 0, s, 0, 0, 0, kind + 1)));
+				vailed ++;
 			}
 		}
-		if (row3.firstChild) msg.appendChild(row3);
+		if (vailed) {
+			msg.appendChild(line());
+			msg.appendChild(row3);
+			row3.appendChild(line(3, "join the vail!"));
+		}
 	} else {
 		msg.appendChild(line(2, "STUCK - R"));
 		msg.appendChild(line(2, "SCORE " + currentScore() + "  MOVES " + moveCount));

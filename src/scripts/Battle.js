@@ -167,11 +167,11 @@ function upgradeId(u) {
 	return u.hero ? 0 : u.name;
 }
 
-// a ray choice only appears while that ladder still has a step left in it
+// a ray choice only appears while there are still upgrades left
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
-	return ["hp", "att"].concat(rayStep(unit.mv, unit.range, m[2]) ? ["range"] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? ["reach"] : []);
+	return ["hp", "dm"].concat(rayStep(unit.mv, unit.range, m[2]) ? ["rg"] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? ["reach"] : []);
 }
 
 function upgradeRows() {
@@ -241,10 +241,31 @@ function applyUpgradePicks() {
 		const m = allyMod(unit.name);
 		// the ceilings gate these already, so a banked step past the top is harmless
 		if (k == "hp") m[0] += 2;
-		else if (k == "att") m[1] += 1;
-		else if (k == "range") m[2] += 1;
+		else if (k == "dm") m[1] += 1;
+		else if (k == "rg") m[2] += 1;
 		else m[3] += 1;
 	}
+}
+
+function createEnemy(unitType, x, y, l) {
+	l = l ? l > 4 ? 4 : l : 1;
+	return makeUnit([
+		,
+		// unitType: 1: leprechaun, 2: hydra, 3: serpent, lvl 1-4
+		// HP:
+		unitType ? unitType * 3 + l * (4 - unitType)
+			: l + 1,
+		// DMG
+		unitType ? unitType - 1 + l * (3 - unitType)
+			: l < 3 ? 1 : 3,
+		unitType ? 2 : 0,
+		unitType ? 2 : 1,
+		2 + unitType,
+		getEnemyPalette(unitType, l),
+		// enemies never upgrade, so they are simply born at their ceiling
+		unitType > 1 ? 22 : 0,
+		!unitType && l > 3 ? 2 : 0
+	], x, y, unitType ? 4 : 3);
 }
 
 function spawnEnemies() {
@@ -258,13 +279,15 @@ function spawnEnemies() {
 		clearRock(x, 0);
 	};
 	if (battleKind == 2) {
-		if (w < 3) put(createEnemy(1, cx, 0, w), cx);
+		// vail 3 - boss
+		if (w < 3) put(createEnemy(4, cx, 0, w), cx);
 		else {
 			put(createEnemy(2, cx, 0, last ? 4 : w - 2 > 3 ? 3 : w - 2), cx);
 			put(createEnemy(1, cx - 2, 0, last ? 4 : 3), cx - 2);
 			put(createEnemy(1, cx + 2, 0, last ? 4 : 3), cx + 2);
 		}
 	} else {
+		// vail 1 & 2
 		put(createEnemy(0, cx, 0, shadowNumber() > 1 ? 4 : 2), cx);
 		if (w > 1) put(createEnemy(2, cx - 2, 0, w - 1 > 3 ? 3 : w - 1), cx - 2);
 		if (w > 3) put(createEnemy(2, cx + 2, 0, w - 3 > 3 ? 3 : w - 3), cx + 2);
@@ -528,7 +551,7 @@ function performMove(u, x, y, done) {
 	battleTiles = [];
 	battleHints = [];
 	updateUI();
-	TweenFX.to(u, 8, {offsetX: 0, offsetY: 0}, drawBattle, () => {
+	TweenFX.to(u, 9, {offsetX: 0, offsetY: 0}, drawBattle, () => {
 		animating = 0;
 		updateUI();
 		done();
@@ -543,7 +566,7 @@ function hitShake(hits, then) {
 	}
 	for (let i = 0; i < hits.length; i++) {
 		hits[i].shake = 1;
-		TweenFX.to(hits[i], 12, {shake: 0}, drawBattle, () => {
+		TweenFX.to(hits[i], 9, {shake: 0}, drawBattle, () => {
 			if (--n <= 0) then();
 		});
 	}
@@ -558,7 +581,7 @@ function performAttack(u, hits, done) {
 	const dx = t ? (t.x - u.x) : 0;
 	const dy = t ? (t.y - u.y) : 0;
 	const len = Math.max(1, Math.abs(dx) + Math.abs(dy));
-	TweenFX.to(u, 5, {offsetX: dx / len * 0.35, offsetY: dy / len * 0.35}, drawBattle, () => {
+	TweenFX.to(u, 5, {offsetX: dx / len * 0.4, offsetY: dy / len * 0.4}, drawBattle, () => {
 		for (let i = 0; i < hits.length; i++) hits[i].hp -= u.dmg;
 		if (!u.enemy) {
 			const mul = u.hero ? 2 : 1;

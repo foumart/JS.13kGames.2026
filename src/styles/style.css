@@ -14,20 +14,20 @@ body {
 
 #L, #R {
 	position: absolute;
-	display: none;
+	/*display: none;*/
 	font: 900 3vmin system-ui;
-	background: #546d;
-	padding: 2vmin;
+	/*background: #546d;*/
+	padding: 1vmin;
 	gap: 1vmin;
 }
 
-#L {
+/*#L {
 	align-items: flex-start;
-}
+}*/
 
 #R {
 	right: 0;
-	align-items: flex-end;
+	/*align-items: flex-end;*/
 }
 
 #ov {
@@ -70,7 +70,7 @@ body {
 	align-items: center;
 	justify-content: center;
 	gap: 3vmin;
-	padding: 2vmin;
+	/*padding: 2vmin;*/
 }
 
 .on {
