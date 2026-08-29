@@ -21,22 +21,21 @@ function getLevelData(stage) {
 
 // the trail the generator walks is the solution - pockets are filled with enemies
 function makeRandomLevel(stage) {
-	const D = genDirs;
 	const progress = stage || 0;
 
 	function RNG(n) { return Math.random() * n | 0; }
 
-	let width = progress < 2 ? 7 : 8 + RNG(2 + (progress / 27 | 0));
-	let height = progress < 2 ? 6 : 7 + RNG(2 + (progress / 27 | 0));
+	let width = progress < 2 ? 7 : 7 + RNG(2 + (progress / 9 | 0));
+	let height = progress < 2 ? 6 : 6 + RNG(2 + (progress / 9 | 0));
 	if (portrait && width > height || !portrait && width < height) {
 		const w = width;
 		width = height;
 		height = w;
 	}
 	const area = width * height;
-	let want = progress < 3 ? 3 + progress : 6 + RNG(3 + (progress / 12 | 0));
+	let want = progress < 3 ? 3 + progress : 6 + RNG(3 + (progress / 9 | 0));
 	//if (want > 16) want = 16;
-	if (hasRescue(progress)) want ++;
+	if (hasRescue(progress)) want += 2;
 
 	function inMap(x, y) { return (x | y) >= 0 && x < width && y < height; }
 	function id(x, y) { return x + y * width; }
@@ -64,13 +63,20 @@ function makeRandomLevel(stage) {
 		for (let n = want * 30, left = want; n -- && left;) {
 			if (plant(1 + RNG(width - 2), 1 + RNG(height - 2), 1)) left --;
 		}
-		let stones = 2 + RNG(3) + ((area - 56) / 16 | 0) + (progress / 16 | 0);
-		for (let n = stones * 8; n -- && stones;) {
+		for (let n = 12, left = 1 + RNG(3); n -- && left;) {
+			const x = 2 + RNG(width - 4);
+			const y = 2 + RNG(height - 4);
+			if (!hasRoom(seed, x, y)) continue;
+			seed[id(x, y)] = 3;
+			left --;
+		}
+		let blockTiles = 2 + RNG(3) + ((area - 56) / 16 | 0) + (progress / 16 | 0);
+		for (let n = blockTiles * 8; n -- && blockTiles;) {
 			const rim = progress < 5 || RNG(2);
 			const e = RNG(4);
 			const x = rim ? (e < 2 ? RNG(width) : e == 2 ? 0 : width - 1) : 1 + RNG(width - 2);
 			const y = rim ? (e < 2 ? (e ? height - 1 : 0) : RNG(height)) : 1 + RNG(height - 2);
-			if (plant(x, y, 2)) stones --;
+			if (plant(x, y, 2)) blockTiles --;
 		}
 		return seed;
 	}
@@ -90,16 +96,20 @@ function makeRandomLevel(stage) {
 				for (let i = trail.length; i --;) at[trail[i]] = i;
 			}
 			const last = trail.length - 1;
-			const d = D[RNG(4)];
-			const x = trail[last] % width + d[0];
-			const y = (trail[last] / width | 0) + d[1];
+			const p = trail[last];
+			const c = p % area;
+			const d = genDirs[RNG(4)];
+			if (seed[c] == 3 && (p < area) != !d[1]) continue;
+			const x = c % width + d[0];
+			const y = (c / width | 0) + d[1];
 			if (!inMap(x, y)) continue;
 			const k = id(x, y);
-			if (seed[k]) continue;
-			const j = at[k];
+			if (seed[k] && seed[k] != 3) continue;
+			const lane = seed[k] == 3 && d[1] ? k + area : k;
+			const j = at[lane];
 			if (j == null) {
-				at[k] = trail.length;
-				trail.push(k);
+				at[lane] = trail.length;
+				trail.push(lane);
 			} else if (j < last - 1) {
 				for (let a = j + 1, b = last; a < b; a ++, b --) {
 					const t = trail[a];
@@ -110,8 +120,13 @@ function makeRandomLevel(stage) {
 				}
 			}
 		}
-		for (let gap; gap = Math.abs(trail[0] - trail[trail.length - 1]), gap == 1 || gap == width;) {
-			trail.pop();
+		for (let i = trail.length; i --;) trail[i] %= area;
+		const hits = [];
+		for (let i = trail.length; i --;) hits[trail[i]] = (hits[trail[i]] || 0) + 1;
+		while (hits[trail[0]] > 1) hits[trail.shift()] --;
+		for (let gap; hits[trail[trail.length - 1]] > 1
+			|| (gap = Math.abs(trail[0] - trail[trail.length - 1]), gap == 1 || gap == width);) {
+			hits[trail.pop()] --;
 		}
 		return trail;
 	}
@@ -125,8 +140,8 @@ function makeRandomLevel(stage) {
 			const c = stack.pop();
 			cells.push(c);
 			for (let d = 4; d --;) {
-				const x = c % width + D[d][0];
-				const y = (c / width | 0) + D[d][1];
+				const x = c % width + genDirs[d][0];
+				const y = (c / width | 0) + genDirs[d][1];
 				const n = id(x, y);
 				if (!inMap(x, y) || on[n] || seen[n]) continue;
 				seen[n] = 1;
@@ -137,17 +152,21 @@ function makeRandomLevel(stage) {
 	}
 
 	// Best carve: the one that fills the map and leaves the most spawns
+	// seed array holds what's pre-placed on each tile before the carve
+	// (1:leprechaun, 2:block, 3 cross)
 	let trail;
 	let seed;
 	let holes;
 	let best = 0;
-	for (let tries = 12; tries --;) {
+	for (let tries = 9; tries --;) {
 		const s = scatterSeeds();
 		const t = carveTrail(s);
 		const on = [];
 		const rows = [];
 		const cols = [];
+		let cross = 0;
 		for (let i = t.length; i --;) {
+			if (on[t[i]]) cross ++;
 			on[t[i]] = 1;
 			rows[t[i] / width | 0] = 1;
 			cols[t[i] % width] = 1;
@@ -166,7 +185,7 @@ function makeRandomLevel(stage) {
 			if (cells.length > 3) waste += cells.length * cells.length;
 			else if (s[cells[0]] != 2) spawns += cells.length;
 		}
-		const score = (spawns < want ? spawns : want) * 9 - waste - walls * area;
+		const score = (spawns < want ? spawns : want) * 9 + cross * 300 - waste - walls * 9999;
 		if (!holes || score > best) {
 			best = score;
 			trail = t;
@@ -206,6 +225,12 @@ function makeRandomLevel(stage) {
 		}
 	}
 
+	const twice = [];
+	for (let i = trail.length; i --;) {
+		if (twice[trail[i]]) grid[trail[i] / width | 0][trail[i] % width] = 7;
+		twice[trail[i]] = 1;
+	}
+
 	grid[from / width | 0][from % width] = 2;
 	grid[to / width | 0][to % width] = 8;
 
@@ -217,8 +242,18 @@ function makeRandomLevel(stage) {
 	}
 
 	if (hasRescue(progress) && enemies.length) {
-		const jail = enemies[RNG(enemies.length)];
-		grid[jail[1]][jail[0]] = 9;
+		const prison = enemies[RNG(enemies.length)];
+		/*const px = from % width;
+		const py = from / width | 0;
+		let prison = enemies[0];
+		for (let i = enemies.length, k = RNG(i); i --; k = (k + 1) % enemies.length) {
+			const e = enemies[k];
+			if (Math.abs(e[0] - px) + Math.abs(e[1] - py) > 1) {
+				prison = e;
+				break;
+			}
+		}*/
+		grid[prison[1]][prison[0]] = 9;
 	}
 	return grid;
 }
