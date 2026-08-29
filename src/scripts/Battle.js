@@ -247,10 +247,6 @@ function applyUpgradePicks() {
 	}
 }
 
-function battleTitle() {
-	return "World " + worldNumber() + " - Vail " + (battleKind + 1);
-}
-
 function spawnEnemies() {
 	const cx = boardWidth / 2 | 0;
 	const w = worldNumber();

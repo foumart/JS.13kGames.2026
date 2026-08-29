@@ -1,5 +1,4 @@
 body {
-	/*margin: 0;*/
 	overflow: hidden;
 	color: #fff;
 }
@@ -18,19 +17,16 @@ body {
 	display: none;
 	font: 900 3vmin system-ui;
 	background: #546d;
-	padding: 1vmin 2vmin 2vmin;
+	padding: 2vmin;
 	gap: 1vmin;
-	/*z-index: 2;*/
 }
 
 #L {
-	/* flex-direction: column; */
 	align-items: flex-start;
 }
 
 #R {
 	right: 0;
-	/* flex-direction: column; */
 	align-items: flex-end;
 }
 
@@ -45,10 +41,9 @@ body {
 #msg {
 	position: absolute;
 	align-self: center;
-	/*inset: 0;*/
-	/*top: 30%;*/
 	font: 900 7vmin arial;
 	text-align: center;
+	padding: 0 0 6vmin;
 }
 
 .s {
@@ -58,8 +53,7 @@ body {
 
 .l {
 	font-size: 5vmin;
-	line-height: 7vmin;
-	margin: 1vmin;
+	line-height: 9vmin;
 }
 
 .e {
@@ -67,24 +61,31 @@ body {
 	line-height: 9vmin;
 }
 
+.x {
+	font-size: 9vmin;
+}
+
 .g {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 2vmin;
-	padding: 2vmin 1vmin;
-	margin: 1vmin;
+	gap: 3vmin;
+	padding: 2vmin;
 }
 
 .on {
 	background: #fff;
 	color: #103;
-	/*padding: .4vmin;*/
-	outline: .4vmin solid #fe8;
+	outline: 1vmin solid #fe8;
 }
 
 .cur {
 	outline: 1vmin solid #6e6;
+}
+
+.in {
+	background: #96f4;
+	outline: 2vmin solid #96f4;
 }
 
 /* already switched on, so the cursor ring only needs to be thin */

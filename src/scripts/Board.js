@@ -789,7 +789,7 @@ function showBattleTurnButton() {
 	Y.style.display = "none";
 	N.style.display = "block";
 	N.textContent = "END";
-	N.style.opacity = on ? "1" : "0.35";
+	N.style.opacity = on ? "1" : "0.3";
 	N.onclick = battleEndTurn;
 	syncEndCursor();
 }
@@ -825,7 +825,7 @@ function showObjectiveButtons() {
 function syncPickButton() {
 	if (!showPick) return;
 	const need = Math.min(2, livingRescueCount());
-	N.style.opacity = battleParty.length >= need ? "1" : "0.35";
+	N.style.opacity = battleParty.length >= need ? "1" : "0.3";
 }
 
 function dismissObjective() {

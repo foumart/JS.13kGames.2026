@@ -30,19 +30,19 @@ function createIcon(unit, size) {
 }
 
 function createUnitStatsText(unit, textAlign = "left", sep = "\n") {
-	hp = sep ? Math.max(0, unit.hp) + "/" : "";
+	const hp = sep ? Math.max(0, unit.hp) + "/" : "";
 	if (!sep) sep = " | ";
 	const txt = document.createElement("div");
 	txt.style.textAlign = textAlign || "right";
-	//txt.style.whiteSpace = "pre";
-	txt.textContent = "HP: " + hp + unit.hpMax + sep + "ATT: " + unit.dmg
-		+ sep + "Move: " + unit.mvMax + sep + "ATT: " + unit.atkMax;
+	txt.style.whiteSpace = "pre";
+	txt.textContent = "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
+		+ sep + "Move: " + unit.mvMax + sep + "Att: " + unit.atkMax;
 	return txt;
 }
 
-function line(t, c = "l") {
-	const d = document.createElement("div");
-	d.className = c;
+function line(c, t = "\xa0") {
+	const d = row();
+	d.className = ["x","e","l","s"][c];
 	d.textContent = t;
 	return d;
 }
@@ -96,7 +96,7 @@ function unitCard(unit, size, right) {
 }
 
 function playerCard(U) {
-	const d = document.createElement("div");
+	const d = row();
 	/*const top = row();
 	top.appendChild(createSpriteIcon(U, s => drawUnitIcon(0, s / 2, s / 2, s)));
 	const sp = createSpriteIcon(U / 2 | 0, s => drawSparkle(0, 0, s, time / 180));
@@ -114,7 +114,7 @@ function playerCard(U) {
 }
 
 function enemyCard(U) {
-	const d = document.createElement("div");
+	const d = row();
 	d.style.textAlign = "right";
 	d.appendChild(document.createTextNode("Vail " + shadowNumber()));
 	const w = worldNumber();
@@ -161,39 +161,47 @@ function updateOverlay() {
 	else fillEnd();
 }
 
+function getTitle(battle) {
+	return "World " + worldNumber() + "-" + shadowNumber();
+}
+
+function printProgress() {
+	msg.appendChild(line(1 - portrait, getTitle()));
+	msg.appendChild(line(2 - portrait, battleActive ? "Vail " + battleKind + " battle" : "Puzzle " + stageNumber()));
+}
+
 function fillBrief() {
 	const size = uiSize() * 1.2 | 0;
-	if (battleActive) {
-		msg.appendChild(line(battleTitle(), "e"));
-		//msg.appendChild(line("Destroy all enemies", "s"));
-		return;
-	}
-	msg.appendChild(line("World: " + worldNumber() + "-" + shadowNumber(), "e"));
-	msg.appendChild(line("Stage: " + stageNumber()));
+	printProgress();
+
+	msg.appendChild(line(portrait ? 1 : 3));
+	//msg.appendChild(line(3 - portrait, "Objective:"));
+
 	if (stageCaptive) {
 		const r = row();
-		r.appendChild(line("Rescue "));
+		r.appendChild(line(2, "Rescue "));
 		r.appendChild(createIcon(stageCaptive, size));
-		r.appendChild(line(stageCaptive));
-		r.style.background = "#fff3";
+		r.appendChild(line(2, stageCaptive));
+		r.className = "g in";
 		msg.appendChild(r);
+		msg.appendChild(line(3));
 	}
 
+	msg.appendChild(line(3, (stageCaptive ? "and g" : "G") + "et to"));
 	msg.appendChild(createSparkAnim(size));
 }
 
 function fillPick() {
 	const size = Math.max(40, Math.min(width / (rescuedUnits.length + 1), height * 0.14) | 0);
 	const need = Math.min(2, livingRescueCount());
-	msg.appendChild(line(battleTitle(), "e"));
-	//msg.appendChild(line("Destroy all enemies"));
-	msg.appendChild(line(need > 1 ? "Pick " + need + " allies" : "Your ally", "s"));
+	printProgress();
+	msg.appendChild(line(3, need > 1 ? "Pick " + need + " allies" : "Your ally"));
 	const r = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
 		const dead = isDeadBmp(bmp);
-		const wrap = document.createElement("div");
-		wrap.className = "g" + (battleParty.indexOf(bmp) >= 0 ? " on" : "") + (i == pickCursor ? " cur" : "");
+		const wrap = row();
+		wrap.className += (battleParty.indexOf(bmp) >= 0 ? " on" : " in") + (i == pickCursor ? " cur" : "");
 		const c = createIcon(rescuedUnits[i], size);
 		if (dead) {
 			c.style.opacity = "0.5";
@@ -215,16 +223,16 @@ function fillPick() {
 	const name = rescuedUnits[pickCursor];
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
-	msg.appendChild(line(unit.name, "s"));
-	msg.appendChild(line(createUnitStatsText(unit, 0, 0).textContent, "s"));
+	msg.appendChild(line(2, unit.name));
+	msg.appendChild(line(3, createUnitStatsText(unit, 0, 0).textContent));
 	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
-	msg.appendChild(line(unit.mv == unit.atk ? n[unit.mv] : n[unit.mv] + " / " + n[unit.atk], "s"));
+	msg.appendChild(line(3, unit.mv == unit.atk ? n[unit.mv] : n[unit.mv] + " / " + n[unit.atk]));
 }
 
 function fillUpgrade() {
 	const size = uiSize();
-	msg.appendChild(line("VICTORY!"));
-	msg.appendChild(line("Choose a bonus", "s"));
+	msg.appendChild(line(1, "VICTORY!"));
+	msg.appendChild(line(3, "Choose a bonus"));
 	const list = battleRoster();
 	let live = 0;
 	for (let i = 0; i < list.length; i++) {
@@ -262,26 +270,30 @@ function fillUpgrade() {
 
 function fillEnd() {
 	if (battleActive) {
-		msg.appendChild(line(battleResult == 2 ? "VICTORY!" : "DEFEAT - R"));
+		msg.appendChild(line(1, battleResult == 2 ? "VICTORY!" : "DEFEAT - R"));
 		return;
 	}
 	if (state == 2) {
 		const size = uiSize();
-		msg.appendChild(line("STAGE CLEAR!", "e"));
+		msg.appendChild(line(1, "STAGE CLEAR!"));
 
 		const row1 = row();
 		if (isPerfect()) {
-			msg.appendChild(line("Perfect!"));
+			msg.appendChild(line(2, "Perfect!"));
 			row1.appendChild(createSparkAnim(size));
-			row1.appendChild(line("+1", "e"));
+			row1.appendChild(line(1, "+1"));
 		}
 		msg.appendChild(row1);
 
-		const row2 = row();
-		for (let i = 0; i < rescuedUnits.length; i++) {
-			row2.appendChild(createIcon(rescuedUnits[i], size));
+		const row2 = line();
+		if (stageCaptive && rescuedUnits.indexOf(stageCaptive) >= 0) {
+			const ic = createIcon(stageCaptive, size);
+			ic.className = "in";
+			row2.appendChild(ic);
+			msg.appendChild(line(3));
+			msg.appendChild(row2);
+			row2.appendChild(line(3, stageCaptive + " joined!"));
 		}
-		msg.appendChild(row2);
 
 		const row3 = row();
 		for (let k = 0; k < 3; k++) {
@@ -291,7 +303,7 @@ function fillEnd() {
 		}
 		if (row3.firstChild) msg.appendChild(row3);
 	} else {
-		msg.appendChild(line("STUCK - R"));
-		msg.appendChild(line("SCORE " + currentScore() + "  MOVES " + moveCount));
+		msg.appendChild(line(2, "STUCK - R"));
+		msg.appendChild(line(2, "SCORE " + currentScore() + "  MOVES " + moveCount));
 	}
 }

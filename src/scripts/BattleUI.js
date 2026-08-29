@@ -130,6 +130,6 @@ function upgradeLabel(kind, unit) {
 	if (kind == "hp") return "HP +2";
 	if (kind == "att") return "Dmg +1";
 	const atk = kind != "range";
-	return (atk ? "ATT " : "Move ")
+	return (atk ? "Att " : "Move ")
 		+ rayStep(atk ? unit.atk : unit.mv, atk ? unit.reach : unit.range, allyMod(unit.name)[atk ? 3 : 2]);
 }
