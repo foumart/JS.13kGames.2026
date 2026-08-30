@@ -38,6 +38,7 @@ function doAnimationFrame() {
 }
 
 function redraw() {
+	gameContext.clearRect(0, 0, width, height);
 	drawBoard();
 	updateUI();
 }

@@ -589,7 +589,7 @@ function stageNumber() {
 }
 
 function groundBmp() {
-	return backgroundsBitmaps[worldNumber() % backgroundsBitmaps.length];
+	return backgroundsBitmaps[[0, 1, 6][worldNumber() % 3]];
 }
 
 function isPerfect() {
@@ -949,29 +949,18 @@ function fitBoard(cols, rows) {
 	return size;
 }
 
-function drawEdgeTiles(size, bmp) {
-	const ox = boardOffsetX;
-	const oy = boardOffsetY;
-	const gx0 = -ox / size - 1 | 0;
-	const gy0 = -oy / size - 1 | 0;
-	const gx1 = (width - ox) / size + 1 | 0;
-	const gy1 = (height - oy) / size + 1 | 0;
-	const rock = objectBitmaps[0];
-	for (let gy = gy0; gy < gy1; gy++) {
-		for (let gx = gx0; gx < gx1; gx++) {
-			if (inBounds(gx, gy)) continue;
-			const px = ox + gx * size;
-			const py = oy + gy * size;
+function drawEdgeTiles(size) {
+	for (let i = 0; i < 4; i++) {
+		const d = ROOK[i];
+		const n = d[0] ? boardHeight : boardWidth;
+		const bmp = backgroundsBitmaps[2 + i];
+		for (let k = 0; k < n; k++) {
+			const gx = d[0] ? (d[0] > 0 ? boardWidth : -1) : k;
+			const gy = d[1] ? (d[1] > 0 ? boardHeight : -1) : k;
+			const px = boardOffsetX + gx * size;
+			const py = boardOffsetY + gy * size;
+			gameContext.clearRect(px, py, size, size);
 			gameContext.drawImage(bmp, 0, 0, tileWidth, tileWidth, px, py, size, size);
-			const rockHere = ((gx * 13 + gy * 7 + levelIndex * 3) % 5 + 5) % 5;
-			if (rockHere) {
-				gameContext.drawImage(rock, 0, 0, tileWidth, tileWidth, px, py, size, size);
-			} else {
-				// spread animated special tiles diagonaly
-				const period = 1400 + ((gx * 19 + gy * 11) % 10 + 10) % 10 * 180;
-				const phase = gx * 430 + gy * 710;
-				drawPaletted(objectBitmaps[3 + ((time + phase) / period & 1)], "543", px, py, size, size, gameContext);
-			}
 		}
 	}
 }
@@ -983,7 +972,6 @@ function drawBoard() {
 	}
 	zoom = (portrait ? width / 99 : height / 99) - (portrait ? boardWidth : boardHeight) / 6;
 	const size = fitBoard(boardWidth, boardHeight);
-	drawEdgeTiles(size, groundBmp());
 	rainbowPulse = anyDying();
 	scrollRainbow();
 	player.resize();
@@ -1039,6 +1027,7 @@ function drawBoard() {
 
 	drawFlowingPath();
 	drawFillNiches();
+	drawEdgeTiles(size);
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {

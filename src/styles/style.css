@@ -1,6 +1,7 @@
 body {
 	overflow: hidden;
 	color: #fff;
+	background: #06221c;
 }
 
 #mainDiv, #gameCanvas, #ui, #ov {
@@ -47,7 +48,6 @@ body {
 
 .m {
 	font-size: 2vmin;
-	line-height: 5vmin;
 }
 
 .s {

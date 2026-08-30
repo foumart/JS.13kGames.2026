@@ -66,7 +66,9 @@ function updateUI() {
 	const initial = !sc && briefing;
 
 	L.textContent = initial ? "Welcome to The Fourth Labyrinth!" : "Score: " + currentScore();
+	L.appendChild(document.createElement("hr"));
 	R.textContent = initial ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
+	R.appendChild(document.createElement("hr"));
 	const size = uiSize();
 	if (battleActive && !battleResult && !briefing) {
 		// battle UI
@@ -79,8 +81,7 @@ function updateUI() {
 	}
 
 	const fade = showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
-	L.style.background = fade ? "" : "#546d";
-	R.style.background = fade ? "" : "#546d";
+	L.style.background = R.style.background = fade ? "" : "#546d";
 	ov.style.background = fade ? "#103c" : "";
 	if (!fade) {
 		msg.textContent = "";

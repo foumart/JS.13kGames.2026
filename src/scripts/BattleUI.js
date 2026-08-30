@@ -49,8 +49,6 @@ function battleHinted(x, y) {
 
 function drawBattle() {
 	const tileSize = fitBoard(boardWidth, boardHeight);
-	//portrait = height > width;
-	drawEdgeTiles(tileSize, groundBmp());
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
@@ -88,6 +86,8 @@ function drawBattle() {
 	if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {
 		outlineUnit(battleSelect, tileSize, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);
 	}
+
+	drawEdgeTiles(tileSize);
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let i = 0; i < battleUnits.length; i++) {

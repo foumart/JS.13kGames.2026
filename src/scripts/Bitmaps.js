@@ -38,26 +38,31 @@ const unitData = [
 ];
 
 const backgroundsData = [
-	"3853954a578d67c56caad6ac49b", // color bank
-	"348", // swamp
-	"012345", // grass
-	"354", // clouds
-	"ie?zz?Vio~~onuo{e{~{^Yn?UkZumV^gU{iW"
+	"4a539538526478d67c56c78a69c67a", // color bank
+	"789", // swamp
+	"210456", // grass
+	"123", // tile 5
+	"012", // tile 4
+	"012", // tile 3
+	"012", // tile 6
+	"465", // clouds
+	"]zZ_^igyj]{Ynuo{e{~{^Yn?@@h@xHiIgmfUC@V@v@UA?AACf]LqPAPCp@@@@`@UD}TU|_@pUkZumV^gU{iW"
 ];
 
 const objectsData = [
-	"ffeffafd0867465243deeabc789", // color bank
-	"345678", // obstacle
-	"124674", // coin
-	"064124", // cloudX
-	"012435", // sparkleA
-	"012435", // sparkleB
-	"067123", // prison
+	"ffeffafd0465354243deeabc789", // color bank
+	"345", // tile 10
+	"123673", // coin
+	"063123", // cloudX
+	"012345", // sparkleA
+	"012345", // sparkleB
+	"067124", // prison
 	"012", // up
 	"012", // right
 	"012", // down
 	"012", // left
-	"UEifywyvUuxoH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
+	"435678", // obstacle
+	"TM}w}w}wW}|OH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@]v~}yf~?]vw{"
 ];
 
 encodeBitmap(unitData, unitBitmaps);
@@ -92,14 +97,13 @@ function drawPalettedBitmap(src, ref) {
 }
 
 // Shared palette variations, 3 slots each, indexed after a tile's own ones
-//const PALS = "0120463560793920d23823e2abe";
+const PALS = "0120463560793920d23823e2abe";
 
 function drawPaletted(src, i, dx, dy, dw, dh, ctx) {
 	const w = src.palW || 3;
 	// index 0 is the tile's main palette; once its own run out, continue into PALS
 	const o = (i || 0) * w;
-	//const ref = typeof i == "string" ? i : src.pal.substr(o, w) || PALS.substr(o - src.pal.length, w) || "012";
-	//const bmp = drawPalettedBitmap(src, ref);
-	const bmp = drawPalettedBitmap(src, i.length ? i : src.pal.substr(o, w));
+	const ref = typeof i == "string" ? i : src.pal.substr(o, w) || PALS.substr(o - src.pal.length, w) || "012";
+	const bmp = drawPalettedBitmap(src, ref);
 	ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, dx, dy, dw, dh);
 }
