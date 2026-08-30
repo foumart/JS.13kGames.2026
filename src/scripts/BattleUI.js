@@ -48,7 +48,6 @@ function battleHinted(x, y) {
 }
 
 function drawBattle() {
-	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	const tileSize = fitBoard(boardWidth, boardHeight);
 	//portrait = height > width;
 	drawEdgeTiles(tileSize, groundBmp());
@@ -90,9 +89,11 @@ function drawBattle() {
 		outlineUnit(battleSelect, tileSize, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);
 	}
 
-	const order = battleUnits.slice().sort((a, b) => a.y - b.y);
-	for (let i = 0; i < order.length; i++) {
-		if (order[i].hp > 0 || order[i].shake) order[i].draw(tileSize);
+	for (let y = 0; y < boardHeight; y++) {
+		for (let i = 0; i < battleUnits.length; i++) {
+			const u = battleUnits[i];
+			if ((u.hp > 0 || u.shake) && (u.y + u.offsetY | 0) == y) u.draw(tileSize);
+		}
 	}
 }
 

@@ -981,12 +981,12 @@ function drawBoard() {
 		drawBattle();
 		return;
 	}
-	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 	zoom = (portrait ? width / 99 : height / 99) - (portrait ? boardWidth : boardHeight) / 6;
 	const size = fitBoard(boardWidth, boardHeight);
 	drawEdgeTiles(size, groundBmp());
 	rainbowPulse = anyDying();
 	scrollRainbow();
+	player.resize();
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
@@ -1033,13 +1033,23 @@ function drawBoard() {
 					const coy = py + size - cs - size * 0.06;
 					gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
 				}
-			} else if (rescues[y][x]) {
+			}
+		}
+	}
+
+	drawFlowingPath();
+	drawFillNiches();
+
+	for (let y = 0; y < boardHeight; y++) {
+		for (let x = 0; x < boardWidth; x++) {
+			const px = boardOffsetX + x * size;
+			const py = boardOffsetY + y * size;
+			if (rescues[y][x]) {
 				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size * 0.9);
 				if (!rescueDying[y][x]) {
 					gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, size, size);
 				}
 			}
-
 			if (enemies[y][x]) {
 				const k = enemies[y][x];
 				const t = (time + x * 90 + y * 180) / (leprechaunDying(k) ? 180 : 720) & 1;
@@ -1048,13 +1058,9 @@ function drawBoard() {
 					size / tileWidth * unitBitmaps[2].width * unitScale);
 			}
 		}
+		if ((player.y + player.offsetY | 0) == y) player.draw();
 	}
 
-	drawFlowingPath();
-	drawFillNiches();
 	drawMoveArrows(size);
 	drawGoldFlies(size);
-
-	player.resize();
-	player.draw();
 }
