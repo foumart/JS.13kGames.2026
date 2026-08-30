@@ -19,8 +19,6 @@ let rescues = []; // 0 empty, else unit bitmap index
 let pathData = [];
 let pathStep = [];
 let fillData = [];
-let fillCharges = 3;
-let fillStart = 3;
 let moveLog = []; // flushed enemy cells per forward move (for undo)
 let player;
 let moving = 0;
@@ -28,6 +26,7 @@ let gameLoop;
 let time = 0;
 let pathCount = 0;
 let hiscore = 0;
+let lives = 3;
 
 let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
@@ -159,7 +158,7 @@ function inBounds(x, y) {
 }
 
 function isMapTile(x, y) {
-	return inBounds(x, y) && !(obstacles[y] && obstacles[y][x]);
+	return inBounds(x, y) && !obstacles[y][x];
 }
 
 function initBoard() {
@@ -190,7 +189,6 @@ function initBoard() {
 	levelScore = 0;
 	totalScore = scoreStart;
 	scoreBanked = 0;
-	fillCharges = fillStart;
 	leftTotalThisLevel = 0;
 	leftUnitsThisLevel = [0, 0, 0];
 	leftGoldThisLevel = 0;
@@ -261,7 +259,7 @@ function isPassable(x, y, dx, dy) {
 	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || fillData[y][x] == 1) return 0;
 	if (rescues[y][x] && !rescueDying[y][x]) return 0;
 	if (exits[y][x] && remainingRescue()) return 0;
-	const cross = clouds[y][x] || fillData[y][x] == 2;
+	const cross = clouds[y][x];
 	if (pathStep[y][x]) {
 		if (cross) {
 			const pd = pathData[y][x];
@@ -273,18 +271,6 @@ function isPassable(x, y, dx, dy) {
 		return 0;
 	}
 	return 1;
-}
-
-function useSparkAbility() {
-	if (battleActive || moving || showEnd || showObjective || state != 1) return;
-	if (fillCharges < 1) return;
-	const x = player.x;
-	const y = player.y;
-	if (!inBounds(x, y) || fillData[y][x]) return;
-	fillData[y][x] = 2;
-	fillCharges --;
-	checkCaptures();
-	redraw();
 }
 
 function leprechaunType(v) {
@@ -507,7 +493,7 @@ function getCurrentContext() {
 }
 
 function drawSparkle(x, y, size, frame) {
-	getCurrentContext().drawImage(objectBitmaps[3 + (frame & 1)], 0, 0, tileWidth, tileWidth, x, y, size, size);
+	blit(objectBitmaps[3 + (frame & 1)], x, y, size);
 }
 
 function pickRescueBmp() {
@@ -592,10 +578,6 @@ function stageNumber() {
 	return (levelIndex % 3) + 1;
 }
 
-function groundBmp() {
-	return backgroundsBitmaps[0];
-}
-
 function isPerfect() {
 	if (leftTotalThisLevel) return 0;
 	if (stageCaptive && rescuedUnits.indexOf(stageCaptive) < 0) return 0;
@@ -619,7 +601,6 @@ function scheduleEndScreen() {
 	waitDelay(()=> {
 		calcLevelScore();
 		if (state == 2) {
-			fillCharges ++;
 			if (!scoreBanked) {
 				totalScore += levelScore;
 				scoreBanked = 1;
@@ -653,10 +634,7 @@ function drawMoveArrows(size) {
 		const ny = player.y + ROOK[i][1];
 		if (!puzzleMoveAt(nx, ny) || isPrevPath(nx, ny)) continue;
 		if ((coins[ny][nx] || exits[ny][nx]) && showGold) continue;
-		const bmp = objectBitmaps[6 + i];
-		const px = boardOffsetX + nx * size;
-		const py = boardOffsetY + ny * size;
-		gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, px, py, size, size);
+		blit(objectBitmaps[6 + i], boardOffsetX + nx * size, boardOffsetY + ny * size, size);
 	}
 }
 
@@ -668,7 +646,7 @@ function drawGoldFlies(size) {
 		const f = goldFlies[i];
 		const px = boardOffsetX + f.x * size + (size - cs) / 2;
 		const py = boardOffsetY + f.y * size + size - cs - size * 0.06;
-		gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, px, py, cs, cs);
+		blit(objectBitmaps[1], px, py, cs);
 	}
 }
 
@@ -752,19 +730,13 @@ function showBattleTurnButton() {
 
 function showEndButtons() {
 	Y.style.display = "block";
-	Y.onclick = () => {
-		if (battleActive) resetBattle();
-		else {
-			skipObjective = 1;
-			resetLevel();
-		}
-	};
+	Y.textContent = "RE" + (lives ? "TRY" : "START");
+	Y.onclick = lives ? resetHere : restartCampaign;
 	N.style.opacity = "1";
 	N.onclick = battleActive ? afterBattleWin : nextLevel;
-	N.textContent = battleActive
-		? (levelIndex < campaignLength - 1 ? "NEXT LEVEL" : "REPLAY")
-		: (levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL");
-	N.style.display = state == 2 ? "block" : "none";
+	N.textContent = battleActive && levelIndex > campaignLength - 2 ? "REPLAY"
+		: !battleActive && levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL";
+	N.style.display = lives && state == 2 ? "block" : "none";
 	syncEndCursor();
 }
 
@@ -792,7 +764,6 @@ function dismissObjective() {
 }
 
 function nextLevel() {
-	fillStart = fillCharges;
 	scoreStart = totalScore;
 	leftoverEnemies += leftTotalThisLevel;
 	for (let i = 0; i < 3; i++) leftoverKinds[i] += leftUnitsThisLevel[i];
@@ -849,8 +820,7 @@ function restartCampaign() {
 	showPick = 0;
 	showUpgrade = 0;
 	levelIndex = 0;
-	fillCharges = 3;
-	fillStart = 3;
+	lives = 3;
 	totalScore = 0;
 	scoreStart = 0;
 	scoreBanked = 0;
@@ -945,6 +915,10 @@ function debugSkipToBattle() {
 	startBattle();
 }
 
+function blit(src, px, py, s) {
+	getCurrentContext().drawImage(src, 0, 0, tileWidth, tileWidth, px, py, s, s);
+}
+
 function fitBoard(cols, rows) {
 	const size = Math.min(width / (cols + zoom), height / (rows + zoom));
 	cellSize = size;
@@ -953,108 +927,98 @@ function fitBoard(cols, rows) {
 	return size;
 }
 
-function drawEdgeTiles(size) {
-	const tiles = [0, 3, 4, 6, 1, 15, 7, 12, 2, 5, 14, 9, 8, 10, 11, 13];
-	for (let gy = -1; gy <= boardHeight; gy++) {
-		for (let gx = -1; gx <= boardWidth; gx++) {
-			if (isMapTile(gx, gy)) continue;
-			const mask = isMapTile(gx, gy - 1)
-				| isMapTile(gx + 1, gy) << 1
-				| isMapTile(gx, gy + 1) << 2
-				| isMapTile(gx - 1, gy) << 3;
-			if (!mask) continue;
-			const px = boardOffsetX + gx * size;
-			const py = boardOffsetY + gy * size;
-			gameContext.clearRect(px, py, size, size);
-			gameContext.drawImage(backgroundsBitmaps[tiles[mask]], 0, 0, tileWidth, tileWidth, px, py, size, size);
-		}
-	}
-}
-
 function drawBoard() {
-	if (battleActive) {
-		drawBattle();
-		return;
+	if (!battleActive) {
+		zoom = (portrait ? width / 99 : height / 99) - (portrait ? boardWidth : boardHeight) / 6;
+		rainbowPulse = anyDying();
+		scrollRainbow();
+		player.resize();
 	}
-	zoom = (portrait ? width / 99 : height / 99) - (portrait ? boardWidth : boardHeight) / 6;
 	const size = fitBoard(boardWidth, boardHeight);
-	rainbowPulse = anyDying();
-	scrollRainbow();
-	player.resize();
-
-	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
-			if (obstacles[y][x]) continue;
-			const px = boardOffsetX + x * size;
-			const py = boardOffsetY + y * size;
-
-			const onPlayer = x == player.x && y == player.y;
-			// Hide rainbow under unicorn (on cross, only the second time)
+	const ox = boardOffsetX, oy = boardOffsetY;
+	const t = [0, 3, 4, 6, 1, 15, 7, 12, 2, 5, 14, 9, 8, 10, 11, 13];
+	for (let gy = -oy / size - 1 | 0; gy < (height - oy) / size + 1 | 0; gy++) {
+		for (let gx = -ox / size - 1 | 0; gx < (width - ox) / size + 1 | 0; gx++) {
+			const px = ox + gx * size, py = oy + gy * size;
+			if (!isMapTile(gx, gy)) {
+				drawPaletted(backgroundsBitmaps[0], 1, px, py, size, size, gameContext);
+				let m = 0;
+				for (let i = 4; i--;) if (isMapTile(gx + ROOK[i][0], gy + ROOK[i][1])) m |= 1 << i;
+				if (m) blit(backgroundsBitmaps[t[m]], px, py, size);
+				continue;
+			}
+			if (battleActive) {
+				blit(backgroundsBitmaps[0], px, py, size);
+				continue;
+			}
+			const onPlayer = gx == player.x && gy == player.y;
 			let tipOnly = 0;
-			if (onPlayer && pathStep[y][x] && !revealPlayerTile && !(showEnd && state == 3)) {
+			if (onPlayer && pathStep[gy][gx] && !revealPlayerTile && !(showEnd && state == 3)) {
 				let visits = 0;
 				for (let i = 0; i < pathTrail.length; i++) {
-					if (pathTrail[i][0] == x && pathTrail[i][1] == y) visits ++;
+					if (pathTrail[i][0] == gx && pathTrail[i][1] == gy) visits ++;
 				}
 				const tip = pathTrail[pathTrail.length - 1];
-				tipOnly = tip[0] == x && tip[1] == y && visits <= 1;
+				tipOnly = tip[0] == gx && tip[1] == gy && visits <= 1;
 			}
-			const purified = fillData[y][x] || (pathStep[y][x] && !tipOnly);
-			if (purified) {
-				drawPurifiedTile(x, y);
-			} else {
-				gameContext.drawImage(
-					groundBmp(),
-					0, 0, tileWidth, tileWidth, px, py, size, size
-				);
-			}
-			if (clouds[y][x]) {
-				gameContext.drawImage(
-					objectBitmaps[2],
-					0, 0, tileWidth, tileWidth, px, py, size, size
-				);
-			}
-
-			if (exits[y][x]) {
-				if (!puzzleMoveAt(x, y) || isPrevPath(x, y) || (time / 1000 | 0) % 2) {
-					drawSparkle(px, py, size, (time / 180 | 0) + x + y);
+			if (fillData[gy][gx] || (pathStep[gy][gx] && !tipOnly)) drawPurifiedTile(gx, gy);
+			else blit(backgroundsBitmaps[0], px, py, size);
+			if (clouds[gy][gx]) blit(objectBitmaps[2], px, py, size);
+			if (exits[gy][gx]) {
+				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 2) {
+					drawSparkle(px, py, size, (time / 180 | 0) + gx + gy);
 				}
-			} else if (coins[y][x]) {
-				if (!puzzleMoveAt(x, y) || isPrevPath(x, y) || (time / 1000 | 0) % 2) {
+			} else if (coins[gy][gx]) {
+				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 2) {
 					const cs = size * 0.8;
-					const cox = px + (size - cs) / 2;
-					const coy = py + size - cs - size * 0.06;
-					gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
+					blit(objectBitmaps[1], px + (size - cs) / 2, py + size - cs - size * 0.06, cs);
 				}
 			}
 		}
 	}
 
-	drawFlowingPath();
-	drawFillNiches();
-	drawEdgeTiles(size);
+	if (battleActive) {
+		for (let i = 0; i < battleTiles.length; i++) {
+			const bt = battleTiles[i];
+			const hot = (battleAim && battleHinted(bt.x, bt.y)) || (bt.live && hoverTile && hoverTile.x == bt.x && hoverTile.y == bt.y);
+			gameContext.fillStyle = bt.kind
+				? (hot ? "#f458" : bt.live ? "#f456" : "#f454")
+				: (hot ? "#9f8c" : bt.live ? "#9f88" : "#9f84");
+			gameContext.fillRect(ox + bt.x * size, oy + bt.y * size, size, size);
+		}
+		if (battleControl && battleControl.hp > 0) outlineUnit(battleControl, size, "#fff", 0.06, 1);
+		if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {
+			outlineUnit(battleSelect, size, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);
+		}
+	} else drawFlowingPath();
 
 	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
-			const px = boardOffsetX + x * size;
-			const py = boardOffsetY + y * size;
-			if (rescues[y][x]) {
-				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size * 0.9);
-				if (!rescueDying[y][x]) {
-					gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, size, size);
+		if (battleActive) {
+			for (let i = 0; i < battleUnits.length; i++) {
+				const u = battleUnits[i];
+				if ((u.hp > 0 || u.shake) && (u.y + u.offsetY | 0) == y) u.draw(size);
+			}
+		} else {
+			for (let x = 0; x < boardWidth; x++) {
+				const px = ox + x * size, py = oy + y * size;
+				if (rescues[y][x]) {
+					drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size * 0.9);
+					if (!rescueDying[y][x]) blit(objectBitmaps[5], px, py, size);
+				}
+				if (enemies[y][x]) {
+					const k = enemies[y][x];
+					const hop = (time + x * 90 + y * 180) / (leprechaunDying(k) ? 180 : 720) & 1;
+					drawUnitIcon({bgr: 2, palette: getEnemyPalette(0, leprechaunType(k))},
+						px + size / 2, py + size / 2 - hop * size / 8,
+						size / tileWidth * unitBitmaps[2].width * unitScale);
 				}
 			}
-			if (enemies[y][x]) {
-				const k = enemies[y][x];
-				const t = (time + x * 90 + y * 180) / (leprechaunDying(k) ? 180 : 720) & 1;
-				drawUnitIcon({bgr: 2, palette: getEnemyPalette(0, leprechaunType(k))},
-					px + size / 2, py + size / 2 - t * size / 8,
-					size / tileWidth * unitBitmaps[2].width * unitScale);
-			}
+			if ((player.y + player.offsetY | 0) == y) player.draw();
 		}
-		if ((player.y + player.offsetY | 0) == y) player.draw();
 	}
 
-	drawMoveArrows(size);
-	drawGoldFlies(size);
+	if (!battleActive) {
+		drawMoveArrows(size);
+		drawGoldFlies(size);
+	}
 }

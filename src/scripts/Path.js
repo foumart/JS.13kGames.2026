@@ -257,14 +257,3 @@ function drawFlowingPath() {
 		s += len;
 	}
 }
-
-function drawFillNiches() {
-	const w = cellSize;
-	//gameContext.imageSmoothingEnabled = false;
-	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
-			if (fillData[y][x] != 2 || (player.x == x && player.y == y)) continue;
-			drawSparkle(boardOffsetX + x * w, boardOffsetY + y * w, w, (time / 500 | 0) + x + y);
-		}
-	}
-}

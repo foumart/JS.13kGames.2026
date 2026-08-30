@@ -329,26 +329,24 @@ function isMapEmptyAt(x, y) {
 }
 
 function checkForBattleEnd() {
-	let p = 0;
-	let e = 0;
-	let breach = 0;
+	if (battleResult) return 1;
+	let p = 0, e = 0, hero = 0, lose = 0;
 	for (let i = 0; i < battleUnits.length; i++) {
 		const u = battleUnits[i];
 		if (u.hp <= 0) continue;
 		if (u.enemy) {
 			e ++;
-			if (u.advance && u.y >= boardHeight - 1) breach = 1;
-		} else p ++;
+			if (u.advance && u.y >= boardHeight - 1) lose = 1;
+		} else {
+			p ++;
+			hero |= u.hero;
+		}
 	}
-	if (!p || breach) {
-		battleFinish(3);
+	lose = lose || !p || !hero;
+	if (lose || !e) {
+		battleFinish(lose ? 3 : 2);
 		return 1;
 	}
-	if (!e) {
-		battleFinish(2);
-		return 1;
-	}
-	return 0;
 }
 
 function battleFinish(result) {
@@ -359,6 +357,7 @@ function battleFinish(result) {
 	thinking = 0;
 	battleTiles = [];
 	battleHints = [];
+	if (result == 3 && !--lives && currentScore() > hiscore) hiscore = currentScore();
 	if (result == 2) {
 		showUpgrade = 1;
 		defaultUpgradePicks();
@@ -543,7 +542,7 @@ function performMove(u, x, y, done) {
 	battleTiles = [];
 	battleHints = [];
 	updateUI();
-	TweenFX.to(u, 9, {offsetX: 0, offsetY: 0}, drawBattle, () => {
+	TweenFX.to(u, 9, {offsetX: 0, offsetY: 0}, drawBoard, () => {
 		animating = 0;
 		updateUI();
 		done();
@@ -558,7 +557,7 @@ function hitShake(hits, then) {
 	}
 	for (let i = 0; i < hits.length; i++) {
 		hits[i].shake = 1;
-		TweenFX.to(hits[i], 9, {shake: 0}, drawBattle, () => {
+		TweenFX.to(hits[i], 9, {shake: 0}, drawBoard, () => {
 			if (--n <= 0) then();
 		});
 	}
@@ -573,7 +572,7 @@ function performAttack(u, hits, done) {
 	const dx = t ? (t.x - u.x) : 0;
 	const dy = t ? (t.y - u.y) : 0;
 	const len = Math.max(1, Math.abs(dx) + Math.abs(dy));
-	TweenFX.to(u, 5, {offsetX: dx / len * 0.4, offsetY: dy / len * 0.4}, drawBattle, () => {
+	TweenFX.to(u, 5, {offsetX: dx / len * 0.4, offsetY: dy / len * 0.4}, drawBoard, () => {
 		for (let i = 0; i < hits.length; i++) hits[i].hp -= u.dmg;
 		if (!u.enemy) {
 			const mul = u.hero ? 2 : 1;
@@ -584,7 +583,7 @@ function performAttack(u, hits, done) {
 		}
 		updateUI();
 		hitShake(hits, () => {
-			TweenFX.to(u, 5, {offsetX: 0, offsetY: 0}, drawBattle, () => {
+			TweenFX.to(u, 5, {offsetX: 0, offsetY: 0}, drawBoard, () => {
 				u.acted = 1;
 				animating = 0;
 				updateUI();

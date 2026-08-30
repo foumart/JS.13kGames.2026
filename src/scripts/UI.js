@@ -39,6 +39,10 @@ function createUnitStatsText(unit, sep = "\n") {
 	return txt;
 }
 
+function appendLine(c, t) {
+	msg.appendChild(line(c, t));
+}
+
 function line(c = 3, t = 0) {
 	if (!t) t = "\xa0";
 	const d = row();
@@ -70,13 +74,12 @@ function updateUI() {
 	R.textContent = initial ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
 	R.appendChild(document.createElement("hr"));
 	const size = uiSize();
+	if (!initial) L.appendChild(playerCard(size));
 	if (battleActive && !battleResult && !briefing) {
 		// battle UI
 		if (ally) L.appendChild(unitCard(ally, size, 0));
 		if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
 	} else if (!initial) {
-		// puzzle UI
-		L.appendChild(playerCard(size));
 		if (!battleResult) R.appendChild(enemyCard(size));
 	}
 
@@ -113,21 +116,8 @@ function unitCard(unit, size, right) {
 
 function playerCard(size) {
 	const d = row();
-	d.appendChild(createSpriteIcon(size * .75, s => drawUnitIcon(1, s / 2, s / 2, s)));
-	d.appendChild(line(3, ": " + fillCharges));
-	/*const top = row();
-	top.appendChild(createSpriteIcon(U, s => drawUnitIcon(0, s / 2, s / 2, s)));
-	const sp = createSpriteIcon(U / 2 | 0, s => drawSparkle(0, 0, s, time / 180));
-	top.appendChild(sp);
-	top.appendChild(document.createTextNode(":" + fillCharges));
-	d.appendChild(top);
-	const n = rescuedUnits.length;
-	if (n) {
-		const r = row();
-		const sm = U / 2 | 0;
-		for (let i = 0; i < n; i++) r.appendChild(createSpriteIcon(sm, s => drawUnitIcon(rescuedUnits[i], s / 2, s / 2, s)));
-		d.appendChild(r);
-	}*/
+	d.appendChild(createSpriteIcon(size * .75, s => drawUnitIcon(0, s / 2, s / 2, s)));
+	d.appendChild(line(3, ": " + lives));
 	return d;
 }
 
@@ -141,12 +131,14 @@ function foeThumb(v, s) {
 function enemyCard(size) {
 	const d = row();
 	d.style.display = "block";
-	d.appendChild(line(4, "upcoming in"));
-	d.appendChild(line(4, (4-stageNumber()) + " puzzles"));
+	if (!showPick) {
+		d.appendChild(line(4, "upcoming in"));
+		d.appendChild(line(4, (4-stageNumber()) + " puzzles"));
+	}
 	const add = (n, v, s) => {
 		if (!n) return;
 		const r = row();
-		if (v == 2) r.appendChild(line(3, "!"));
+		//if (v == 2 && !showPick) r.appendChild(line(3, "!"));
 		r.appendChild(foeThumb(v, s));
 		if (v != 2) r.appendChild(line(4, ": " + n));
 		d.appendChild(r);
@@ -167,15 +159,15 @@ function getTitle(battle) {
 }
 
 function printProgress() {
-	msg.appendChild(line(1 - portrait, getTitle()));
-	msg.appendChild(line(2 - portrait, battleActive ? "Vail " + battleKind + " - battle" : "Puzzle " + stageNumber()));
+	appendLine(1 - portrait, getTitle());
+	appendLine(2 - portrait, battleActive ? "Vail " + battleKind + " - battle" : "Puzzle " + stageNumber());
 }
 
 function fillBrief() {
 	const size = uiSize() * 1.2 | 0;
 	printProgress();
 
-	msg.appendChild(line(portrait ? 1 : 3));
+	appendLine(portrait ? 1 : 3);
 
 	if (stageCaptive) {
 		const r = row();
@@ -184,10 +176,10 @@ function fillBrief() {
 		r.appendChild(line(2, stageCaptive));
 		r.className = "g in";
 		msg.appendChild(r);
-		msg.appendChild(line());
+		appendLine();
 	}
 
-	msg.appendChild(line(3, (stageCaptive ? "and g" : "G") + "et to"));
+	appendLine(3, (stageCaptive ? "and g" : "G") + "et to");
 	msg.appendChild(createSparkAnim(size));
 }
 
@@ -195,7 +187,7 @@ function fillPick() {
 	const size = Math.max(40, Math.min(width / (rescuedUnits.length + 1), height * 0.14) | 0);
 	const need = Math.min(2, livingRescueCount());
 	printProgress();
-	msg.appendChild(line(3, need > 1 ? "Pick " + need + " allies" : "Your ally"));
+	appendLine(3, need > 1 ? "Pick " + need + " allies" : "Your ally");
 	const r = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
@@ -213,16 +205,16 @@ function fillPick() {
 	const name = rescuedUnits[pickCursor];
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
-	msg.appendChild(line(2, unit.name));
-	msg.appendChild(line(3, createUnitStatsText(unit).textContent));
+	appendLine(2, unit.name);
+	appendLine(3, createUnitStatsText(unit).textContent);
 	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
-	msg.appendChild(line(3, unit.mv == unit.atk ? n[unit.mv] : n[unit.mv] + " / " + n[unit.atk]));
+	appendLine(3, unit.mv == unit.atk ? n[unit.mv] : n[unit.mv] + " / " + n[unit.atk]);
 }
 
 function fillUpgrade() {
 	const size = uiSize();
-	msg.appendChild(line(1, "VICTORY!"));
-	msg.appendChild(line(3, "Choose a bonus"));
+	appendLine(1, "VICTORY!");
+	appendLine(3, "Choose a bonus");
 	const list = battleRoster();
 	let live = 0;
 	for (let i = 0; i < list.length; i++) {
@@ -257,17 +249,23 @@ function fillUpgrade() {
 }
 
 function fillEnd() {
+	if (!lives) {
+		appendLine(1, "GAME OVER");
+		appendLine(2, "SCORE " + currentScore());
+		appendLine(2, "HI-SCORE " + hiscore);
+		return;
+	}
 	if (battleActive) {
-		msg.appendChild(line(1, battleResult == 2 ? "VICTORY!" : "DEFEAT - R"));
+		appendLine(1, battleResult == 2 ? "VICTORY!" : "DEFEAT");
 		return;
 	}
 	if (state == 2) {
 		const size = uiSize();
-		msg.appendChild(line(1, "STAGE CLEAR!"));
+		appendLine(1, "STAGE CLEAR!");
 
 		if (isPerfect()) {
 			const row1 = row();
-			msg.appendChild(line(2, "Perfect!"));
+			appendLine(2, "Perfect!");
 			row1.appendChild(createSparkAnim(size));
 			row1.appendChild(line(1, "+1"));
 			msg.appendChild(row1);
@@ -278,7 +276,7 @@ function fillEnd() {
 			const ic = createIcon(stageCaptive, size);
 			ic.className = "in";
 			row2.appendChild(ic);
-			msg.appendChild(line());
+			appendLine();
 			msg.appendChild(row2);
 			row2.appendChild(line(3, stageCaptive + " joined your party!"));
 		}
@@ -293,12 +291,12 @@ function fillEnd() {
 			}
 		}
 		if (vailed) {
-			msg.appendChild(line());
+			appendLine();
 			msg.appendChild(row3);
 			row3.appendChild(line(3, vailed + "will join the Vail!"));
 		}
 	} else {
-		msg.appendChild(line(2, "STUCK - R"));
-		msg.appendChild(line(2, "SCORE " + currentScore() + "  MOVES " + moveCount));
+		appendLine(2, "STUCK - R");
+		appendLine(2, "SCORE " + currentScore() + "  MOVES " + moveCount);
 	}
 }

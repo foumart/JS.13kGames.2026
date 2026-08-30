@@ -19,7 +19,7 @@ function puzzleMoveAt(x, y) {
 
 function puzzleClick(event) {
 	const cell = getPosFromEvent(event);
-	if (!cell) return;
+	if (!cell || cell.x == player.x && cell.y == player.y) return;
 	const dir = puzzleMoveAt(cell.x, cell.y);
 	if (dir) act(dir[0], dir[1]);
 	else startRetract(cell.x, cell.y);

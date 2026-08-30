@@ -61,7 +61,7 @@ function onKeyDown(event) {
 			event.preventDefault();
 			activateEndButton();
 		}
-		else if (k == 82) resetHere();
+		else if (k == 82) Y.onclick();
 		return;
 	}
 	if (battleActive) {
@@ -73,10 +73,5 @@ function onKeyDown(event) {
 		battleKey(event);
 	}
 	else if (k == 82) resetHere();
-	else if (k == 32) {
-		// showEnd returned above, so this is always the in-play spark
-		event.preventDefault();
-		useSparkAbility();
-	}
 	else if (d) act(d[0], d[1]);
 }

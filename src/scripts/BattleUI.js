@@ -47,51 +47,6 @@ function battleHinted(x, y) {
 	return 0;
 }
 
-function drawBattle() {
-	const tileSize = fitBoard(boardWidth, boardHeight);
-
-	for (let y = 0; y < boardHeight; y++) {
-		for (let x = 0; x < boardWidth; x++) {
-			if (hasObstacle(x, y)) continue;
-			const px = boardOffsetX + x * tileSize;
-			const py = boardOffsetY + y * tileSize;
-			gameContext.drawImage(
-				groundBmp(),
-				0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
-			);
-		}
-	}
-
-	for (let i = 0; i < battleTiles.length; i++) {
-		const t = battleTiles[i];
-		const hot = (battleAim && battleHinted(t.x, t.y)) || (t.live && hoverTile && hoverTile.x == t.x && hoverTile.y == t.y);
-		gameContext.fillStyle = t.kind
-			? (hot ? "#f458" : t.live ? "#f456" : "#f454")
-			: (hot ? "#9f8c" : t.live ? "#9f88" : "#9f84");
-		gameContext.fillRect(
-			boardOffsetX + t.x * tileSize,
-			boardOffsetY + t.y * tileSize,
-			tileSize, tileSize
-		);
-	}
-
-	if (battleControl && battleControl.hp > 0) {
-		outlineUnit(battleControl, tileSize, "#fff", 0.06, 1);
-	}
-	if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {
-		outlineUnit(battleSelect, tileSize, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);
-	}
-
-	drawEdgeTiles(tileSize);
-
-	for (let y = 0; y < boardHeight; y++) {
-		for (let i = 0; i < battleUnits.length; i++) {
-			const u = battleUnits[i];
-			if ((u.hp > 0 || u.shake) && (u.y + u.offsetY | 0) == y) u.draw(tileSize);
-		}
-	}
-}
-
 function getBattleUIAlly() {
 	if (battleSelect && !battleSelect.enemy && battleSelect.hp > 0) return battleSelect;
 	for (let i = 0; i < battleUnits.length; i++) {
