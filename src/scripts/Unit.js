@@ -83,7 +83,7 @@ class Unit {
 			if (this.around) out.push(foe);
 			else {
 				const d = scan[i][0].length;
-				if (d < bestD || (d == bestD && Math.random() < 0.5)) {
+				if (d < bestD || d == bestD && RNG(2)) {
 					bestD = d;
 					out[0] = foe;
 				}
@@ -134,9 +134,10 @@ class Unit {
 		const hop = (this.offsetX || this.offsetY)
 			? Math.sin(Math.PI * Math.max(Math.abs(this.offsetX), Math.abs(this.offsetY))) * size * 0.22
 			: 0;
+		const t = this.enemy && (time + this.x * 90 + this.y * 180) / (this.hp ? 720 : 180) & 1;
 		gameContext.save();
-		gameContext.translate(px + size / 2, py + size / 2 - hop);
-		gameContext.scale(this.face, 1);
+		gameContext.translate(px + size / 2, py + size / 2 - hop - (this.bgr != 3 && t) * size / 8);
+		gameContext.scale(this.face * (this.bgr == 3 && t ? -1 : 1), 1);
 		//if (this.palette) drawPaletted(bmp, this.palette, -dw / 2, -dh / 2, dw, dh, gameContext);
 		//else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
 		drawPaletted(bmp, this.palette, -dw / 2, -dh / 2, dw, dh, gameContext);

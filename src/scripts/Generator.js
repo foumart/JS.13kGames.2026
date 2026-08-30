@@ -23,8 +23,6 @@ function getLevelData(stage) {
 function makeRandomLevel(stage) {
 	const progress = stage || 0;
 
-	function RNG(n) { return Math.random() * n | 0; }
-
 	let width = progress < 2 ? 7 : 7 + RNG(2 + (progress / 9 | 0));
 	let height = progress < 2 ? 6 : 6 + RNG(2 + (progress / 9 | 0));
 	if (portrait && width > height || !portrait && width < height) {

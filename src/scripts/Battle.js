@@ -298,7 +298,7 @@ function spawnEnemies() {
 	}
 	if (n > spots.length) n = spots.length;
 	for (let i = spots.length - 1; i > 0; i--) {
-		const j = Math.random() * (i + 1) | 0;
+		const j = RNG(i + 1);
 		const t = spots[i];
 		spots[i] = spots[j];
 		spots[j] = t;
@@ -661,8 +661,8 @@ function battleEndTurn() {
 
 function getPosFromEvent(event) {
 	if (!cellSize) return null;
-	const x = Math.floor((event.clientX - boardOffsetX) / cellSize);
-	const y = Math.floor((event.clientY - boardOffsetY) / cellSize);
+	const x = (event.clientX - boardOffsetX) / cellSize | 0;
+	const y = (event.clientY - boardOffsetY) / cellSize | 0;
 	if (!inBounds(x, y)) return null;
 	return {x, y};
 }

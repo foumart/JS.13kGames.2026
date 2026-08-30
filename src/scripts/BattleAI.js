@@ -48,7 +48,7 @@ function bestByScore(list, scoreFn) {
 	let bestS = -999;
 	for (let i = 0; i < list.length; i++) {
 		const s = scoreFn(list[i]);
-		if (s > bestS || (s == bestS && Math.random() < 0.5)) {
+		if (s > bestS || s == bestS && RNG(2)) {
 			bestS = s;
 			best = i;
 		}
@@ -81,7 +81,7 @@ function battleThink(u, done) {
 	const [best, bestS] = bestByScore(moves, m => u.hits(m.x, m.y).length * 10 + getProbability(m.x, m.y, want));
 	if (stayS > bestS && stayHits.length) {
 		previewTiles(u, 1, () => performAttack(u, stayHits, done));
-	} else if (best < 0 || stayS > bestS || (stayS == bestS && Math.random() < 0.5)) {
+	} else if (best < 0 || stayS > bestS || stayS == bestS && RNG(2)) {
 		if (stayHits.length) previewTiles(u, 1, () => performAttack(u, stayHits, done));
 		else {
 			u.moved = 1;

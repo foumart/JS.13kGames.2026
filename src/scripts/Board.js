@@ -219,7 +219,7 @@ function initBoard() {
 		fillData[y] = [];
 		for (let x = 0; x < boardWidth; x++) {
 			const c = levelData[y][x];
-			enemies[y][x] = c == 1 ? (levelIndex >= 4 && Math.random() < 0.5 ? 2 : 1) : 0;
+			enemies[y][x] = c == 1 ? 1 + (levelIndex > 3 && RNG(2)) : 0;
 			obstacles[y][x] = c == 3 ? 1 : 0;
 			coins[y][x] = c == 4 ? 1 : 0;
 			clouds[y][x] = c == 7 ? 1 : 0;
@@ -518,7 +518,7 @@ function pickRescueBmp() {
 		if (!taken[UNITS[i][0]]) pool.push(UNITS[i][0]);
 	}
 	if (!pool.length) for (let i = 1; i < UNITS.length; i++) pool.push(UNITS[i][0]);
-	return pool[Math.random() * pool.length | 0];
+	return pool[RNG(pool.length)];
 }
 
 function unrescueLevel(i) {
@@ -627,18 +627,6 @@ function scheduleEndScreen() {
 		showEndButtons();
 		redraw();
 	});
-}
-
-function drawLeprechaunSprite(px, py, size, bounceSpeed, x, y, kind) {
-	const bmp = unitBitmaps[2];
-	const scale = size / tileWidth * unitScale;
-	const dw = bmp.width * scale;
-	const dh = bmp.height * scale;
-	const bounce = bounceSpeed && Math.sin(time * bounceSpeed + x * 1.7 + y * 2.3) > 0 ? scale : 0;
-	drawPaletted(
-		bmp, getEnemyPalette(0, kind || 1),
-		px + (size - dw) / 2, py + (size - dh) / 2 - bounce, dw, dh, getCurrentContext()
-	);
 }
 
 function drawUnitIcon(src, cx, cy, size, pal) {
@@ -945,7 +933,7 @@ function debugSkipToBattle() {
 	const pool = [];
 	for (let i = 0; i < UNITS.length; i++) pool.push(UNITS[i][0]);
 	for (let i = 0; i < 4 && pool.length; i++) {
-		const j = Math.random() * pool.length | 0;
+		const j = RNG(pool.length);
 		rescuedUnits.push(pool.splice(j, 1)[0]);
 	}
 	if (!leftoverEnemies) leftoverEnemies = leftTotalThisLevel || 3;
@@ -964,10 +952,10 @@ function fitBoard(cols, rows) {
 function drawEdgeTiles(size, bmp) {
 	const ox = boardOffsetX;
 	const oy = boardOffsetY;
-	const gx0 = Math.floor(-ox / size);
-	const gy0 = Math.floor(-oy / size);
-	const gx1 = Math.ceil((width - ox) / size);
-	const gy1 = Math.ceil((height - oy) / size);
+	const gx0 = -ox / size - 1 | 0;
+	const gy0 = -oy / size - 1 | 0;
+	const gx1 = (width - ox) / size + 1 | 0;
+	const gy1 = (height - oy) / size + 1 | 0;
 	const rock = objectBitmaps[0];
 	for (let gy = gy0; gy < gy1; gy++) {
 		for (let gx = gx0; gx < gx1; gx++) {
@@ -979,6 +967,7 @@ function drawEdgeTiles(size, bmp) {
 			if (rockHere) {
 				gameContext.drawImage(rock, 0, 0, tileWidth, tileWidth, px, py, size, size);
 			} else {
+				// spread animated special tiles diagonaly
 				const period = 1400 + ((gx * 19 + gy * 11) % 10 + 10) % 10 * 180;
 				const phase = gx * 430 + gy * 710;
 				drawPaletted(objectBitmaps[3 + ((time + phase) / period & 1)], "543", px, py, size, size, gameContext);
@@ -993,7 +982,7 @@ function drawBoard() {
 		return;
 	}
 	gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
-	zoom = (portrait ? width / 99 | 0 : height / 99 | 0) - (portrait ? boardWidth : boardHeight) / 6 | 0;
+	zoom = (portrait ? width / 99 : height / 99) - (portrait ? boardWidth : boardHeight) / 6;
 	const size = fitBoard(boardWidth, boardHeight);
 	drawEdgeTiles(size, groundBmp());
 	rainbowPulse = anyDying();
@@ -1045,19 +1034,18 @@ function drawBoard() {
 					gameContext.drawImage(objectBitmaps[1], 0, 0, tileWidth, tileWidth, cox, coy, cs, cs);
 				}
 			} else if (rescues[y][x]) {
-				const bounce = rescueDying[y][x] && Math.sin(time * 0.014 + x * 1.7 + y * 2.3) > 0 ? size * 0.08 : 0;
-				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2 - bounce, size * 0.9);
+				drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size * 0.9);
 				if (!rescueDying[y][x]) {
 					gameContext.drawImage(objectBitmaps[5], 0, 0, tileWidth, tileWidth, px, py, size, size);
 				}
 			}
 
 			if (enemies[y][x]) {
-				drawLeprechaunSprite(
-					px, py, size,
-					leprechaunDying(enemies[y][x]) ? 0.014 : 0.004,
-					x, y, leprechaunType(enemies[y][x])
-				);
+				const k = enemies[y][x];
+				const t = (time + x * 90 + y * 180) / (leprechaunDying(k) ? 180 : 720) & 1;
+				drawUnitIcon({bgr: 2, palette: getEnemyPalette(0, leprechaunType(k))},
+					px + size / 2, py + size / 2 - t * size / 8,
+					size / tileWidth * unitBitmaps[2].width * unitScale);
 			}
 		}
 	}

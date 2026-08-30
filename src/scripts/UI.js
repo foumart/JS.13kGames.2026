@@ -287,7 +287,7 @@ function fillEnd() {
 		let vailed = 0;
 		for (let kind = 0; kind < 3; kind++) {
 			for (let n = leftUnitsThisLevel[kind]; n--;) {
-				row3.appendChild(createSpriteIcon(size, s => drawLeprechaunSprite(0, 0, s, 0, 0, 0, kind + 1)));
+				row3.appendChild(foeThumb(kind + 1, size));
 				vailed ++;
 			}
 		}

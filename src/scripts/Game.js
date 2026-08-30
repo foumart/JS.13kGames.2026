@@ -1,3 +1,5 @@
+function RNG(n) { return Math.random() * n | 0 }
+
 function act(dx, dy) {
 	if (moving || state != 1 || showObjective) return;
 	const nx = player.x + dx;
