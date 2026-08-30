@@ -38,15 +38,24 @@ const unitData = [
 ];
 
 const backgroundsData = [
-	"4a539538526478d67c56c78a69c67a", // color bank
-	"789", // swamp
+	"4a539538526478d67c56c", // color bank
 	"210456", // grass
-	"123", // tile 5
-	"012", // tile 4
-	"012", // tile 3
-	"012", // tile 6
-	"465", // clouds
-	"]zZ_^igyj]{Ynuo{e{~{^Yn?@@h@xHiIgmfUC@V@v@UA?AACf]LqPAPCp@@@@`@UD}TU|_@pUkZumV^gU{iW"
+	"023", // tile top
+	"023", // tile right
+	"023", // tile bottom
+	"023", // tile left
+	"012", // tile bottom right
+	"023", // tile bottom left
+	"012", // tile top left
+	"012", // tile top right
+	"023", // tile bay top
+	"012", // tile bay left
+	"012", // tile bay bottom
+	"023", // tile bay right
+	"023", // tile hole
+	"012", // tile vertical
+	"012", // tile horizontal
+	"nuo{e{~{^Yn?@@@@@@@CLAdUC@B@F@E@J@M@fY{mLr@C@@@@@`@P@P@T@h@|UDE@A@@@A@@@DZH_LP@T@h@|@@@P@@@P@TDU@@@@@@E@@@TPVie^zSO`BpC@UAE@A@A@E@UA@@@@APAPETUUki|^@S@`TpdVuZJ_O`@pLDtWAPAPAPAPAPAPUU@@@@@@@@UU"
 ];
 
 const objectsData = [

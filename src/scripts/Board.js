@@ -158,6 +158,10 @@ function inBounds(x, y) {
 	return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
 }
 
+function isMapTile(x, y) {
+	return inBounds(x, y) && !(obstacles[y] && obstacles[y][x]);
+}
+
 function initBoard() {
 	const levelData = getLevelData(levelIndex);
 	boardHeight = levelData.length;
@@ -589,7 +593,7 @@ function stageNumber() {
 }
 
 function groundBmp() {
-	return backgroundsBitmaps[[0, 1, 6][worldNumber() % 3]];
+	return backgroundsBitmaps[0];
 }
 
 function isPerfect() {
@@ -950,17 +954,19 @@ function fitBoard(cols, rows) {
 }
 
 function drawEdgeTiles(size) {
-	for (let i = 0; i < 4; i++) {
-		const d = ROOK[i];
-		const n = d[0] ? boardHeight : boardWidth;
-		const bmp = backgroundsBitmaps[2 + i];
-		for (let k = 0; k < n; k++) {
-			const gx = d[0] ? (d[0] > 0 ? boardWidth : -1) : k;
-			const gy = d[1] ? (d[1] > 0 ? boardHeight : -1) : k;
+	const tiles = [0, 3, 4, 6, 1, 15, 7, 12, 2, 5, 14, 9, 8, 10, 11, 13];
+	for (let gy = -1; gy <= boardHeight; gy++) {
+		for (let gx = -1; gx <= boardWidth; gx++) {
+			if (isMapTile(gx, gy)) continue;
+			const mask = isMapTile(gx, gy - 1)
+				| isMapTile(gx + 1, gy) << 1
+				| isMapTile(gx, gy + 1) << 2
+				| isMapTile(gx - 1, gy) << 3;
+			if (!mask) continue;
 			const px = boardOffsetX + gx * size;
 			const py = boardOffsetY + gy * size;
 			gameContext.clearRect(px, py, size, size);
-			gameContext.drawImage(bmp, 0, 0, tileWidth, tileWidth, px, py, size, size);
+			gameContext.drawImage(backgroundsBitmaps[tiles[mask]], 0, 0, tileWidth, tileWidth, px, py, size, size);
 		}
 	}
 }
@@ -978,6 +984,7 @@ function drawBoard() {
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
+			if (obstacles[y][x]) continue;
 			const px = boardOffsetX + x * size;
 			const py = boardOffsetY + y * size;
 
@@ -1008,9 +1015,7 @@ function drawBoard() {
 				);
 			}
 
-			if (obstacles[y][x]) {
-				gameContext.drawImage(objectBitmaps[0], 0, 0, tileWidth, tileWidth, px, py, size, size);
-			} else if (exits[y][x]) {
+			if (exits[y][x]) {
 				if (!puzzleMoveAt(x, y) || isPrevPath(x, y) || (time / 1000 | 0) % 2) {
 					drawSparkle(px, py, size, (time / 180 | 0) + x + y);
 				}

@@ -52,18 +52,13 @@ function drawBattle() {
 
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
+			if (hasObstacle(x, y)) continue;
 			const px = boardOffsetX + x * tileSize;
 			const py = boardOffsetY + y * tileSize;
 			gameContext.drawImage(
 				groundBmp(),
 				0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
 			);
-			if (hasObstacle(x, y)) {
-				gameContext.drawImage(
-					objectBitmaps[0],
-					0, 0, tileWidth, tileWidth, px, py, tileSize, tileSize
-				);
-			}
 		}
 	}
 
