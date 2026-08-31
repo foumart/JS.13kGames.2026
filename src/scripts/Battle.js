@@ -667,7 +667,7 @@ function getPosFromEvent(event) {
 }
 
 function battleClick(event) {
-	if (showPick || showUpgrade || showEnd) return;
+	if (menu || showPick || showUpgrade || showEnd) return;
 	if (showObjective) {
 		dismissObjective();
 		return;

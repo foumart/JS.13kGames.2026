@@ -18,16 +18,12 @@ body {
 	font: 900 3vmin system-ui;
 	padding: 1vmin;
 	gap: 1vmin;
+	background: #546;
 }
-
-/*#L {
-	align-items: flex-start;
-}*/
 
 #R {
 	right: 0;
-	/*align-items: flex-end;*/
-	text-align: right;
+	text-align: center;
 }
 
 #ov {
@@ -52,59 +48,52 @@ body {
 
 .s {
 	font-size: 3vmin;
-	line-height: 6vmin;
 }
 
 .l {
 	font-size: 5vmin;
-	line-height: 8vmin;
 }
 
 .e {
 	font-size: 7vmin;
-	line-height: 12vmin;
 }
 
 .x {
 	font-size: 9vmin;
-	line-height: 15vmin;
 }
 
 .g {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 1vmin;
+	/*gap: 3vmin;*/
 	/*padding: 2vmin;*/
 }
 
 .on {
 	background: #fff;
 	color: #103;
-	outline: 2vmin solid #fe8;
-	margin: 2vmin;
+	/*box-shadow: 0 0 0 2vmin #fe8;*/
+	/*margin: 2vmin;*/
 }
 
 .cur {
 	outline: 2vmin solid #6e6;
+	/*outline-offset: 2vmin;*/
 }
 
 .in {
 	background: #96f4;
+	/*margin: 2vmin;*/
 	/*padding: 2vmin;*/
-	outline: 2vmin solid #96f4;
-	margin: 2vmin;
 }
 
 .if {
-	background: #b9f8;
+	background: #546;
 	padding: 2vmin;
+	margin: 1vmin;
 	/*outline: 2vmin solid #b9f8;*/
 }
-
-/*#Y, #N {
-	display: none;
-}*/
 
 button {
 	padding: 2vmin 4vmin;

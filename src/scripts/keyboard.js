@@ -31,6 +31,11 @@ function onKeyDown(event) {
 		debugSkipToBattle();
 		return;
 	}
+	if (k == 27) {
+		event.preventDefault();
+		togglePause();
+		return;
+	}
 	if (showPick) {
 		if (d && d[0]) movePickCursor(d[0]);
 		else if (k == 32) pickCursorUnit();
@@ -55,13 +60,13 @@ function onKeyDown(event) {
 		else if (k == 82) resetHere();
 		return;
 	}
-	if (showEnd) {
-		if (d && d[0]) moveEndCursor(d[0]);
+	if (menu || showEnd) {
+		if (d) moveEndCursor(d[0] || d[1]);
 		else if (k == 13 || k == 32) {
 			event.preventDefault();
 			activateEndButton();
 		}
-		else if (k == 82) Y.onclick();
+		else if (k == 82 && !menu) Y.onclick();
 		return;
 	}
 	if (battleActive) {

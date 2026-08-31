@@ -1,7 +1,7 @@
 function RNG(n) { return Math.random() * n | 0 }
 
 function act(dx, dy) {
-	if (moving || state != 1 || showObjective) return;
+	if (moving || state != 1 || menu || showObjective) return;
 	const nx = player.x + dx;
 	const ny = player.y + dy;
 	if (isPassable(nx, ny, dx, dy)) player.moveTo(dx, dy);
@@ -10,7 +10,7 @@ function act(dx, dy) {
 }
 
 function puzzleMoveAt(x, y) {
-	if (!player || moving || state != 1 || showObjective || showEnd) return 0;
+	if (!player || moving || state != 1 || menu || showObjective || showEnd) return 0;
 	const dx = x - player.x;
 	const dy = y - player.y;
 	if (Math.abs(dx) + Math.abs(dy) != 1) return 0;
@@ -31,6 +31,7 @@ function gameStart() {
 }
 
 function doAnimationFrame() {
+	if (menu == 2) return;
 	time = Date.now();
 	drawBoard();
 	pulseSparkles();

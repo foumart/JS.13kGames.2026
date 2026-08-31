@@ -27,6 +27,9 @@ let time = 0;
 let pathCount = 0;
 let hiscore = 0;
 let lives = 3;
+let puzzleMode = 0;
+let menu = 1; // 1 title, 2 pause
+let perfects = 0;
 
 let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
@@ -62,15 +65,15 @@ const UNITS = [
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
 	["Unicorn",  6, 2, 3, 0, 0, 0,     100, 121],
-	["Corwin",   9, 1, 0, 3, 9, "012", 121,  0],
-	["Merlin",   5, 1, 2, 0, 5, "0d2", 131, 43], // red
-	["Benedict", 10,2, 0, 1, 8, "356", 21,  22], // blue
-	["Fiona",    4, 1, 1, 1, 6, 0,     33,  6],
-	["Random",   8, 1, 1, 1, 5, 0,     2,   12],
-	["Bleys",    7, 1, 0, 3, 8, 0,     11,  121],
+	["Corwin",   9, 1, 0, 3, 8, "012", 121,  0],
+	["Merlin",   5, 1, 2, 0, 8, "b8e", 131, 43], // yellow
+	["Benedict", 10,2, 0, 1, 6, "356", 21,  22], // blue
+	["Fiona",    4, 1, 1, 1, 5, 0,     33,  6],
+	["Random",   8, 1, 1, 1, 8, 0,     2,   12],
+	["Bleys",    7, 1, 0, 3, 7, 0,     11,  121],
 	["Julian",   7, 1, 1, 1, 5, "392", 3,   50],// green
-	["Caine",    9, 1, 0, 0, 9, 0,     20,  30],
-	["Gerard",   12,2, 0, 0, 7, 0,     11,  21],
+	["Caine",    9, 1, 0, 0, 7, "046", 20,  30],// light blue
+	["Gerard",   12,2, 0, 0, 6, 0,     11,  21],
 ];
 const ENEMIES = [
 	["Manticore",20,5, 2, 1, 1, "cd6", 43,  16],
@@ -198,7 +201,7 @@ function initBoard() {
 	state = 1;
 	showEnd = 0;
 	battleResult = 0;
-	showObjective = skipObjective ? 0 : 1;
+	showObjective = skipObjective || menu == 1 ? 0 : 1;
 	skipObjective = 0;
 	moving = 0;
 	hideEndButtons();
@@ -227,7 +230,7 @@ function initBoard() {
 			clouds[y][x] = c == 7 ? 1 : 0;
 			exits[y][x] = c == 8 ? 1 : 0;
 			rescues[y][x] = 0;
-			if (c == 9) {
+			if (c == 9 && !puzzleMode) {
 				let bmp = levelCaptives[levelIndex][capIdx];
 				if (!bmp) {
 					bmp = pickRescueBmp();
@@ -600,12 +603,12 @@ function calcLevelScore() {
 function scheduleEndScreen() {
 	waitDelay(()=> {
 		calcLevelScore();
-		if (state == 2) {
-			if (!scoreBanked) {
-				totalScore += levelScore;
-				scoreBanked = 1;
-			}
+		if (state == 2 && !scoreBanked) {
+			totalScore += levelScore;
+			scoreBanked = 1;
+			if (isPerfect()) perfects ++;
 		}
+		if (currentScore() > hiscore) hiscore = currentScore();
 
 		showEnd = 1;
 		endBtnCur = 1; // start on NEXT; clamps back to RETRY when it is the only one
@@ -627,7 +630,7 @@ function drawUnitIcon(src, cx, cy, size, pal) {
 }
 
 function drawMoveArrows(size) {
-	if (moving || state != 1 || showObjective || showEnd) return;
+	if (moving || state != 1 || menu || showObjective || showEnd) return;
 	const showGold = (time / 1000 | 0) % 2;
 	for (let i = 0; i < 4; i++) {
 		const nx = player.x + ROOK[i][0];
@@ -702,7 +705,7 @@ function endButtons() {
 function syncEndCursor() {
 	const a = endButtons();
 	if (endBtnCur >= a.length) endBtnCur = a.length - 1;
-	const on = showUpgrade ? upgradeCurUnit >= upgradeRows().length : showEnd;
+	const on = showUpgrade ? upgradeCurUnit >= upgradeRows().length : showEnd || menu;
 	for (let i = 0; i < a.length; i++) a[i].className = on && i == endBtnCur ? "cur" : "";
 }
 
@@ -710,7 +713,7 @@ function moveEndCursor(dx) {
 	const n = endButtons().length;
 	if (!n || !dx) return;
 	endBtnCur = (endBtnCur + dx + n) % n;
-	redraw();
+	syncEndCursor();
 }
 
 function activateEndButton() {
@@ -722,7 +725,7 @@ function showBattleTurnButton() {
 	const on = !battlePhase && !animating && !thinking;
 	Y.style.display = "none";
 	N.style.display = "block";
-	N.textContent = "END";
+	N.textContent = "END ROUND";
 	N.style.opacity = on ? "1" : "0.3";
 	N.onclick = battleEndTurn;
 	syncEndCursor();
@@ -735,14 +738,14 @@ function showEndButtons() {
 	N.style.opacity = "1";
 	N.onclick = battleActive ? afterBattleWin : nextLevel;
 	N.textContent = battleActive && levelIndex > campaignLength - 2 ? "REPLAY"
-		: !battleActive && levelIndex % 3 == 2 ? "BATTLE" : "NEXT LEVEL";
+		: !puzzleMode && !battleActive && levelIndex % 3 == 2 ? "CONFRONT" : "NEXT";
 	N.style.display = lives && state == 2 ? "block" : "none";
 	syncEndCursor();
 }
 
 function showObjectiveButtons() {
 	Y.style.display = "none";
-	N.textContent = "START";
+	N.textContent = "PLAY";
 	N.onclick = showPick ? confirmParty : dismissObjective;
 	N.style.display = "block";
 	N.style.opacity = "1";
@@ -765,17 +768,19 @@ function dismissObjective() {
 
 function nextLevel() {
 	scoreStart = totalScore;
-	leftoverEnemies += leftTotalThisLevel;
-	for (let i = 0; i < 3; i++) leftoverKinds[i] += leftUnitsThisLevel[i];
+	if (!puzzleMode) {
+		leftoverEnemies += leftTotalThisLevel;
+		for (let i = 0; i < 3; i++) leftoverKinds[i] += leftUnitsThisLevel[i];
+	}
 	leftTotalThisLevel = 0;
 	leftUnitsThisLevel = [0, 0, 0];
-	if (levelIndex % 3 == 2) {
+	if (!puzzleMode && levelIndex % 3 == 2) {
 		battleKind = isBossBattle() ? 2 : 1;
 		startBattle();
-	} else {
+	} else if (levelIndex < campaignLength - 1) {
 		levelIndex ++;
 		resetLevel();
-	}
+	} else restartCampaign();
 }
 
 function clearLeftovers() {
@@ -821,13 +826,50 @@ function restartCampaign() {
 	showUpgrade = 0;
 	levelIndex = 0;
 	lives = 3;
+	perfects = 0;
 	totalScore = 0;
 	scoreStart = 0;
 	scoreBanked = 0;
+	menu = 1;
+	endBtnCur = 0;
+	resetLevel();
+	gameStart();
+}
+
+function startMode(puz) {
+	puzzleMode = puz;
+	menu = 0;
 	resetLevel();
 }
 
+function showMenuButtons() {
+	const t = menu == 1;
+	Y.style.display = N.style.display = "block";
+	Y.textContent = t ? "Story" : "Resume";
+	N.textContent = t ? "Puzzle" : "Quit";
+	Y.onclick = t ? () => startMode(0) : togglePause;
+	N.onclick = t ? () => startMode(1) : restartCampaign;
+	N.style.opacity = "1";
+	syncEndCursor();
+}
+
+function togglePause() {
+	if (menu == 1 || showPick || showUpgrade || showObjective || showEnd) return;
+	if (menu) {
+		menu = 0;
+		hideEndButtons();
+		redraw();
+		gameStart();
+	} else {
+		menu = 2;
+		endBtnCur = 0;
+		cancelAnimationFrame(gameLoop);
+		updateUI();
+	}
+}
+
 function debugAdvance() {
+	if (menu) return;
 	if (battleActive) {
 		if (showUpgrade || battleResult == 2) {
 			afterBattleWin();
@@ -902,7 +944,7 @@ function debugClearLevel() {
 }
 
 function debugSkipToBattle() {
-	if (moving) return;
+	if (moving || menu || puzzleMode) return;
 	rescuedUnits = [];
 	const pool = [];
 	for (let i = 0; i < UNITS.length; i++) pool.push(UNITS[i][0]);

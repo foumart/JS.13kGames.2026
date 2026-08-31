@@ -43,8 +43,8 @@ function appendLine(c, t) {
 	msg.appendChild(line(c, t));
 }
 
-function line(c = 3, t = 0) {
-	if (!t) t = "\xa0";
+function line(c = 3, t = "\xa0") {
+	//if (!t) t = "\xa0";
 	const d = row();
 	d.className = ["x","e","l","s","m"][c];
 	d.textContent = t;
@@ -67,24 +67,24 @@ function updateUI() {
 	const briefing = showPick || showObjective;
 	const ally = battleActive && !briefing ? getBattleUIAlly() : 0;
 	const foe = battleActive && !briefing ? getBattleUIFoe() : 0;
-	const initial = !sc && briefing;
-
-	L.textContent = initial ? "Welcome to The Fourth Labyrinth!" : "Score: " + currentScore();
-	L.appendChild(document.createElement("hr"));
-	R.textContent = initial ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
-	R.appendChild(document.createElement("hr"));
 	const size = uiSize();
-	if (!initial) L.appendChild(playerCard(size));
-	if (battleActive && !battleResult && !briefing) {
-		// battle UI
-		if (ally) L.appendChild(unitCard(ally, size, 0));
-		if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
-	} else if (!initial) {
-		if (!battleResult) R.appendChild(enemyCard(size));
+
+	if (menu == 1) L.textContent = R.textContent = "";
+	else {
+		L.textContent = "Score: " + sc;
+		L.appendChild(document.createElement("hr"));
+		R.textContent = puzzleMode ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
+		R.appendChild(document.createElement("hr"));
+		L.appendChild(playerCard(size));
+		if (battleActive && !battleResult && !briefing) {
+			if (ally) L.appendChild(unitCard(ally, size, 0));
+			if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
+		} else if (!puzzleMode && !battleResult) {
+			R.appendChild(enemyCard(size));
+		}
 	}
 
-	const fade = showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
-	L.style.background = R.style.background = fade ? "" : "#546d";
+	const fade = menu || showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
 	ov.style.background = fade ? "#103c" : "";
 	if (!fade) {
 		msg.textContent = "";
@@ -94,13 +94,18 @@ function updateUI() {
 	// overlay
 	msg.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
 	msg.textContent = "";
-	if (showPick) fillPick();
+	if (menu == 1) {
+		appendLine(2, "The Fourth");
+		appendLine(0, "Labyrinth");
+	} else if (menu == 2) appendLine(1, "PAUSED");
+	else if (showPick) fillPick();
 	else if (showUpgrade) fillUpgrade();
 	else if (showObjective) fillBrief();
 	else fillEnd();
 
 	// bottom
-	if (showPick || showObjective) showObjectiveButtons();
+	if (menu) showMenuButtons();
+	else if (showPick || showObjective) showObjectiveButtons();
 	else if (showUpgrade || showEnd) showEndButtons();
 	else if (battleActive && !battleResult) showBattleTurnButton();
 	else hideEndButtons();
@@ -115,6 +120,7 @@ function unitCard(unit, size, right) {
 }
 
 function playerCard(size) {
+	if (puzzleMode) return line(3, "Perfect: " + perfects);
 	const d = row();
 	d.appendChild(createSpriteIcon(size * .75, s => drawUnitIcon(0, s / 2, s / 2, s)));
 	d.appendChild(line(3, ": " + lives));
@@ -140,7 +146,7 @@ function enemyCard(size) {
 		const r = row();
 		//if (v == 2 && !showPick) r.appendChild(line(3, "!"));
 		r.appendChild(foeThumb(v, s));
-		if (v != 2) r.appendChild(line(4, ": " + n));
+		//if (v != 2) r.appendChild(line(4, ": " + n));
 		d.appendChild(r);
 	};
 	const w = BATTLES[levelIndex / 3 | 0];
@@ -159,8 +165,8 @@ function getTitle(battle) {
 }
 
 function printProgress() {
-	appendLine(1 - portrait, getTitle());
-	appendLine(2 - portrait, battleActive ? "Vail " + battleKind + " - battle" : "Puzzle " + stageNumber());
+	appendLine(1 - portrait, puzzleMode ? "Puzzle " + (levelIndex + 1) : getTitle());
+	if (!puzzleMode) appendLine(2 - portrait, battleActive ? "Vail " + battleKind + " - battle" : "Puzzle " + stageNumber());
 }
 
 function fillBrief() {
@@ -172,9 +178,11 @@ function fillBrief() {
 	if (stageCaptive) {
 		const r = row();
 		r.appendChild(line(2, "Rescue "));
-		r.appendChild(createIcon(stageCaptive, size));
+		const c = createIcon(stageCaptive, size);
+		r.appendChild(c);
 		r.appendChild(line(2, stageCaptive));
-		r.className = "g in";
+		r.className = "g";
+		c.className = "if";
 		msg.appendChild(r);
 		appendLine();
 	}
@@ -266,37 +274,40 @@ function fillEnd() {
 		if (isPerfect()) {
 			const row1 = row();
 			appendLine(2, "Perfect!");
-			row1.appendChild(createSparkAnim(size));
-			row1.appendChild(line(1, "+1"));
+			appendLine(3, "Bonus: 100");
+			//row1.appendChild(createSparkAnim(size));
+			//row1.appendChild(line(1, "+1"));
 			msg.appendChild(row1);
 		}
 
+		const row3 = line(3, "");
 		if (stageCaptive && rescuedUnits.indexOf(stageCaptive) >= 0) {
 			const row2 = line(3, "");
 			const ic = createIcon(stageCaptive, size);
-			ic.className = "in";
+			ic.className = "if";
 			row2.appendChild(ic);
 			appendLine();
 			msg.appendChild(row2);
-			row2.appendChild(line(3, stageCaptive + " joined your party!"));
+			row2.appendChild(line(3, stageCaptive + " joined!"));
+			row3.appendChild(line(4, "but"));
 		}
-
-		const row3 = line(3, "");
-		row3.className = "if";
+		
 		let vailed = 0;
 		for (let kind = 0; kind < 3; kind++) {
 			for (let n = leftUnitsThisLevel[kind]; n--;) {
-				row3.appendChild(foeThumb(kind + 1, size));
+				const enemy = foeThumb(kind + 1, size);
+				row3.appendChild(enemy);
+				enemy.className = "if";
 				vailed ++;
 			}
 		}
-		if (vailed) {
+		if (vailed && !puzzleMode) {
 			appendLine();
 			msg.appendChild(row3);
-			row3.appendChild(line(3, vailed + "will join the Vail!"));
+			row3.appendChild(line(3, "enter the Vail"));
 		}
-	} else {
+	}/* else {
 		appendLine(2, "STUCK - R");
 		appendLine(2, "SCORE " + currentScore() + "  MOVES " + moveCount);
-	}
+	}*/
 }

@@ -1,7 +1,7 @@
 let hoverTile = null;
 
 function battleHover(event) {
-	if (showPick || showUpgrade || showObjective || showEnd) {
+	if (menu || showPick || showUpgrade || showObjective || showEnd) {
 		if (hoverTile) {
 			hoverTile = null;
 			gameCanvas.style.cursor = "";

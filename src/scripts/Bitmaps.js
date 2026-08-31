@@ -29,12 +29,11 @@ const unitData = [
 	"b52", // leprechaun
 	"712", // hydra
 	"792", // serpent
-	"08e", // merlin / julian
 	"b56", // fiona / flora
 	"be2", // gerard / eric
 	"bd2", // bleys / brand
-	"8e2", // caine / corwin
-	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@|@`jBljNk{zkUzljNp@Cp@C@@@`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK@?PpfSrUSlkPXVRjfdzzD|pGL@G`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfhkj@s@`sB"
+	"bd2", // caine / corwin
+	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@@@@|@`jBljNk{zkUzljNp@Cp@C`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfh{j@bC`sC"
 ];
 
 const backgroundsData = [
@@ -44,34 +43,33 @@ const backgroundsData = [
 	"023", // tile right
 	"023", // tile bottom
 	"023", // tile left
-	"012", // tile bottom right
+	"023", // tile bottom right
 	"023", // tile bottom left
-	"012", // tile top left
-	"012", // tile top right
+	"023", // tile top left
+	"023", // tile top right
 	"023", // tile bay top
 	"023", // tile bay left
-	"012", // tile bay bottom
+	"023", // tile bay bottom
 	"023", // tile bay right
 	"023", // tile hole
 	"012", // tile vertical
 	"012", // tile horizontal
-	"f_eYoYVYv{fU@@@@@@LBxmgUB@C@K@e@z@M@fY{mLr@C@@@@@l@V@[@\\@P@XDAE@@@A@@@@@DZH_LP@T@h@|@@@@@P@@@TPD@@@@A@@@E@DAVie^zSO`BpC@D@E@@@@@E@D@@@@@@@@@ETDDki|^@S@`TpdVuZJ_O`@pLDtW@@AP@PA@AP@@TD@@@@@@@@DE"
+	"f_eYoYVYv{fU@@@@@CLB{}fU@@O@@@E@N@C@fZWm|q@B@C@@@k@P@PpV@\\@[fyuNOCI@O@@@DZH_LP@T@h@|@@@P@p@@LTD\\L@I@CCeCG@GoVie^zSO`BpC@GAEBJC@@K@G|@@@@@@E`GagUki|^@S@`TpdVuZJ_O`@pLDtW@@AP@PA@AP@@TD@@@@@@@@DE"
 ];
 
 const objectsData = [
-	"ffeffafd0465354243deeabc789", // color bank
-	"345", // tile 10
-	"123673", // coin
-	"063123", // cloudX
-	"012345", // sparkleA
-	"012345", // sparkleB
-	"067124", // prison
+	"ffeffafd0deeabc465f44d33833", // color bank
+	"678", // tile 10
+	"125345", // coin
+	"035125", // cloudX
+	"012533", // sparkleA
+	"012533", // sparkleB
+	"034123", // prison
 	"012", // up
 	"012", // right
 	"012", // down
 	"012", // left
-	"435678", // obstacle
-	"TM}w}w}wW}|OH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@]v~}yf~?]vw{"
+	"@@pC\\NlMlNpCH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
 ];
 
 encodeBitmap(unitData, unitBitmaps);

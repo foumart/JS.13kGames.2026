@@ -60,7 +60,7 @@ function isTrail(x, y) {
 
 // retrace back to the older trail tile, one hop per rendered frame
 function startRetract(x, y) {
-	if (!player || moving || state != 1 || showObjective || showEnd || !isTrail(x, y)) return;
+	if (!player || moving || state != 1 || menu || showObjective || showEnd || !isTrail(x, y)) return;
 	retractX = x;
 	retractY = y;
 	moving = 1;
