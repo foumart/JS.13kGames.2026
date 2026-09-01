@@ -38,22 +38,22 @@ const unitData = [
 const backgroundsData = [
 	"4a5395385264133022001", // color bank
 	"012456", // grass
-	"023456", // tile top
-	"023456", // tile right
 	"023456", // tile bottom
 	"023456", // tile left
-	"023456", // tile bottom right
 	"023456", // tile bottom left
+	"023456", // tile top
+	"023456", // tile horizontal
 	"023456", // tile top left
-	"023456", // tile top right
+	"023456", // tile bay right
+	"023456", // tile right
+	"023456", // tile bottom right
+	"023456", // tile vertical
 	"023456", // tile bay top
+	"023456", // tile top right
 	"023456", // tile bay left
 	"023456", // tile bay bottom
-	"023456", // tile bay right
 	"023456", // tile hole
-	"023456", // tile vertical
-	"023456", // tile horizontal
-	"f_eYoYVYv{fU@@@@@CLr{mfU@@N@C@y@N@C@fZWm|q@B@C@@@l@P@PpV@\\@[fyuNOCI@O@@@wZH_LP@T@h@|@@@\\@p@CLVD\\L@I@CCeCG@GoVie^zSO`BpC@vaErJCC@K@G|@lN@@pEcvagUki|^@SL`HptVuZJ_O`@pLDtW@pNl@pI@N@C@g\\x`Lp@@LLDz"
+	"f_eYoYVYv{fUfZWm|q@B@C@@@l@P@PpV@\\@[wZH_LP@T@h@|@@@@@CLr{mfUg\\x`Lp@@LLDz@@@\\@p@CLVD\\ki|^@SL`HptV@@N@C@y@N@C@fyuNOCI@O@@@@pNl@pI@N@C@Vie^zSO`BpC@L@I@CCeCG@GovaErJCC@K@G|@lN@@pEcvagUuZJ_O`@pLDtW"
 ];
 
 const objectsData = [

@@ -978,7 +978,6 @@ function drawBoard() {
 	}
 	const size = fitBoard(boardWidth, boardHeight);
 	const ox = boardOffsetX, oy = boardOffsetY;
-	const t = [0, 3, 4, 6, 1, 15, 7, 12, 2, 5, 14, 9, 8, 10, 11, 13];
 	for (let gy = -oy / size - 1 | 0; gy < (height - oy) / size + 1 | 0; gy++) {
 		for (let gx = -ox / size - 1 | 0; gx < (width - ox) / size + 1 | 0; gx++) {
 			const px = ox + gx * size, py = oy + gy * size;
@@ -986,7 +985,7 @@ function drawBoard() {
 				drawPaletted(backgroundsBitmaps[0], 1, px, py, size, size, gameContext);
 				let m = 0;
 				for (let i = 4; i--;) if (isMapTile(gx + ROOK[i][0], gy + ROOK[i][1])) m |= 1 << i;
-				if (m) blit(backgroundsBitmaps[t[m]], px, py, size);
+				if (m) blit(backgroundsBitmaps[m], px, py, size);
 				continue;
 			}
 			if (battleActive) {
