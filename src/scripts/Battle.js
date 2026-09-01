@@ -540,7 +540,7 @@ function performMove(u, x, y, done) {
 	battleTiles = [];
 	battleHints = [];
 	updateUI();
-	TweenFX.to(u, 9, {offsetX: 0, offsetY: 0}, drawBoard, () => {
+	tween(u, 9, {offsetX: 0, offsetY: 0}, () => {
 		animating = 0;
 		updateUI();
 		done();
@@ -555,7 +555,7 @@ function hitShake(hits, then) {
 	}
 	for (let i = 0; i < hits.length; i++) {
 		hits[i].shake = 1;
-		TweenFX.to(hits[i], 9, {shake: 0}, drawBoard, () => {
+		tween(hits[i], 9, {shake: 0}, () => {
 			if (--n <= 0) then();
 		});
 	}
@@ -570,7 +570,7 @@ function performAttack(u, hits, done) {
 	const dx = t ? (t.x - u.x) : 0;
 	const dy = t ? (t.y - u.y) : 0;
 	const len = Math.max(1, Math.abs(dx) + Math.abs(dy));
-	TweenFX.to(u, 5, {offsetX: dx / len * 0.4, offsetY: dy / len * 0.4}, drawBoard, () => {
+	tween(u, 5, {offsetX: dx / len * 0.4, offsetY: dy / len * 0.4}, () => {
 		for (let i = 0; i < hits.length; i++) hits[i].hp -= u.dmg;
 		if (!u.enemy) {
 			const mul = u.hero ? 2 : 1;
@@ -581,7 +581,7 @@ function performAttack(u, hits, done) {
 		}
 		updateUI();
 		hitShake(hits, () => {
-			TweenFX.to(u, 5, {offsetX: 0, offsetY: 0}, drawBoard, () => {
+			tween(u, 5, {offsetX: 0, offsetY: 0}, () => {
 				u.acted = 1;
 				animating = 0;
 				updateUI();

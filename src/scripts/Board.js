@@ -328,7 +328,7 @@ function countEnemiesAndCoinsLeft() {
 		coins[g[1]][g[0]] = 0;
 		const fly = { x: g[0], y: g[1] };
 		goldFlies.push(fly);
-		TweenFX.to(fly, 60, { x: l[0], y: l[1] }, drawBoard, () => {
+		tween(fly, 60, { x: l[0], y: l[1] }, () => {
 			enemies[l[1]][l[0]] = 3;
 			const k = goldFlies.indexOf(fly);
 			if (k >= 0) goldFlies.splice(k, 1);
@@ -342,7 +342,7 @@ function countEnemiesAndCoinsLeft() {
 }
 
 function waitDelay(callback, frames = 30) {
-	TweenFX.to({}, frames, {}, ()=>{}, callback);
+	tween({}, frames, {}, callback);
 }
 
 function hasMove() {

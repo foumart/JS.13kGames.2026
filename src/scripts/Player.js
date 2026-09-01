@@ -38,7 +38,7 @@ class Player {
 		this.offsetY = -dy;
 		moving = 1;
 		const hopped = collectRescue(this.x, this.y);
-		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
+		tween(this, 6, {offsetX: 0, offsetY: 0}, () => {
 			extendPath(ox, oy, this.x, this.y, dx, dy);
 			const gold = collectCoin(this.x, this.y);
 			moveCount ++;
@@ -64,7 +64,7 @@ class Player {
 		this.offsetX = -dx;
 		this.offsetY = -dy;
 		moving = 1;
-		TweenFX.to(this, 6, {offsetX: 0, offsetY: 0}, drawBoard, () => {
+		tween(this, 6, {offsetX: 0, offsetY: 0}, () => {
 			moveCount ++;
 			restoreFlushed(moveLog.pop() || []);
 			reviveDyingEnemies();
