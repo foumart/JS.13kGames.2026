@@ -1,3 +1,9 @@
+function dropShadow(s) {
+	gameContext.shadowColor = "#534";
+	gameContext.shadowOffsetX = -s;
+	//gameContext.shadowOffsetY = s;
+}
+
 class Player {
 
 	constructor(x, y) {
@@ -90,6 +96,7 @@ class Player {
 		gameContext.save();
 		gameContext.translate(cx, cy - hop);
 		gameContext.scale(this.face, 1);
+		dropShadow(scale);
 		gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
 		gameContext.restore();
 	}

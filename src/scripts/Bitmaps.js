@@ -31,7 +31,7 @@ const unitData = [
 	"b56", // fiona / flora
 	"be2", // gerard / eric
 	"bd2", // bleys / brand
-	"bd2", // caine / corwin
+	"be6", // caine / corwin
 	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@@@@|@`jBljNk{zkUzljNp@Cp@C`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfh{j@bC`sC"
 ];
 

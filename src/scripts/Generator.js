@@ -212,14 +212,16 @@ function makeRandomLevel(stage) {
 	for (let i = holes.length; i --;) {
 		const cells = holes[i];
 		let rock = cells.length > 3 || enemies.length + cells.length > want;
-		for (let j = cells.length; j --;) if (seed[cells[j]] == 2) rock = 1;
+		let beside = 0;
+		for (let j = cells.length; j --;) {
+			if (seed[cells[j]] == 2) rock = 1;
+			if (Math.abs(cells[j] % width - exitX) + Math.abs((cells[j] / width | 0) - exitY) < 2) beside = 1;
+		}
 		for (let j = cells.length; j --;) {
 			const x = cells[j] % width;
 			const y = cells[j] / width | 0;
-			const beside = Math.abs(x - exitX) + Math.abs(y - exitY) < 2;
-			const stone = rock || beside;
-			grid[y][x] = stone ? (cells.length == 1 && !RNG(4) ? 4 : 3) : 1;
-			if (!stone) enemies.push([x, y]);
+			grid[y][x] = rock ? (cells.length == 1 && !RNG(4) ? 4 : 3) : beside ? 0 : 1;
+			if (!rock && !beside) enemies.push([x, y]);
 		}
 	}
 

@@ -138,6 +138,7 @@ class Unit {
 		gameContext.save();
 		gameContext.translate(px + size / 2, py + size / 2 - hop - (this.bgr != 3 && t) * size / 8);
 		gameContext.scale(this.face * (this.bgr == 3 && t ? -1 : 1), 1);
+		if (this.hero) dropShadow(scale);
 		//if (this.palette) drawPaletted(bmp, this.palette, -dw / 2, -dh / 2, dw, dh, gameContext);
 		//else gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
 		drawPaletted(bmp, this.palette, -dw / 2, -dh / 2, dw, dh, gameContext);
