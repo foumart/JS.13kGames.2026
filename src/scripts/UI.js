@@ -196,16 +196,18 @@ function fillPick() {
 	const need = Math.min(2, livingRescueCount());
 	printProgress();
 	appendLine(3, need > 1 ? "Pick " + need + " allies" : "Your ally");
+	appendLine(4);
 	const r = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
 		const dead = isDeadBmp(bmp);
+		if (dead) continue;
 		const wrap = row();
 		wrap.className = "g" + (battleParty.indexOf(bmp) >= 0 ? " on" : " in") + (i == pickCursor ? " cur" : "");
 		const c = createIcon(rescuedUnits[i], size);
-		if (dead) {
+		/*if (dead) {
 			c.style.opacity = "0.5";
-		} else wrap.onclick = toggleParty.bind(null, bmp);
+		} else */wrap.onclick = toggleParty.bind(null, bmp);
 		wrap.appendChild(c);
 		r.appendChild(wrap);
 	}
@@ -213,6 +215,7 @@ function fillPick() {
 	const name = rescuedUnits[pickCursor];
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
+	appendLine(4);
 	appendLine(2, unit.name);
 	appendLine(3, createUnitStatsText(unit).textContent);
 	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
@@ -281,6 +284,8 @@ function fillEnd() {
 		}
 
 		const row3 = line(3, "");
+		const numbersLine = line(4);
+		row3.appendChild(numbersLine);
 		if (stageCaptive && rescuedUnits.indexOf(stageCaptive) >= 0) {
 			const row2 = line(3, "");
 			const ic = createIcon(stageCaptive, size);
@@ -289,7 +294,6 @@ function fillEnd() {
 			appendLine();
 			msg.appendChild(row2);
 			row2.appendChild(line(3, stageCaptive + " joined!"));
-			//row3.appendChild(line(4, "but"));
 		}
 		
 		let vailed = 0;
@@ -302,6 +306,7 @@ function fillEnd() {
 			}
 		}
 		if (vailed && !puzzleMode) {
+			numbersLine.textContent = vailed + " leprechauns";
 			appendLine();
 			msg.appendChild(row3);
 			row3.appendChild(line(3, "enter the Vail"));

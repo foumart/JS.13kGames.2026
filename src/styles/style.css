@@ -66,7 +66,7 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	/*gap: 3vmin;*/
+	gap: 1vmin;
 	/*padding: 2vmin;*/
 }
 
