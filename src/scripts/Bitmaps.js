@@ -22,7 +22,7 @@ function encodeBitmap(group, dest) {
 }
 
 const unitData = [
-	"eda776433ec049b3592159c6c90392feff8bf59c44834", // color bank
+	"eda776433fd049b3592159c6e90392feff8bf59c44834", // color bank
 	"ab3ac3", // unicorn idle
 	"ab3ac3", // unicorn jump
 	"b52", // leprechaun
@@ -32,7 +32,7 @@ const unitData = [
 	"be2", // gerard / eric
 	"bd2", // bleys / brand
 	"be6", // caine / corwin
-	"E@@T}@PjChaNjjzjjzPizljzljzE@@T}@PjNhazjjzjjz@hJpjBpj@@@@@|@`jBljNk{zkUzljNp@Cp@C`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJlnnfjfh{j@bC`sC"
+	"E@@T}@PjChdNjjzjjz@jzhjzhjzE@@T}@PjNhazjjzjjz@hJpjBpj@@@@@|@`jBljNk{zkUzljNp@Cp@C`OO_MfYyfkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK`z@XiCXeblyJkzAyjG`kN`b@``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@~@`WC@UC`wJxnnfjwh{j@bC`sC"
 ];
 
 const backgroundsData = [

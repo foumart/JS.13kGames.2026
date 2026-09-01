@@ -1,7 +1,13 @@
-function dropShadow(s) {
-	gameContext.shadowColor = "#534";
-	gameContext.shadowOffsetX = -s;
-	//gameContext.shadowOffsetY = s;
+function drawUnicorn(bmp, pal, x, y, w, h, s) {
+	for (let i = 4; i--;) {
+		if (i == 2) continue;
+		drawPaletted(bmp, "7d8",
+			x + ROOK[i][0] * s,
+			y + ROOK[i][1] * s,
+			w, h, gameContext
+		);
+	}
+	drawPaletted(bmp, pal, x, y, w, h, gameContext);
 }
 
 class Player {
@@ -96,8 +102,7 @@ class Player {
 		gameContext.save();
 		gameContext.translate(cx, cy - hop);
 		gameContext.scale(this.face, 1);
-		dropShadow(scale);
-		gameContext.drawImage(bmp, 0, 0, bmp.width, bmp.height, -dw / 2, -dh / 2, dw, dh);
+		drawUnicorn(bmp, 0, -dw / 2, -dh / 2, dw, dh, scale);
 		gameContext.restore();
 	}
 }
