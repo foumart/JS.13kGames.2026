@@ -167,11 +167,11 @@ function upgradeId(u) {
 	return u.hero ? 0 : u.name;
 }
 
-// a ray choice only appears while there are still upgrades left
+// 1 hp, 2 dmg, 3 move ray, 4 attack ray, 5 around — extras unlock after 1 then 2 picks
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
-	return ["hp", "dm"].concat(rayStep(unit.mv, unit.range, m[2]) ? ["rg"] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? ["reach"] : []).concat(unit.hero && !m[4] ? ["ao"] : []);
+	return [1, 2].concat(rayStep(unit.mv, unit.range, m[2]) ? [3] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? [4] : []).concat(unit.hero && !m[4] ? [5] : []).slice(0, 2 + Math.min(2, m[0] / 2 + m[1] + m[2] + m[3] + !!m[4]));
 }
 
 function upgradeRows() {
@@ -189,7 +189,7 @@ function defaultUpgradePicks() {
 	upgradeCurUnit = 0;
 	upgradeCurOpt = 0;
 	const rows = upgradeRows();
-	for (let i = 0; i < rows.length; i++) upgradePicks[rows[i].id] = "hp";
+	for (let i = 0; i < rows.length; i++) upgradePicks[rows[i].id] = 1;
 }
 
 function setUpgrade(id, kind) {
@@ -239,12 +239,8 @@ function applyUpgradePicks() {
 		const k = upgradePicks[upgradeId(unit)];
 		if (!k) continue;
 		const m = allyMod(unit.name);
-		// the ceilings gate these already, so a banked step past the top is harmless
-		if (k == "hp") m[0] += 2;
-		else if (k == "dm") m[1] += 1;
-		else if (k == "rg") m[2] += 1;
-		else if (k == "ao") m[4] = 1;
-		else m[3] += 1;
+		if (k > 4) m[4] = 1;
+		else m[k - 1] += k < 2 ? 2 : 1;
 	}
 }
 

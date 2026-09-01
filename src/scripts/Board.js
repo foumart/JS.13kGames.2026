@@ -535,7 +535,6 @@ function getUnitDefinition(name) {
 }
 
 function makeUnit(data, x, y, type) {
-	//if (typeof data == "string") data = getUnitDefinition(data);
 	const unit = new Unit(data, x, y, type);
 	if (!unit.enemy) {
 		const mod = allyMod(data[0]);
@@ -624,7 +623,7 @@ function drawUnitIcon(src, cx, cy, size, pal) {
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	if (typeof pal == "string" ? pal : pal != null && bmp[2]) {
+	if (pal.length ? pal : pal != null && bmp[2]) {
 		drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, getCurrentContext());
 	} else getCurrentContext().drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }

@@ -8,7 +8,7 @@ class Unit {
 		this.mv = d[i++];
 		this.atk = d[i++];
 		this.bgr = d[i++];
-		this.palette = typeof d[i] == "number" || typeof d[i] == "string" ? d[i++] : 0;
+		this.palette = d[i++];
 		this.x = x;
 		this.y = y;
 		this.type = type || (UNITS.indexOf(d) ? 1 : 0);
