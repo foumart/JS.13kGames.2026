@@ -8,7 +8,6 @@ function encodeBitmap(group, dest) {
 	const bank = group[0];
 	const n = group.length - 2;
 	const step = packed.length / n | 0;
-	const size = Math.sqrt(step * 3) | 0;
 	for (let k = 0; k < n; k++) {
 		const enc = packed.substr(k * step, step);
 		const px = [];
@@ -18,7 +17,7 @@ function encodeBitmap(group, dest) {
 		}
 		const pal = group[k + 1] || "";
 		const palW = 3;
-		dest.push(drawPalettedBitmap({ width: size, height: size, px, bank, pal, palW }, pal.substr(0, palW)));
+		dest.push(drawPalettedBitmap([px, bank, pal, palW], pal.substr(0, palW)));
 	}
 }
 
@@ -76,41 +75,33 @@ encodeBitmap(unitData, unitBitmaps);
 encodeBitmap(backgroundsData, backgroundsBitmaps);
 encodeBitmap(objectsData, objectBitmaps);
 
+// bitmap: [px, bank, pal, palW, cache]
 function drawPalettedBitmap(src, ref) {
-	if (!src.palettes) src.palettes = {};
-	if (src.palettes[ref]) return src.palettes[ref];
-	const bank = src.bank;
+	if (!src[4]) src[4] = {};
+	if (src[4][ref]) return src[4][ref];
+	const bank = src[1];
 	const palette = ref.replace(/./g, c => bank.substr(parseInt(c, 16) * 3, 3));
 	const c = document.createElement("canvas");
 	const ctx = c.getContext("2d");
-	const size = src.width;
+	const size = Math.sqrt(src[0].length) | 0;
 	c.width = size;
 	c.height = size;
-	c.px = src.px;
-	c.bank = bank;
-	c.palettes = src.palettes;
-	c.pal = src.pal;
-	c.palW = src.palW;
+	for (let i = 5; i--;) c[i] = src[i];
 	for (let y = 0; y < size; y++) {
 		for (let x = 0; x < size; x++) {
-			const p = src.px[y * size + x];
+			const p = src[0][y * size + x];
 			if (p) {
 				ctx.fillStyle = "#" + palette.substr(3 * (p - 1), 3);
 				ctx.fillRect(x, y, 1, 1);
 			}
 		}
 	}
-	return src.palettes[ref] = c;
+	return src[4][ref] = c;
 }
 
-// Shared palette variations, 3 slots each, indexed after a tile's own ones
-const PALS = "0120463560793920d23823e2abe";
-
 function drawPaletted(src, i, dx, dy, dw, dh, ctx) {
-	const w = src.palW || 3;
-	// index 0 is the tile's main palette; once its own run out, continue into PALS
-	const o = (i || 0) * w;
-	const ref = typeof i == "string" ? i : src.pal.substr(o, w) || PALS.substr(o - src.pal.length, w) || "012";
+	const w = src[3] || 3;
+	const ref = typeof i == "string" ? i : src[2].substr((i || 0) * w, w) || "012";
 	const bmp = drawPalettedBitmap(src, ref);
 	ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, dx, dy, dw, dh);
 }

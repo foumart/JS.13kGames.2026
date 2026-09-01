@@ -17,7 +17,7 @@ body {
 	position: absolute;
 	font: 900 3vmin system-ui;
 	padding: 1vmin;
-	gap: 1vmin;
+	/*gap: 1vmin;*/
 	background: #546;
 }
 
@@ -74,6 +74,7 @@ body {
 	background: #fff;
 	color: #103;
 	/*box-shadow: 0 0 0 2vmin #fe8;*/
+	outline: 3vmin solid #fe8;
 	/*margin: 2vmin;*/
 }
 

@@ -46,7 +46,7 @@ function appendLine(c, t) {
 function line(c = 3, t = "\xa0") {
 	//if (!t) t = "\xa0";
 	const d = row();
-	d.className = ["x","e","l","s","m"][c];
+	d.className = ["x", "e", "l", "s", "m"][c];
 	d.textContent = t;
 	return d;
 }
@@ -73,9 +73,9 @@ function updateUI() {
 	else {
 		L.textContent = "Score: " + sc;
 		L.appendChild(document.createElement("hr"));
+		L.appendChild(playerCard(size));
 		R.textContent = puzzleMode ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
 		R.appendChild(document.createElement("hr"));
-		L.appendChild(playerCard(size));
 		if (battleActive && !battleResult && !briefing) {
 			if (ally) L.appendChild(unitCard(ally, size, 0));
 			if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
@@ -120,7 +120,7 @@ function unitCard(unit, size, right) {
 }
 
 function playerCard(size) {
-	if (puzzleMode) return line(3, "Perfect: " + perfects);
+	if (puzzleMode) return line(3, "Stage: " + levelIndex);// + " (" + perfects + ")");
 	const d = row();
 	d.appendChild(createSpriteIcon(size * .75, s => drawUnitIcon(0, s / 2, s / 2, s)));
 	d.appendChild(line(3, ": " + lives));
@@ -289,7 +289,7 @@ function fillEnd() {
 			appendLine();
 			msg.appendChild(row2);
 			row2.appendChild(line(3, stageCaptive + " joined!"));
-			row3.appendChild(line(4, "but"));
+			//row3.appendChild(line(4, "but"));
 		}
 		
 		let vailed = 0;

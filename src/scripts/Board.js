@@ -84,13 +84,13 @@ const ENEMIES = [
 
 // each battle: kind*10+lvl, kind 0 lep 1 hydra 2 serpent 3+ named ENEMIES
 const BATTLES = [
-	[2],[4],[11,2,2],
-	[5,4,4],[12],[21,5,5],
-	[11,11],[13,4,4],[22,3,3],
-	[21,21],[23,5,5],[30,21,21],
-	[15,11,11],[25,3,3],[40,23,23],
-	[15,22,22],[30,30,30],[50,13,13],
-	[40,30,30],[25,14,14],[60,50,50]
+	[2], [4], [11,2,2],
+	[5,4,4], [12], [21,5,5],
+	[11,11], [13,4,4], [22,3,3],
+	[21,21], [23,5,5], [30,21,21],
+	[15,11,11], [25,3,3], [40,23,23],
+	[15,22,22], [30,30,30], [50,13,13],
+	[40,30,30], [25,14,14], [60,50,50]
 ];
 
 const EnemyPalettes = [
@@ -624,7 +624,7 @@ function drawUnitIcon(src, cx, cy, size, pal) {
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	if (typeof pal == "string" ? pal : pal != null && bmp.pal) {
+	if (typeof pal == "string" ? pal : pal != null && bmp[2]) {
 		drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, getCurrentContext());
 	} else getCurrentContext().drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }
