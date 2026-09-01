@@ -59,7 +59,7 @@ let rescuedUnits = [];
 let deadUnits = [];
 let levelCaptives = [];
 let rescueDying = [];
-let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken]
+let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken, around]
 const UNITS = [
 	// name,     hp,dm,mv,at,bm,pttrn, rng, rc - born as 0:+ 1:x 2:* 3:knight 4:around
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB

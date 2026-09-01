@@ -222,7 +222,8 @@ function fillPick() {
 	appendLine(2, unit.name);
 	appendLine(3, createUnitStatsText(unit).textContent);
 	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
-	appendLine(3, unit.mv == unit.atk ? n[unit.mv] : n[unit.mv] + " / " + n[unit.atk]);
+	const atkN = unit.around ? n[4] : n[unit.atk];
+	appendLine(3, unit.mv == unit.atk && !unit.around ? n[unit.mv] : n[unit.mv] + " / " + atkN);
 }
 
 function fillUpgrade() {

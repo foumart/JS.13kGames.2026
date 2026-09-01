@@ -171,7 +171,7 @@ function upgradeId(u) {
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
-	return ["hp", "dm"].concat(rayStep(unit.mv, unit.range, m[2]) ? ["rg"] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? ["reach"] : []);
+	return ["hp", "dm"].concat(rayStep(unit.mv, unit.range, m[2]) ? ["rg"] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? ["reach"] : []).concat(unit.hero && !m[4] ? ["ao"] : []);
 }
 
 function upgradeRows() {
@@ -243,6 +243,7 @@ function applyUpgradePicks() {
 		if (k == "hp") m[0] += 2;
 		else if (k == "dm") m[1] += 1;
 		else if (k == "rg") m[2] += 1;
+		else if (k == "ao") m[4] = 1;
 		else m[3] += 1;
 	}
 }
@@ -738,8 +739,9 @@ function battleKey(event) {
 			battleAim = null;
 			battleHints = [];
 		}
-		if (!u.acted && u.hits(u.x, u.y).length) {
-			playerAttack(u, u.x, u.y);
+		const hits = u.hits(u.x, u.y);
+		if (!u.acted && hits.length) {
+			playerAttack(u, hits[0].x, hits[0].y);
 			return;
 		}
 		if (u.moved && !u.acted) battleFinishUnit(u);
