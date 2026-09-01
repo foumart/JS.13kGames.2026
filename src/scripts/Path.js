@@ -111,26 +111,23 @@ function beginRetractPath() {
 
 // Rainbow background: tileWidth*boardW x tileWidth*boardH, 45 degrees gradient
 function buildRainbowBackdrop() {
-	const bw = tileWidth * boardWidth;
-	const bh = tileWidth * boardHeight;
 	rainbowCanvas = document.createElement("canvas");
-	rainbowCanvas.width = bw;
-	rainbowCanvas.height = bh;
+	rainbowCanvas.width = tileWidth * boardWidth;
+	rainbowCanvas.height = tileWidth * boardHeight;
 	rainbowCanvas.ctx = rainbowCanvas.getContext("2d");
 	paintRainbow(0);
 }
 
+// one diagonal gradient - stops on hue multiples of 60 interpolate like hsl()
 function paintRainbow(shift) {
 	const bw = rainbowCanvas.width;
 	const bh = rainbowCanvas.height;
 	const ctx = rainbowCanvas.ctx;
-	const denom = bw + bh - 2 || 1;
-	for (let y = 0; y < bh; y++) {
-		for (let x = 0; x < bw; x++) {
-			ctx.fillStyle = "hsl(" + ((x + y + shift) / denom * 2520) % 360 + ",85%,58%)";
-			ctx.fillRect(x, y, 1, 1);
-		}
-	}
+	const a = -shift / 2, b = a + (bw + bh - 2) * 4 / 7;
+	const g = ctx.createLinearGradient(a, a, b, b);
+	for (let i = 0; i < 49; i++) g.addColorStop(i / 48, "hsl(" + i * 60 % 360 + ",85%,58%)");
+	ctx.fillStyle = g;
+	ctx.fillRect(0, 0, bw, bh);
 }
 
 function scrollRainbow() {
@@ -151,7 +148,7 @@ function scrollRainbow() {
 		rainbowWait = 0;
 	}
 	if (!rainbowAnim) return;
-	const denom = rainbowCanvas.width + rainbowCanvas.height - 2 || 1;
+	const denom = rainbowCanvas.width + rainbowCanvas.height - 2;
 	const t = (time - rainbowStart) / 1000;
 	if (t >= 1) {
 		paintRainbow(0);

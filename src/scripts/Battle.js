@@ -478,7 +478,7 @@ function playerMove(u, x, y) {
 			return;
 		}
 		battleRefreshTiles();
-		if (!hasLiveTile(1)) battleFinishUnit(u);
+		if (!u.hits(u.x, u.y).length) battleFinishUnit(u);
 	});
 }
 
