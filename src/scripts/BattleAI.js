@@ -1,7 +1,6 @@
 function getProbability(x, y, wantEnemy) {
 	let p = 0;
-	for (let i = 0; i < battleUnits.length; i++) {
-		const t = battleUnits[i];
+	for (const t of battleUnits) {
 		if (t.hp <= 0 || t.enemy != wantEnemy) continue;
 		p += boardWidth - Math.min(boardWidth - 1, Math.abs(t.x - x));
 		p += boardHeight - Math.min(boardHeight - 1, Math.abs(t.y - y));
@@ -76,18 +75,14 @@ function battleThink(u, done) {
 	}
 
 	const moves = u.moves();
-	let stayS = stayHits.length * 10 + getProbability(u.x, u.y, want);
+	// stayHits is empty here - the branch above returns when it is not
+	let stayS = getProbability(u.x, u.y, want);
 	if (u.advance) stayS = -1;
 	const [best, bestS] = bestByScore(moves, m => u.hits(m.x, m.y).length * 10 + getProbability(m.x, m.y, want));
-	if (stayS > bestS && stayHits.length) {
-		previewTiles(u, 1, () => performAttack(u, stayHits, done));
-	} else if (best < 0 || stayS > bestS || stayS == bestS && RNG(2)) {
-		if (stayHits.length) previewTiles(u, 1, () => performAttack(u, stayHits, done));
-		else {
-			u.moved = 1;
-			u.acted = 1;
-			done();
-		}
+	if (best < 0 || stayS > bestS || stayS == bestS && RNG(2)) {
+		u.moved = 1;
+		u.acted = 1;
+		done();
 	} else {
 		previewTiles(u, 0, () => {
 			performMove(u, moves[best].x, moves[best].y, () => {

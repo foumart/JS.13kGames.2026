@@ -47,14 +47,14 @@ function startBattle() {
 	if (!skip) {
 		battleParty = [];
 		if (livingRescueCount() <= 2) {
-			for (let i = 0; i < rescuedUnits.length; i++) {
-				if (!isDeadBmp(rescuedUnits[i])) battleParty.push(rescuedUnits[i]);
+			for (const w of rescuedUnits) {
+				if (!isDeadBmp(w)) battleParty.push(w);
 			}
 		}
 	} else {
 		const kept = [];
-		for (let i = 0; i < battleParty.length; i++) {
-			if (deadUnits.indexOf(battleParty[i]) < 0) kept.push(battleParty[i]);
+		for (const z of battleParty) {
+			if (deadUnits.indexOf(z) < 0) kept.push(z);
 		}
 		battleParty = kept;
 	}
@@ -107,8 +107,8 @@ function isDeadBmp(bmp) {
 
 function livingRescueCount() {
 	let n = 0;
-	for (let i = 0; i < rescuedUnits.length; i++) {
-		if (!isDeadBmp(rescuedUnits[i])) n ++;
+	for (const g of rescuedUnits) {
+		if (!isDeadBmp(g)) n ++;
 	}
 	return n;
 }
@@ -141,8 +141,7 @@ function pickCursorUnit() {
 }
 
 function markHeroesDead() {
-	for (let i = 0; i < battleUnits.length; i++) {
-		const unit = battleUnits[i];
+	for (const unit of battleUnits) {
 		if (unit.enemy || unit.hero || unit.hp > 0) continue;
 		if (deadUnits.indexOf(unit.name) < 0) deadUnits.push(unit.name);
 	}
@@ -156,8 +155,7 @@ function toggleParty(bmp) {
 
 function battleRoster(aliveOnly) {
 	const list = [];
-	for (let i = 0; i < battleUnits.length; i++) {
-		const unit = battleUnits[i];
+	for (const unit of battleUnits) {
 		if (!unit.enemy && (!aliveOnly || unit.hp > 0)) list.push(unit);
 	}
 	return list;
@@ -177,9 +175,9 @@ function upgradeKinds(unit) {
 function upgradeRows() {
 	const list = battleRoster();
 	const rows = [];
-	for (let i = 0; i < list.length; i++) {
-		const kinds = upgradeKinds(list[i]);
-		if (kinds.length) rows.push({u: list[i], id: upgradeId(list[i]), kinds});
+	for (const b of list) {
+		const kinds = upgradeKinds(b);
+		if (kinds.length) rows.push({u: b, id: upgradeId(b), kinds});
 	}
 	return rows;
 }
@@ -189,7 +187,7 @@ function defaultUpgradePicks() {
 	upgradeCurUnit = 0;
 	upgradeCurOpt = 0;
 	const rows = upgradeRows();
-	for (let i = 0; i < rows.length; i++) upgradePicks[rows[i].id] = 1;
+	for (const c of rows) upgradePicks[c.id] = 1;
 }
 
 function setUpgrade(id, kind) {
@@ -234,8 +232,7 @@ function pickUpgradeCursor() {
 
 function applyUpgradePicks() {
 	const list = battleRoster(1);
-	for (let i = 0; i < list.length; i++) {
-		const unit = list[i];
+	for (const unit of list) {
 		const k = upgradePicks[upgradeId(unit)];
 		if (!k) continue;
 		const m = allyMod(unit.name);
@@ -315,8 +312,7 @@ function resetBattle() {
 }
 
 function getUnitAt(x, y) {
-	for (let i = 0; i < battleUnits.length; i++) {
-		const u = battleUnits[i];
+	for (const u of battleUnits) {
 		if (u.hp > 0 && u.x == x && u.y == y) return u;
 	}
 	return null;
@@ -329,8 +325,7 @@ function isMapEmptyAt(x, y) {
 function checkForBattleEnd() {
 	if (battleResult) return 1;
 	let p = 0, e = 0, hero = 0, lose = 0;
-	for (let i = 0; i < battleUnits.length; i++) {
-		const u = battleUnits[i];
+	for (const u of battleUnits) {
 		if (u.hp <= 0) continue;
 		if (u.enemy) {
 			e ++;
@@ -364,8 +359,7 @@ function battleFinish(result) {
 }
 
 function getNextUnit() {
-	for (let i = 0; i < battleUnits.length; i++) {
-		const u = battleUnits[i];
+	for (const u of battleUnits) {
 		if (u.hp > 0 && u.hero && !u.acted) return u;
 	}
 	return null;
@@ -378,9 +372,9 @@ function beginRound() {
 	battleAim = null;
 	battleTiles = [];
 	battleHints = [];
-	for (let i = 0; i < battleUnits.length; i++) {
-		battleUnits[i].moved = 0;
-		battleUnits[i].acted = 0;
+	for (const f of battleUnits) {
+		f.moved = 0;
+		f.acted = 0;
 	}
 	const unit = getNextUnit();
 	if (unit) selectUnit(unit);
@@ -406,8 +400,8 @@ function showTiles(u, attack) {
 		return;
 	}
 	const moves = u.moves();
-	for (let i = 0; i < moves.length; i++) {
-		battleTiles.push({x: moves[i].x, y: moves[i].y, kind: 0, live: 1});
+	for (const h of moves) {
+		battleTiles.push({x: h.x, y: h.y, kind: 0, live: 1});
 	}
 }
 
@@ -419,8 +413,8 @@ function activateUnitTiles(u) {
 	if (!mine || !u.moved) {
 		const moves = u.moves();
 		const live = mine && !u.moved ? 1 : 0;
-		for (let i = 0; i < moves.length; i++) {
-			battleTiles.push({x: moves[i].x, y: moves[i].y, kind: 0, live});
+		for (const o of moves) {
+			battleTiles.push({x: o.x, y: o.y, kind: 0, live});
 		}
 	}
 	if (!mine || !u.acted) {
@@ -439,8 +433,8 @@ function battleRefreshTiles() {
 }
 
 function hasLiveTile(kind) {
-	for (let i = 0; i < battleTiles.length; i++) {
-		if (battleTiles[i].live && (kind == null || battleTiles[i].kind == kind)) return 1;
+	for (const r of battleTiles) {
+		if (r.live && (kind == null || r.kind == kind)) return 1;
 	}
 	return 0;
 }
@@ -468,8 +462,7 @@ function nextRoundPhase() {
 	battleAim = null;
 	thinking = 1;
 	const q = [];
-	for (let i = 0; i < battleUnits.length; i++) {
-		const u = battleUnits[i];
+	for (const u of battleUnits) {
 		if (u.hp > 0 && !u.enemy && !u.hero) q.push(u);
 	}
 	nextUnitInQueue(q, startEnemyPhase);
@@ -516,8 +509,7 @@ function startEnemyPhase() {
 	battleHints = [];
 	battleAim = null;
 	const q = [];
-	for (let i = 0; i < battleUnits.length; i++) {
-		const u = battleUnits[i];
+	for (const u of battleUnits) {
 		if (u.hp > 0 && u.enemy) {
 			u.moved = 0;
 			u.acted = 0;
@@ -600,8 +592,7 @@ function knightSide(u, tile, dx, dy) {
 
 function knightTilesInDir(u, dx, dy) {
 	const out = [];
-	for (let i = 0; i < battleTiles.length; i++) {
-		const t = battleTiles[i];
+	for (const t of battleTiles) {
 		const tx = t.x - u.x;
 		const ty = t.y - u.y;
 		if (t.kind == 0) {

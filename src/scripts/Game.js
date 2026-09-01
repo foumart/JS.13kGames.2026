@@ -40,6 +40,7 @@ function doAnimationFrame() {
 
 function redraw() {
 	gameContext.clearRect(0, 0, width, height);
+	bgKey = 0;
 	drawBoard();
 	updateUI();
 }
