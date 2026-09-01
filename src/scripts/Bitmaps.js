@@ -22,38 +22,38 @@ function encodeBitmap(group, dest) {
 }
 
 const unitData = [
-	"eda776433fd049b3592159c6e90392feff8bf59c44834", // color bank
+	"eda776433fd049b3592159c6e90465feff8bf59c44834", // color bank
 	"ab3ac3", // unicorn idle
 	"ab3ac3", // unicorn jump
 	"b52", // leprechaun
 	"712", // hydra
 	"792", // serpent
-	"b56", // fiona / flora
-	"be2", // gerard / eric
+	"b56", // fiona
+	"be2", // gerard
 	"bd2", // bleys / brand
 	"be6", // caine / corwin
 	"E@@T?@`jChdNjjzjjz@jzhjzhjzE@@T}@PjNhazjjzjjz@hJpjBpj@@@@@|@`jBljNk{zkUzljNp@Cp@C`OO_yfYufkjy|fN@v@pjNl^z{pypoB\\UIWUukiu\\VM`UCPgK`\\mPpK`z@XiCXeblyJkzAyjg`kN`bB``@@{``UbpUSdffijJB{@pnC`bBxbK@Z@puApUQlnRvzZlkcpnBpsCpp@@k@pVB@UC`wJxnnZkgkzzpsCpp@"
 ];
 
 const backgroundsData = [
-	"4a5395385264001022133", // color bank
-	"012654", // grass
-	"023", // tile top
-	"023", // tile right
-	"023", // tile bottom
-	"023", // tile left
-	"023", // tile bottom right
-	"023", // tile bottom left
-	"023", // tile top left
-	"023", // tile top right
-	"023", // tile bay top
-	"023", // tile bay left
-	"023", // tile bay bottom
-	"023", // tile bay right
-	"023", // tile hole
-	"012", // tile vertical
-	"012", // tile horizontal
-	"f_eYoYVYv{fU@@@@@CLB{}fU@@O@@@E@N@C@fZWm|q@B@C@@@k@P@PpV@\\@[fyuNOCI@O@@@DZH_LP@T@h@|@@@P@p@@LTD\\L@I@CCeCG@GoVie^zSO`BpC@GAEBJC@@K@G|@@@@@@E`GagUki|^@S@`TpdVuZJ_O`@pLDtW@@AP@PA@AP@@TD@@@@@@@@DE"
+	"4a5395385264133022001", // color bank
+	"012456", // grass
+	"023456", // tile top
+	"023456", // tile right
+	"023456", // tile bottom
+	"023456", // tile left
+	"023456", // tile bottom right
+	"023456", // tile bottom left
+	"023456", // tile top left
+	"023456", // tile top right
+	"023456", // tile bay top
+	"023456", // tile bay left
+	"023456", // tile bay bottom
+	"023456", // tile bay right
+	"023456", // tile hole
+	"023456", // tile vertical
+	"023456", // tile horizontal
+	"f_eYoYVYv{fU@@@@@CLr{mfU@@N@C@y@N@C@fZWm|q@B@C@@@l@P@PpV@\\@[fyuNOCI@O@@@wZH_LP@T@h@|@@@\\@p@CLVD\\L@I@CCeCG@GoVie^zSO`BpC@vaErJCC@K@G|@lN@@pEcvagUki|^@SL`HptVuZJ_O`@pLDtW@pNl@pI@N@C@g\\x`Lp@@LLDz"
 ];
 
 const objectsData = [

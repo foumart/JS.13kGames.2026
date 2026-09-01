@@ -248,6 +248,7 @@ function applyUpgradePicks() {
 }
 
 function createEnemy(unitType, x, y, l) {
+	if (unitType > 2) return makeUnit(ENEMIES[unitType - 3], x, y, 5);
 	l = l > 5 ? 5 : l || 1;
 	return makeUnit([
 		,
@@ -282,7 +283,7 @@ function spawnEnemies() {
 		const v = wave[i];
 		const kind = v / 10 | 0;
 		const x = xs[i];
-		put(kind > 2 ? makeUnit(ENEMIES[kind - 3], x, 0, 5) : createEnemy(kind, x, 0, v % 10), x);
+		put(createEnemy(kind, x, 0, v % 10), x);
 	}
 	const queue = [];
 	for (let k = 0; k < 3; k++) {

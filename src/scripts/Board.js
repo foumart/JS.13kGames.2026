@@ -64,7 +64,7 @@ const UNITS = [
 	// name,     hp,dm,mv,at,bm,pttrn, rng, rc - born as 0:+ 1:x 2:* 3:knight 4:around
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
-	["Unicorn",  6, 2, 3, 0, 0, 0,     100, 121],
+	[0,          6, 2, 3, 0, 0, 0,     100, 121], // Unicorn
 	["Corwin",   9, 1, 0, 3, 8, "012", 121,  0],
 	["Merlin",   5, 1, 2, 0, 8, "b8e", 131, 43], // yellow
 	["Benedict", 10,2, 0, 1, 6, "356", 21,  22], // blue
@@ -72,7 +72,7 @@ const UNITS = [
 	["Random",   8, 1, 1, 1, 8, 0,     2,   12],
 	["Bleys",    7, 1, 0, 3, 7, 0,     11,  121],
 	["Julian",   7, 1, 1, 1, 5, "392", 3,   50],// green
-	["Caine",    9, 1, 0, 0, 7, "056", 20,  30],// blue
+	["Caine",    9, 1, 0, 0, 7, "356", 20,  30],// blue
 	["Gerard",   12,2, 0, 0, 6, 0,     11,  21],
 ];
 const ENEMIES = [
@@ -631,7 +631,7 @@ function drawUnitIcon(src, cx, cy, size, pal) {
 
 function drawMoveArrows(size) {
 	if (moving || state != 1 || menu || showObjective || showEnd) return;
-	const showGold = (time / 1000 | 0) % 2;
+	const showGold = (time / 1000 | 0) % 3;
 	for (let i = 0; i < 4; i++) {
 		const nx = player.x + ROOK[i][0];
 		const ny = player.y + ROOK[i][1];
@@ -1007,11 +1007,11 @@ function drawBoard() {
 			else blit(backgroundsBitmaps[0], px, py, size);
 			if (clouds[gy][gx]) blit(objectBitmaps[2], px, py, size);
 			if (exits[gy][gx]) {
-				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 2) {
+				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 3) {
 					drawSparkle(px, py, size, (time / 180 | 0) + gx + gy);
 				}
 			} else if (coins[gy][gx]) {
-				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 2) {
+				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 3) {
 					const cs = size * 0.8;
 					blit(objectBitmaps[1], px + (size - cs) / 2, py + size - cs - size * 0.06, cs);
 				}

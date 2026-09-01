@@ -19,11 +19,11 @@ body {
 	padding: 1vmin;
 	/*gap: 1vmin;*/
 	background: #546;
+	text-align: center;
 }
 
 #R {
 	right: 0;
-	text-align: center;
 }
 
 #ov {

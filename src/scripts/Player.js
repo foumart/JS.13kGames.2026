@@ -1,7 +1,7 @@
 function drawUnicorn(bmp, pal, x, y, w, h, s) {
 	for (let i = 4; i--;) {
 		if (i == 2) continue;
-		drawPaletted(bmp, "7d8",
+		drawPaletted(bmp, "798",
 			x + ROOK[i][0] * s,
 			y + ROOK[i][1] * s,
 			w, h, gameContext

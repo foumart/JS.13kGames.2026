@@ -32,7 +32,7 @@ function createIcon(unit, size) {
 function createUnitStatsText(unit, sep = "\n") {
 	const hp = sep ? Math.max(0, unit.hp) + "/" : "";
 	if (!sep) sep = " | ";
-	const txt = document.createElement("div");
+	const txt = line(4);
 	txt.style.whiteSpace = "pre";
 	txt.textContent = "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
 		+ sep + "Move: " + unit.mvMax + sep + "Att: " + unit.atkMax;
@@ -44,7 +44,6 @@ function appendLine(c, t) {
 }
 
 function line(c = 3, t = "\xa0") {
-	//if (!t) t = "\xa0";
 	const d = row();
 	d.className = ["x", "e", "l", "s", "m"][c];
 	d.textContent = t;
@@ -65,18 +64,22 @@ function updateUI() {
 	// top left and right panels
 	const sc = currentScore();
 	const briefing = showPick || showObjective;
-	const ally = battleActive && !briefing ? getBattleUIAlly() : 0;
-	const foe = battleActive && !briefing ? getBattleUIFoe() : 0;
+	const ally = battleActive && !battleResult ? getBattleUIAlly() : 0;
+	const foe = battleActive && !battleResult ? getBattleUIFoe() : 0;
 	const size = uiSize();
 
 	if (menu == 1) L.textContent = R.textContent = "";
 	else {
 		L.textContent = "Score: " + sc;
 		L.appendChild(document.createElement("hr"));
-		L.appendChild(playerCard(size));
+		if (!battleActive) {
+			L.appendChild(line(4, "The Unicorn"));
+			L.appendChild(line(4, "of Order"));
+			L.appendChild(playerCard(size));
+		}
 		R.textContent = puzzleMode ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
 		R.appendChild(document.createElement("hr"));
-		if (battleActive && !battleResult && !briefing) {
+		if (battleActive && !battleResult || showPick) {
 			if (ally) L.appendChild(unitCard(ally, size, 0));
 			if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
 		} else if (!puzzleMode && !battleResult) {

@@ -52,10 +52,14 @@ function getBattleUIAlly() {
 	for (let i = 0; i < battleUnits.length; i++) {
 		if (battleUnits[i].hero) return battleUnits[i];
 	}
-	return null;
+	return makeUnit(UNITS[0], 0, 0);
 }
 
 function getBattleUIFoe() {
+	if (showPick) {
+		const v = BATTLES[levelIndex / 3 | 0][0];
+		return createEnemy(v / 10 | 0, 0, 0, v % 10);
+	}
 	if (battleSelect && battleSelect.enemy && battleSelect.hp > 0) return battleSelect;
 	let pink = null;
 	let fallback = null;
@@ -68,13 +72,6 @@ function getBattleUIFoe() {
 	}
 	return pink || fallback;
 }
-
-/*function rayStyle(rays) {
-	if (rays == KNIGHT) return "+";
-	if (rays == BISHOP) return "X";
-	if (rays == QUEEN) return "*";
-	return "*";
-}*/
 
 // the ray buttons name what the next step actually grants: R2, B1, or the knight leap
 function upgradeLabel(kind, unit) {
