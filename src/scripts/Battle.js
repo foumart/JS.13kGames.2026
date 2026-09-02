@@ -553,16 +553,20 @@ function hitShake(hits, then) {
 	}
 }
 
+function poke(u, x, y, then) {
+	const dx = x - u.x;
+	const dy = y - u.y
+	const n = Math.max(1, Math.abs(dx) + Math.abs(dy));
+	tween(u, 5, {offsetX: dx / n / 2, offsetY: dy / n / 2}, then);
+}
+
 function performAttack(u, hits, done) {
 	animating = 1;
 	battleTiles = [];
 	battleHints = [];
 	updateUI();
 	const t = hits[0];
-	const dx = t ? (t.x - u.x) : 0;
-	const dy = t ? (t.y - u.y) : 0;
-	const len = Math.max(1, Math.abs(dx) + Math.abs(dy));
-	tween(u, 5, {offsetX: dx / len * 0.4, offsetY: dy / len * 0.4}, () => {
+	poke(u, t ? t.x : u.x, t ? t.y : u.y, () => {
 		for (let i = 0; i < hits.length; i++) hits[i].hp -= u.dmg;
 		if (!u.enemy) {
 			const mul = u.hero ? 2 : 1;
@@ -683,12 +687,9 @@ function battleClick(event) {
 
 	if (occ) {
 		if (!battlePhase && !thinking && battleControl && !battleControl.acted) {
-			const hits = battleControl.hits(battleControl.x, battleControl.y);
-			for (let i = 0; i < hits.length; i++) {
-				if (hits[i] == occ) {
-					playerAttack(battleControl, occ.x, occ.y);
-					return;
-				}
+			if (battleControl.actHits(occ.x, occ.y).length) {
+				playerAttack(battleControl, occ.x, occ.y);
+				return;
 			}
 		}
 		battleSelect = occ;

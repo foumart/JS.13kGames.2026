@@ -66,7 +66,7 @@ const UNITS = [
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
 	[0,          6, 2, 3, 0, 0, 0,     100, 121], // Unicorn
 	["Corwin",   9, 1, 0, 3, 8, "012", 121,  0],
-	["Merlin",   5, 1, 2, 0, 8, "b8e", 131, 43], // yellow
+	["Merlin",   5, 1, 2, 0, 8, "b56", 131, 43], // yellow
 	["Benedict", 10,2, 0, 1, 6, "356", 21,  22], // blue
 	["Fiona",    4, 1, 1, 1, 5, 0,     33,  6],
 	["Random",   8, 1, 1, 1, 8, 0,     2,   12],

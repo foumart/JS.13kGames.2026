@@ -68,6 +68,8 @@ function startRetract(x, y) {
 	if (retractX != x || retractY != y) {
 		retractX = x;
 		retractY = y;
+		moving = 1;
+		poke(player, x, y, () => tween(player, 6, {offsetX: 0, offsetY: 0}, () => moving = 0));
 		return;
 	}
 	moving = 1;

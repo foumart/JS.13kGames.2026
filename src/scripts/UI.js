@@ -296,7 +296,7 @@ function fillEnd() {
 		}
 
 		const row3 = line(3, "");
-		const numbersLine = line(4);
+		const numbersLine = line(3);
 		row3.appendChild(numbersLine);
 		if (stageCaptive && rescuedUnits.indexOf(stageCaptive) >= 0) {
 			const row2 = line(3, "");
@@ -318,7 +318,7 @@ function fillEnd() {
 			}
 		}
 		if (vailed && !puzzleMode) {
-			numbersLine.textContent = vailed + " leprechauns";
+			numbersLine.textContent = vailed + " leprechaun" + (vailed > 1 ? "s" : "");
 			appendLine();
 			msg.appendChild(row3);
 			row3.appendChild(line(3, "enter the Vail"));
