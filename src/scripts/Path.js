@@ -60,9 +60,16 @@ function isTrail(x, y) {
 
 // retrace back to the older trail tile, one hop per rendered frame
 function startRetract(x, y) {
-	if (!player || moving || state != 1 || menu || showObjective || showEnd || !isTrail(x, y)) return;
-	retractX = x;
-	retractY = y;
+	if (!player || moving || state != 1 || menu || showObjective || showEnd) return;
+	if (!isTrail(x, y)) {
+		retractX = -1;
+		return;
+	}
+	if (retractX != x || retractY != y) {
+		retractX = x;
+		retractY = y;
+		return;
+	}
 	moving = 1;
 	hopping = 1;
 	stepRetract();
@@ -125,7 +132,7 @@ function paintRainbow(shift) {
 	const ctx = rainbowCanvas.ctx;
 	const a = -shift / 2, b = a + (bw + bh - 2) * 4 / 7;
 	const g = ctx.createLinearGradient(a, a, b, b);
-	for (let i = 0; i < 49; i++) g.addColorStop(i / 48, "hsl(" + i * 60 % 360 + ",85%,58%)");
+	for (let i = 0; i < 49; i++) g.addColorStop(i / 48, pathInk(i * 60));
 	ctx.fillStyle = g;
 	ctx.fillRect(0, 0, bw, bh);
 }
@@ -152,16 +159,17 @@ function scrollRainbow() {
 	const t = (time - rainbowStart) / 1000;
 	if (t >= 1) {
 		paintRainbow(0);
-		rainbowAnim = 0;
+		if (rainbowDone > 1) {
+			rainbowDone = 1;
+			rainbowStart = time;
+		} else rainbowAnim = 0;
 	} else {
 		paintRainbow(t * denom / 7);
 	}
 }
 
 function pathInk(shift) {
-	return state == 2
-		? "hsl(" + ((shift == null ? time * 0.1 : shift) % 360) + ",85%,55%)"
-		: "hsl(120,85%,55%)";
+	return "hsl(" + ((shift == null ? state == 2 ? time * 0.1 : 120 : shift) % 360) + ",85%,55%)";
 }
 
 function drawPurifiedTile(x, y) {
@@ -245,7 +253,7 @@ function drawFlowingPath() {
 			const t0 = k / steps;
 			const t1 = (k + 1) / steps;
 			const hue = ((s + t0 * len) / band * 60 + shift) % 360;
-			gameContext.strokeStyle = "hsl(" + hue + ",85%,55%)";
+			gameContext.strokeStyle = pathInk(hue);
 			gameContext.beginPath();
 			gameContext.moveTo(a.x + dx * t0, a.y + dy * t0);
 			gameContext.lineTo(a.x + dx * t1, a.y + dy * t1);

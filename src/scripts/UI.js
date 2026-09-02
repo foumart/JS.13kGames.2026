@@ -70,12 +70,12 @@ function updateUI() {
 
 	if (menu == 1) {
 		L.textContent = "game by Noncho Savov";
-		R.textContent = "";
-		R.appendChild(line(4, "Arrows - move"));
-		R.appendChild(line(4, "Space - select"));
-		R.appendChild(line(4, "Enter - confirm"));
-		R.appendChild(line(4, "ESC - pause"));
-
+		R.textContent = "v{VERSION}";
+		//R.textContent = "";
+		//R.appendChild(line(4, "Arrows - move"));
+		//R.appendChild(line(4, "Space - select"));
+		//R.appendChild(line(4, "Enter - confirm"));
+		//R.appendChild(line(4, "ESC - pause"));
 	}
 	else {
 		L.textContent = "Score: " + sc;

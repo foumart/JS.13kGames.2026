@@ -439,10 +439,11 @@ function markClusterDying(cluster) {
 		if (rescues[y][x]) rescueDying[y][x] = 1;
 		fillData[y][x] = 1;
 	}
-	rainbowDone = 0;
-	rainbowAnim = 0;
-	rainbowWait = 0;
-	paintRainbow(0);
+	if (rainbowAnim) rainbowDone = 2;
+	else {
+		rainbowDone = 0;
+		rainbowWait = 0;
+	}
 }
 
 function flushDyingEnemies() {

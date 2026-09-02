@@ -4,9 +4,13 @@ function act(dx, dy) {
 	if (moving || state != 1 || menu || showObjective) return;
 	const nx = player.x + dx;
 	const ny = player.y + dy;
-	if (isPassable(nx, ny, dx, dy)) player.moveTo(dx, dy);
-	else if (isPrevPath(nx, ny)) player.retractTo(dx, dy);
-	else startRetract(nx, ny);
+	if (isPassable(nx, ny, dx, dy)) {
+		retractX = -1;
+		player.moveTo(dx, dy);
+	} else if (isPrevPath(nx, ny)) {
+		retractX = -1;
+		player.retractTo(dx, dy);
+	} else startRetract(nx, ny);
 }
 
 function puzzleMoveAt(x, y) {
