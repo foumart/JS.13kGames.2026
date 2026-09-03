@@ -24,8 +24,6 @@ let battleKind = 0; // 1 regular, 2 boss
 
 
 function startBattle() {
-	const skip = skipObjective;
-	skipObjective = 0;
 	battleActive = 1;
 	hideEndButtons();
 	showEnd = 0;
@@ -44,30 +42,19 @@ function startBattle() {
 	battleControl = null;
 	totalScore = scoreStart;
 	battleUnits = [];
-	if (!skip) {
-		battleParty = [];
-		if (livingRescueCount() <= 2) {
-			for (const w of rescuedUnits) {
-				if (!isDeadBmp(w)) battleParty.push(w);
-			}
+	battleParty = [];
+	const n = livingRescueCount();
+	if (n < 3) {
+		for (const w of rescuedUnits) {
+			if (!isDeadBmp(w)) battleParty.push(w);
 		}
-	} else {
-		const kept = [];
-		for (const z of battleParty) {
-			if (deadUnits.indexOf(z) < 0) kept.push(z);
-		}
-		battleParty = kept;
 	}
 	pickCursor = firstLivingPick();
-	if (livingRescueCount() && !skip) {
-		showPick = 1;
-		showObjectiveButtons();
-		updateUI();
-		return;
+	if (n) showPick = 1;
+	else {
+		spawnBattleParty();
+		showObjective = 1;
 	}
-	spawnBattleParty();
-	showObjective = 1;
-	showObjectiveButtons();
 	updateUI();
 }
 
@@ -683,7 +670,7 @@ function battleClick(event) {
 	}
 
 	if (occ) {
-		if (!battlePhase && !thinking && battleControl && !battleControl.acted) {
+		if (!battlePhase && !thinking && battleControl && battleSelect == battleControl && !battleControl.acted) {
 			if (battleControl.actHits(occ.x, occ.y).length) {
 				playerAttack(battleControl, occ.x, occ.y);
 				return;

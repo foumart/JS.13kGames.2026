@@ -117,8 +117,10 @@ class Unit {
 			const cells = scan[i][0];
 			const foe = scan[i][1];
 			const live = allowClick && (this.around ? any : foe) ? 1 : 0;
-			for (let j = 0; j < cells.length; j++) {
-				battleTiles.push({x: cells[j][0], y: cells[j][1], kind: 1, live});
+			if (!this.hero) {
+				for (let j = 0; j < cells.length; j++) {
+					battleTiles.push({x: cells[j][0], y: cells[j][1], kind: 1, live});
+				}
 			}
 			if (foe) battleTiles.push({x: foe.x, y: foe.y, kind: 1, live});
 		}

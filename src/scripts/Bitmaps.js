@@ -73,7 +73,7 @@ const objectsData = [
 ];
 
 const pathsData = [
-	"fff2e21a1", // color bank
+	"fffaf92e2", // color bank
 	"012", // center
 	"012", // top
 	"012", // right
@@ -90,7 +90,7 @@ const pathsData = [
 	"012", // top-bottom-left
 	"012", // bottom-left-right
 	"012", // cross
-	"@@@@@@@D@@Y@PjA@Y@@D@@@@@@@PjAPjAPjAPjAPjA@Y@@D@@@@@@@@@@@@@@TU@ijPjj@ij@TU@@@@@@PjAPjAPjVPjjPjj@ij@TU@@@@@@@@@@@@@D@@Y@PjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjA@@@@@@@TU@ijPjjPjjPjVPjAPjAPjAPjAPjVPjjPjjPjjPjVPjAPjA@@@@@@UE@jZ@jjAjZ@UE@@@@@@@PjAPjAejAjjAjjAjZ@UE@@@@@@@@@@@@@UUUjjjjjjjjjUUU@@@@@@PjAPjAejVjjjjjjjjjUUU@@@@@@@@@@@@UE@jZ@jjAjjAejAPjAPjAPjAPjAejAjjAjjAjjAejAPjAPjA@@@@@@UUUjjjjjjjjjejVPjAPjAPjAPjAejVjjjjjjjjjejVPjAPjA"
+	"@@@@@@@@@@@@@@@@@@@@@@@@@@@P?AP?AP?AP?APnA@U@@@@@@@@@@@@@@@@@TU@y?@}?@y?@TU@@@@@@P?AP?AP?WP~?@y?@d?@PU@@@@@@@@@@@@@@@@U@PnAP?AP?AP?AP?AP?AP?AP?AP?AP?AP?AP?AP?AP?A@@@@@@@PU@d?@y?P~?P?WP?AP?AP?AP?AP?VP??P??P??P?VP?AP?A@@@@@@UE@?[@?_@?[@UE@@@@@@@P?AP?Au?A?oA?[@?F@UA@@@@@@@@@@@@@UUU?????????UUU@@@@@@P?AP?Ae?V?????????UUU@@@@@@@@@@@@UA@?F@?[@?oAu?AP?AP?AP?AP?Ae?A??A??A??Ae?AP?AP?A@@@@@@UUU?????????e?VP?AP?AP?AP?Ae?V?????????e?VP?AP?A"
 ];
 
 encodeBitmap(unitData, unitBitmaps);

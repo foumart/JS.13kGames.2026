@@ -63,7 +63,6 @@ function uiSize() {
 function updateUI() {
 	// top left and right panels
 	const sc = currentScore();
-	const briefing = showPick || showObjective;
 	const ally = battleActive && !battleResult ? getBattleUIAlly() : 0;
 	const foe = battleActive && !battleResult ? getBattleUIFoe() : 0;
 	const size = uiSize();
@@ -83,7 +82,7 @@ function updateUI() {
 	else {
 		L.textContent = "Score: " + sc;
 		L.appendChild(document.createElement("hr"));
-		if (!battleActive) {
+		if (!battleActive && !puzzleMode) {
 			L.appendChild(line(4, "The Unicorn"));
 			L.appendChild(line(4, "of Order"));
 			L.appendChild(playerCard(size));

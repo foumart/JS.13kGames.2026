@@ -12,10 +12,7 @@ function arrowDXY(k) {
 // R - restart whatever is running
 function resetHere() {
 	if (battleActive) resetBattle();
-	else {
-		skipObjective = 1;
-		resetLevel();
-	}
+	else resetLevel();
 }
 
 function onKeyDown(event) {

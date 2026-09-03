@@ -33,7 +33,6 @@ let perfects = 0;
 let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
 let showObjective = 0;
-let skipObjective = 0;
 let stageCaptive = 0;
 
 let levelIndex = 0;
@@ -200,10 +199,8 @@ function initBoard() {
 	state = 1;
 	showEnd = 0;
 	battleResult = 0;
-	showObjective = skipObjective || menu == 1 ? 0 : 1;
-	skipObjective = 0;
+	showObjective = !menu;
 	moving = 0;
-	hideEndButtons();
 
 	let startX = 0;
 	let startY = 0;
@@ -254,7 +251,6 @@ function initBoard() {
 	player = new Player(startX, startY);
 	placeStartPath(startX, startY);
 	buildRainbowBackdrop();
-	if (showObjective) showObjectiveButtons();
 }
 
 function isPassable(x, y, dx, dy) {
@@ -1031,16 +1027,15 @@ function drawBoard() {
 	}
 
 	if (battleActive) {
+		const hero = (battleControl || battleSelect || 0).hero;
 		for (let i = 0; i < battleTiles.length; i++) {
 			const bt = battleTiles[i];
-			const hot = (battleAim && battleHinted(bt.x, bt.y)) || (bt.live && hoverTile && hoverTile.x == bt.x && hoverTile.y == bt.y);
-			gameContext.fillStyle = bt.kind
-				? (hot ? "#f45c" : bt.live ? "#f456" : "#f454")
-				: (hot ? "#9f8c" : bt.live ? "#9f88" : "#9f84");
+			const aimed = battleAim && battleHinted(bt.x, bt.y);
+			const hot = aimed || (bt.live && hoverTile && hoverTile.x == bt.x && hoverTile.y == bt.y);
+			gameContext.fillStyle = "#" + (bt.kind ? "f45" : hero ? "fe8" : "9f8") + (hot ? "c" : bt.live ? "8" : "4");
 			gameContext.fillRect(ox + bt.x * size, oy + bt.y * size, size, size);
-			if (hot && bt.kind) outlineUnit(bt, size, "#f89", 0.06, 2);
+			if (hot && (bt.kind || aimed)) outlineUnit(bt, size, bt.kind ? "#f89" : "#fe8", 0.06, 2);
 		}
-		if (battleControl && battleControl.hp > 0) outlineUnit(battleControl, size, "#fff", 0.06, 1);
 		if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {
 			outlineUnit(battleSelect, size, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);
 		}
