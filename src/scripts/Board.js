@@ -1,11 +1,10 @@
 const tileWidth = 6;
-const unitScale = 0.665;
+const cellSize = 18;
+const unitScale = 2 / 3;
 const campaignLength = 63;
 
 let boardWidth;
 let boardHeight;
-let cellSize = 1;
-let zoom = 1;
 let boardOffsetX = 0;
 let boardOffsetY = 0;
 let iconContext;
@@ -961,31 +960,37 @@ function blit(src, px, py, s) {
 	getCurrentContext().drawImage(src, 0, 0, tileWidth, tileWidth, px, py, s, s);
 }
 
-function fitBoard(cols, rows) {
-	const size = Math.min(width / (cols + zoom), height / (rows + zoom));
-	cellSize = size;
-	boardOffsetX = (width - cols * size) / 2;
-	boardOffsetY = (height - rows * size) / 2;
-	return size;
+function fitBoard(c, r) {
+	const z = Math.max(2, (portrait ? width : height) / 99 - (portrait ? c : r) / 6);
+	const k = Math.min(width / (c + z), height / (r + z)) / cellSize || 1;
+	const w = width / k | 0, h = height / k | 0;
+	if (gameCanvas.width - w | gameCanvas.height - h) {
+		gameCanvas.width = w;
+		gameCanvas.height = h;
+		bgKey = 0;
+	}
+	gameContext.imageSmoothingEnabled = false;
+	boardOffsetX = (w - c * cellSize) / 2 | 0;
+	boardOffsetY = (h - r * cellSize) / 2 | 0;
+	return cellSize;
 }
 
 let bgKey = 0;
 
 function drawBoard() {
 	if (!battleActive) {
-		zoom = (portrait ? width / 99 : height / 99) - (portrait ? boardWidth : boardHeight) / 6;
 		rainbowPulse = anyDying() || state == 2;
 		scrollRainbow();
-		player.resize();
 	}
 	const size = fitBoard(boardWidth, boardHeight);
 	const ox = boardOffsetX, oy = boardOffsetY;
+	const vw = gameCanvas.width, vh = gameCanvas.height;
 	// the canvas is never cleared, so the far backdrop keeps between frames
 	const bgNow = ox + oy * 7 + size;
 	const bgStale = bgNow != bgKey;
 	bgKey = bgNow;
-	for (let gy = -oy / size - 1 | 0; gy < (height - oy) / size + 1 | 0; gy++) {
-		for (let gx = -ox / size - 1 | 0; gx < (width - ox) / size + 1 | 0; gx++) {
+	for (let gy = -oy / size - 1 | 0; gy < (vh - oy) / size + 1 | 0; gy++) {
+		for (let gx = -ox / size - 1 | 0; gx < (vw - ox) / size + 1 | 0; gx++) {
 			const px = ox + gx * size, py = oy + gy * size;
 			if (!isMapTile(gx, gy)) {
 				if (!bgStale && (gx < -1 || gy < -1 || gx > boardWidth || gy > boardHeight)) continue;

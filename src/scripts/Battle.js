@@ -650,12 +650,10 @@ function battleEndTurn() {
 	updateUI();
 }
 
-function getPosFromEvent(event) {
-	if (!cellSize) return null;
-	const x = (event.clientX - boardOffsetX) / cellSize | 0;
-	const y = (event.clientY - boardOffsetY) / cellSize | 0;
-	if (!inBounds(x, y)) return null;
-	return {x, y};
+function getPosFromEvent(e) {
+	const x = (e.clientX * gameCanvas.width / width - boardOffsetX) / cellSize | 0;
+	const y = (e.clientY * gameCanvas.height / height - boardOffsetY) / cellSize | 0;
+	return inBounds(x, y) && {x, y};
 }
 
 function battleClick(event) {

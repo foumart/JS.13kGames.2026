@@ -191,7 +191,6 @@ function drawFlowingPath() {
 	for (let i = 0; i < pathTrail.length; i++) {
 		const p = pathTrail[i];
 		const m = pathData[p[1]][p[0]];
-		// a pixel of overlap keeps neighbouring tiles from showing a seam
-		gameContext.drawImage(pathBitmaps[m], boardOffsetX + p[0] * w, boardOffsetY + p[1] * w, w + 1, w + 1);
+		gameContext.drawImage(pathBitmaps[m], boardOffsetX + p[0] * w, boardOffsetY + p[1] * w, w, w);
 	}
 }

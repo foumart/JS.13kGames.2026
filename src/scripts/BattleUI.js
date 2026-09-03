@@ -32,7 +32,7 @@ function battleHover(event) {
 
 function outlineUnit(u, size, col, lw, inset) {
 	gameContext.strokeStyle = col;
-	gameContext.lineWidth = Math.max(2, size * lw);
+	gameContext.lineWidth = Math.max(1, size * lw);
 	gameContext.strokeRect(
 		boardOffsetX + u.x * size + inset,
 		boardOffsetY + u.y * size + inset,

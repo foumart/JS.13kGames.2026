@@ -18,12 +18,6 @@ class Player {
 		this.offsetX = 0;
 		this.offsetY = 0;
 		this.face = 1; // 1 = face left, -1 = face right
-		this.resize();
-	}
-
-	resize() {
-		this.width = cellSize;
-		this.height = cellSize;
 	}
 
 	moveTo(dx, dy) {
@@ -88,7 +82,7 @@ class Player {
 	}
 
 	draw() {
-		const cell = this.width;
+		const cell = cellSize;
 		const bmp = unitBitmaps[moving ? 1 : 0];
 		const scale = cell / tileWidth * unitScale;
 		const dw = bmp.width * scale;

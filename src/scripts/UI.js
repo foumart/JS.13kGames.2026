@@ -70,7 +70,7 @@ function updateUI() {
 
 	if (menu == 1) {
 		//L.textContent = "FoumartGames presents:js13k game by Noncho Savov";
-
+		L.textContent = "";
 		L.appendChild(line(4, "FoumartGames presents:"));
 		L.appendChild(line(3, "js13k game by Noncho Savov"));
 		R.textContent = "v{VERSION}";
