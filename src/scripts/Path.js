@@ -161,7 +161,7 @@ function scrollRainbow() {
 	const t = (time - rainbowStart) / 1000;
 	if (t >= 1) {
 		paintRainbow(0);
-		if (rainbowDone > 1) {
+		if (rainbowDone > 1 || state == 2) {
 			rainbowDone = 1;
 			rainbowStart = time;
 		} else rainbowAnim = 0;
@@ -171,7 +171,7 @@ function scrollRainbow() {
 }
 
 function pathInk(shift) {
-	return "hsl(" + ((shift == null ? state == 2 ? time * 0.1 : 120 : shift) % 360) + ",85%,55%)";
+	return "hsl(" + shift % 360 + ",85%,55%)";
 }
 
 function drawPurifiedTile(x, y) {
@@ -186,81 +186,13 @@ function drawPurifiedTile(x, y) {
 	);
 }
 
-// Path trail: green while playing, rainbow when the stage is cleared
 function drawFlowingPath() {
-	const n = pathTrail.length;
-	if (!n) return;
-
 	const w = cellSize;
-	const thick = w * 0.33;
-	const border = w * 0.12;
-	const band = w * 0.45;
-	const rainbow = state == 2;
-	const shift = time * 0.1;
-	const pts = [];
-
-	for (let i = 0; i < n; i++) {
-		pts.push({
-			x: boardOffsetX + pathTrail[i][0] * w + w / 2,
-			y: boardOffsetY + pathTrail[i][1] * w + w / 2
-		});
-	}
-
-	gameContext.lineCap = "round";
-	gameContext.lineJoin = "round";
-
-	if (n == 1) {
-		gameContext.fillStyle = "#fff";
-		gameContext.beginPath();
-		gameContext.arc(pts[0].x, pts[0].y, thick / 2 + border, 0, Math.PI * 2);
-		gameContext.fill();
-		gameContext.fillStyle = pathInk(shift);
-		gameContext.beginPath();
-		gameContext.arc(pts[0].x, pts[0].y, thick / 2, 0, Math.PI * 2);
-		gameContext.fill();
-		return;
-	}
-
-	gameContext.strokeStyle = "#fff";
-	gameContext.lineWidth = thick + border * 2;
-	gameContext.beginPath();
-	gameContext.moveTo(pts[0].x, pts[0].y);
-	for (let i = 1; i < n; i++) {
-		gameContext.lineTo(pts[i].x, pts[i].y);
-	}
-	gameContext.stroke();
-
-	gameContext.lineWidth = thick;
-	if (!rainbow) {
-		gameContext.strokeStyle = pathInk();
-		gameContext.beginPath();
-		gameContext.moveTo(pts[0].x, pts[0].y);
-		for (let i = 1; i < n; i++) {
-			gameContext.lineTo(pts[i].x, pts[i].y);
-		}
-		gameContext.stroke();
-		return;
-	}
-
-	let s = 0;
-	for (let i = 0; i < n - 1; i++) {
-		const a = pts[i];
-		const b = pts[i + 1];
-		const dx = b.x - a.x;
-		const dy = b.y - a.y;
-		const len = Math.abs(dx) + Math.abs(dy);
-		const steps = Math.max(1, len / 3 | 0);
-
-		for (let k = 0; k < steps; k++) {
-			const t0 = k / steps;
-			const t1 = (k + 1) / steps;
-			const hue = ((s + t0 * len) / band * 60 + shift) % 360;
-			gameContext.strokeStyle = pathInk(hue);
-			gameContext.beginPath();
-			gameContext.moveTo(a.x + dx * t0, a.y + dy * t0);
-			gameContext.lineTo(a.x + dx * t1, a.y + dy * t1);
-			gameContext.stroke();
-		}
-		s += len;
+	for (let i = 0; i < pathTrail.length; i++) {
+		const p = pathTrail[i];
+		const m = pathData[p[1]][p[0]];
+		// a pixel of overlap keeps neighbouring tiles from showing a seam
+		gameContext.drawImage(pathBitmaps[0], m % 4 * 9, (m / 4 | 0) * 9, 9, 9,
+			boardOffsetX + p[0] * w, boardOffsetY + p[1] * w, w + 1, w + 1);
 	}
 }

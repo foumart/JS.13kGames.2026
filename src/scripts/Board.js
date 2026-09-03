@@ -974,7 +974,7 @@ let bgKey = 0;
 function drawBoard() {
 	if (!battleActive) {
 		zoom = (portrait ? width / 99 : height / 99) - (portrait ? boardWidth : boardHeight) / 6;
-		rainbowPulse = anyDying();
+		rainbowPulse = anyDying() || state == 2;
 		scrollRainbow();
 		player.resize();
 	}

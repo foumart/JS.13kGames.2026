@@ -1,6 +1,7 @@
 const unitBitmaps = [];
 const backgroundsBitmaps = [];
 const objectBitmaps = [];
+const pathBitmaps = [];
 
 // ImageEncryptor: 3 px/char, 3-char, transparent
 function encodeBitmap(group, dest) {
@@ -71,9 +72,16 @@ const objectsData = [
 	"@@pC\\NlMlNpCH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
 ];
 
+const pathsData = [
+	"fff2e2", // casing, ink
+	"010", // 4x4 grid of 9x9 trail pieces, indexed by the pathData direction mask
+	"@@@PjA@@@PjA@@@PjA@@@PjA@D@PjA@TUPjV@Y@PjA@ijPjjPjAPjAPjjPjj@Y@@Y@@ij@ij@D@@D@@TU@TU@@@@@@@@@@@@@@@@@@@@@@@@@@@PjA@@@PjA@@@PjA@@@PjA@D@PjA@TUPjV@Y@PjA@ijPjjPjAPjAPjjPjjPjAPjAPjjPjjPjAPjAPjVPjVPjAPjAPjAPjAPjAPjAPjAPjA@@@PjA@@@PjA@@@PjA@@@PjAUE@ejAUUUejVjZ@jjAjjjjjjjjAjjAjjjjjjjZ@jZ@jjjjjjUE@UE@UUUUUU@@@@@@@@@@@@@@@@@@@@@@@@@@@PjA@@@PjA@@@PjA@@@PjAUE@ejAUUUejVjZ@jjAjjjjjjjjAjjAjjjjjjjjAjjAjjjjjjejAejAejVejVPjAPjAPjAPjAPjAPjAPjAPjA"
+];
+
 encodeBitmap(unitData, unitBitmaps);
 encodeBitmap(backgroundsData, backgroundsBitmaps);
 encodeBitmap(objectsData, objectBitmaps);
+encodeBitmap(pathsData, pathBitmaps);
 
 // bitmap: [px, bank, pal, palW, cache]
 function drawPalettedBitmap(src, ref) {
