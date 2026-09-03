@@ -73,9 +73,24 @@ const objectsData = [
 ];
 
 const pathsData = [
-	"fff2e2", // casing, ink
-	"010", // 4x4 grid of 9x9 trail pieces, indexed by the pathData direction mask
-	"@@@PjA@@@PjA@@@PjA@@@PjA@D@PjA@TUPjV@Y@PjA@ijPjjPjAPjAPjjPjj@Y@@Y@@ij@ij@D@@D@@TU@TU@@@@@@@@@@@@@@@@@@@@@@@@@@@PjA@@@PjA@@@PjA@@@PjA@D@PjA@TUPjV@Y@PjA@ijPjjPjAPjAPjjPjjPjAPjAPjjPjjPjAPjAPjVPjVPjAPjAPjAPjAPjAPjAPjAPjA@@@PjA@@@PjA@@@PjA@@@PjAUE@ejAUUUejVjZ@jjAjjjjjjjjAjjAjjjjjjjZ@jZ@jjjjjjUE@UE@UUUUUU@@@@@@@@@@@@@@@@@@@@@@@@@@@PjA@@@PjA@@@PjA@@@PjAUE@ejAUUUejVjZ@jjAjjjjjjjjAjjAjjjjjjjjAjjAjjjjjjejAejAejVejVPjAPjAPjAPjAPjAPjAPjAPjA"
+	"fff2e21a1", // color bank
+	"012", // center
+	"012", // top
+	"012", // right
+	"012", // top-right
+	"012", // bottom
+	"012", // top-bottom
+	"012", // bottom-right
+	"012", // top-bottom-right
+	"012", // left
+	"012", // top-left
+	"012", // left-right
+	"012", // top-left-right
+	"012", // bottom-left
+	"012", // top-bottom-left
+	"012", // bottom-left-right
+	"012", // cross
+	"@@@@@@@D@@Y@PjA@Y@@D@@@@@@@PjAPjAPjAPjAPjA@Y@@D@@@@@@@@@@@@@@TU@ijPjj@ij@TU@@@@@@PjAPjAPjVPjjPjj@ij@TU@@@@@@@@@@@@@D@@Y@PjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjAPjA@@@@@@@TU@ijPjjPjjPjVPjAPjAPjAPjAPjVPjjPjjPjjPjVPjAPjA@@@@@@UE@jZ@jjAjZ@UE@@@@@@@PjAPjAejAjjAjjAjZ@UE@@@@@@@@@@@@@UUUjjjjjjjjjUUU@@@@@@PjAPjAejVjjjjjjjjjUUU@@@@@@@@@@@@UE@jZ@jjAjjAejAPjAPjAPjAPjAejAjjAjjAjjAejAPjAPjA@@@@@@UUUjjjjjjjjjejVPjAPjAPjAPjAejVjjjjjjjjjejVPjAPjA"
 ];
 
 encodeBitmap(unitData, unitBitmaps);
