@@ -64,13 +64,13 @@ const UNITS = [
 	// name,     hp,dm,mv,at,bm,pttrn, rng, rc - born as 0:+ 1:x 2:* 3:knight 4:around
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
-	[0,          6, 2, 3, 0, 0, 0,     100, 121], // Unicorn
+	[0,          6, 2, 3, 3, 0, 0,     100, 100], // Unicorn
 	["Corwin",   9, 1, 0, 3, 8, "012", 121,  0],
 	["Merlin",   5, 1, 2, 0, 8, "b56", 131, 43], // yellow
 	["Benedict", 10,2, 0, 1, 6, "356", 21,  22], // blue
 	["Fiona",    4, 1, 1, 1, 5, 0,     33,  6],
 	["Random",   8, 1, 1, 1, 8, 0,     2,   12],
-	["Bleys",    7, 1, 0, 3, 7, 0,     11,  121],
+	["Bleys",    7, 1, 0, 2, 7, 0,     1,  10],
 	["Julian",   7, 1, 1, 1, 5, "392", 3,   50],// green
 	["Caine",    9, 1, 0, 0, 7, "356", 20,  30],// blue
 	["Gerard",   12,2, 0, 0, 6, 0,     11,  21],
@@ -1030,9 +1030,10 @@ function drawBoard() {
 			const bt = battleTiles[i];
 			const hot = (battleAim && battleHinted(bt.x, bt.y)) || (bt.live && hoverTile && hoverTile.x == bt.x && hoverTile.y == bt.y);
 			gameContext.fillStyle = bt.kind
-				? (hot ? "#f458" : bt.live ? "#f456" : "#f454")
+				? (hot ? "#f45c" : bt.live ? "#f456" : "#f454")
 				: (hot ? "#9f8c" : bt.live ? "#9f88" : "#9f84");
 			gameContext.fillRect(ox + bt.x * size, oy + bt.y * size, size, size);
+			if (hot && bt.kind) outlineUnit(bt, size, "#f89", 0.06, 2);
 		}
 		if (battleControl && battleControl.hp > 0) outlineUnit(battleControl, size, "#fff", 0.06, 1);
 		if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {

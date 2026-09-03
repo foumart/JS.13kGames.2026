@@ -1,12 +1,11 @@
 {
 	"name": "js13k_2026",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"title": "JS13K 2026",
-	"description": "JS13kGames 2026 tile grid scaffold",
+	"description": "The Fourth Labyrinth, a trail puzzle / tactical battle strategy",
 	"keywords": [
 		"js13kgames",
-		"js13k",
-		"pwa"
+		"js13k"
 	],
 	"orientation": "any",
 	"iconExtension": "svg",

@@ -69,7 +69,10 @@ function updateUI() {
 	const size = uiSize();
 
 	if (menu == 1) {
-		L.textContent = "game by Noncho Savov";
+		//L.textContent = "FoumartGames presents:js13k game by Noncho Savov";
+
+		L.appendChild(line(4, "FoumartGames presents:"));
+		L.appendChild(line(3, "js13k game by Noncho Savov"));
 		R.textContent = "v{VERSION}";
 		//R.textContent = "";
 		//R.appendChild(line(4, "Arrows - move"));

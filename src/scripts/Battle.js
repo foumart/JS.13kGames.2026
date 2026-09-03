@@ -597,12 +597,11 @@ function knightSide(u, tile, dx, dy) {
 function knightTilesInDir(u, dx, dy) {
 	const out = [];
 	for (const t of battleTiles) {
+		if (!t.live) continue;
 		const tx = t.x - u.x;
 		const ty = t.y - u.y;
-		if (t.kind == 0) {
-			if (dy && ty == dy * 2 && (tx == 1 || tx == -1)) out.push(t);
-			else if (dx && tx == dx * 2 && (ty == 1 || ty == -1)) out.push(t);
-		}
+		if (dy && ty == dy * 2 && (tx == 1 || tx == -1)) out.push(t);
+		else if (dx && tx == dx * 2 && (ty == 1 || ty == -1)) out.push(t);
 	}
 	return out;
 }
@@ -716,6 +715,12 @@ function battleKey(event) {
 	}
 	if (k == 9) {
 		event.preventDefault();
+		if (battlePhase || thinking) return;
+		const list = battleRoster(1);
+		if (!list.length) return;
+		let i = list.indexOf(battleSelect || battleControl);
+		if (i < 0) i = event.shiftKey ? 0 : -1;
+		selectUnit(list[(i + (event.shiftKey ? -1 : 1) + list.length) % list.length]);
 		return;
 	}
 	if (battlePhase || thinking) return;
@@ -741,13 +746,11 @@ function battleKey(event) {
 	const dx = d[0];
 	const dy = d[1];
 
-	if (u.moved && !u.acted) {
+	if (u.moved && !u.acted && u.atk != 3) {
 		if (u.hits(u.x, u.y).length) playerAttack(u, u.x + dx, u.y + dy);
 		else battleFinishUnit(u);
 		return;
 	}
-
-	if (u.moved) return;
 
 	if (!battleTiles.length) battleRefreshTiles();
 

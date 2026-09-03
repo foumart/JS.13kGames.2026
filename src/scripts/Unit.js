@@ -120,7 +120,7 @@ class Unit {
 			for (let j = 0; j < cells.length; j++) {
 				battleTiles.push({x: cells[j][0], y: cells[j][1], kind: 1, live});
 			}
-			if (foe) battleTiles.push({x: foe.x, y: foe.y, kind: 1, live: 0});
+			if (foe) battleTiles.push({x: foe.x, y: foe.y, kind: 1, live});
 		}
 	}
 
