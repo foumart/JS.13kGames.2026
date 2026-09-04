@@ -63,21 +63,21 @@ const UNITS = [
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
 	[0,          6, 2, 3, 3, 0, 0,     100, 100], // Unicorn
-	["Corwin",   9, 1, 0, 3, 8, "012", 121,  0],
-	["Merlin",   5, 1, 2, 0, 8, "b56", 131, 43], // yellow
-	["Benedict", 10,2, 0, 1, 6, "356", 21,  22], // blue
+	["Corwin",   9, 1, 0, 3, 7, "012", 121,  0],
+	["Merlin",   5, 1, 2, 0, 7, "b56", 131, 43], // yellow
+	["Benedict", 10,2, 0, 1, 6, "046", 21,  22], // blue
 	["Fiona",    4, 1, 1, 1, 5, 0,     33,  6],
-	["Random",   8, 1, 1, 1, 8, 0,     2,   12],
-	["Bleys",    7, 1, 0, 2, 7, 0,     1,  10],
+	["Random",   8, 1, 1, 1, 7, 0,     2,   12],
+	["Bleys",    7, 1, 0, 2, 6, 0,     1,   10],
 	["Julian",   7, 1, 1, 1, 5, "392", 3,   50],// green
-	["Caine",    9, 1, 0, 0, 7, "356", 20,  30],// blue
-	["Gerard",   12,2, 0, 0, 6, 0,     11,  21],
+	["Caine",    9, 1, 0, 0, 6, "096", 20,  30],// blue
+	["Gerard",   12,2, 0, 0, 6, "356", 11,  21],
 ];
 const ENEMIES = [
 	["Manticore",20,5, 2, 1, 1, "cd6", 43,  16],
 	["Guisel",   28,4, 1, 0, 4, "1e2", 21,  21],
 	["Shroud",   16,6, 3, 3, 3, "d65", 300, 111],
-	["Brand",    24,6, 3, 3, 8, "b16", 166, 11]
+	["Brand",    24,6, 3, 3, 7, "b16", 166, 11]
 ];
 
 // each battle: kind*10+lvl, kind 0 lep 1 hydra 2 serpent 3+ named ENEMIES
