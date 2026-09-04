@@ -508,6 +508,7 @@ function startEnemyPhase() {
 }
 
 function performMove(u, x, y, done) {
+	sfx("A");// simple step
 	animating = 1;
 	u.offsetX = u.x - x;
 	u.offsetY = u.y - y;
@@ -554,7 +555,8 @@ function performAttack(u, hits, done) {
 	updateUI();
 	const t = hits[0];
 	poke(u, t ? t.x : u.x, t ? t.y : u.y, () => {
-		for (let i = 0; i < hits.length; i++) hits[i].hp -= u.dmg;
+		sfx("SG", .2);
+		for (let i = 0; i < hits.length; i++) if ((hits[i].hp -= u.dmg) <= 0) sfx("MGA", .2);
 		if (!u.enemy) {
 			const mul = u.hero ? 2 : 1;
 			for (let i = 0; i < hits.length; i++) {

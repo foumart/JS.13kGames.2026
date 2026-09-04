@@ -450,6 +450,7 @@ function flushDyingEnemies() {
 				enemies[y][x] = 0;
 				fillData[y][x] = 1;
 				enemiesCleared ++;
+				sfx("AI", .2);
 				flushed.push([x, y, 0, kind]);
 			}
 			const rescued = collectRescue(x, y);
@@ -484,6 +485,7 @@ function collectCoin(x, y) {
 	if (!coins[y][x]) return 0;
 	coins[y][x] = 0;
 	coinsCollected ++;
+	sfx("QX");
 	return [x, y, 0, -1];
 }
 
@@ -596,6 +598,7 @@ function calcLevelScore() {
 }
 
 function scheduleEndScreen() {
+	sfx(state == 2 ? "IMQX" : "QMIE");
 	waitDelay(()=> {
 		calcLevelScore();
 		if (state == 2 && !scoreBanked) {

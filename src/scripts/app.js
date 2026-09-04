@@ -9,6 +9,8 @@ let pinch;
 function init() {
 	window.addEventListener("resize", resize);
 	document.addEventListener("keydown", onKeyDown, true);
+	document.addEventListener("keydown", initSound);
+	document.addEventListener("pointerdown", initSound);
 	gameCanvas.addEventListener("pointerdown", battleClick);
 	gameCanvas.addEventListener("pointermove", battleHover);
 	gameCanvas.addEventListener("pointerleave", battleHover);
