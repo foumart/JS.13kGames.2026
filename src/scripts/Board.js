@@ -51,8 +51,6 @@ let leftTotalThisLevel = 0;
 let leftoverKinds = [0, 0, 0];
 let leftUnitsThisLevel = [0, 0, 0];
 let leftGoldThisLevel = 0;
-let leftUnitConverted = 0;
-let goldFlies = [];
 let rescuedUnits = [];
 let deadUnits = [];
 let levelCaptives = [];
@@ -75,29 +73,35 @@ const UNITS = [
 ];
 const ENEMIES = [
 	["Manticore",20,5, 2, 1, 1, "cd6", 43,  16],
-	["Guisel",   28,4, 1, 0, 4, "1e2", 21,  21],
-	["Shroud",   16,6, 3, 3, 3, "d65", 300, 111],
 	["Brand",    24,6, 3, 3, 7, "b16", 166, 11]
 ];
 
-// each battle: kind*10+lvl, kind 0 lep 1 hydra 2 serpent 3+ named ENEMIES
-const BATTLES = [
-	[2], [4], [11,2,2],
-	[5,4,4], [12], [21,5,5],
-	[11,11], [13,4,4], [22,3,3],
-	[21,21], [23,5,5], [30,21,21],
-	[15,11,11], [25,3,3], [40,23,23],
-	[15,22,22], [30,30,30], [50,13,13],
-	[40,30,30], [25,14,14], [60,50,50]
-];
+// A boss plus the two lesser foes are encoded like: kind * 10 + lvl
+// 0:leprechaun, 1:hydra, 2:serpent, 3:manticore, 4:brand
+let battleWaves = [];
 
+function battleWave(b) {
+	if (battleWaves[b]) return battleWaves[b];
+	const w = b / 3 | 0;
+	const s = b % 3;
+	const lvl = 1 + (b / 5 | 0);
+	const foe = n => (w < 3 ? w : RNG(3)) * 10 + (n > 5 ? 5 : n);
+	const esc = lvl + (s > 1 ? 1 : 0);
+	return battleWaves[b] = [
+		w > 4 && s > 1 ? w * 10 - 20 : foe(lvl + (s ? 2 : 1)),
+		foe(esc),
+		foe(esc)
+	];
+}
+
+// levels 2-5 color palettes, level 1 uses the unit's own palette
 const EnemyPalettes = [
 	// 2 - leprechaun
-	["d72", "3d2", "d32", "eb2", "abe"],
+	["d72", "3d2", "d32", "eb2"],
 	// 3 - hydra
-	["396", "bd2", "382", "bce", "abe"],
+	["396", "bd2", "382", "bce"],
 	// 4 - serpent
-	["456" ,"ce2", "382", "bde", "abe"]
+	["456" ,"ce2", "382", "bde"]
 ]
 
 const UP = [0, -1];
@@ -106,7 +110,7 @@ const DOWN = [0, 1];
 const LEFT = [-1, 0];
 
 const ROOK = [UP, RIGHT, DOWN, LEFT];
-// 4 rook dirs, 4 bishop dirs, 8 knight hops - a unit's rays are a mask over these
+// 4 rook dirs, 4 bishop dirs, 8 knight jumps - masked unit rays
 const DIRS = [...ROOK, [1, 1], [1, -1], [-1, 1], [-1, -1], [1, -2], [-1, -2], [2, -1], [-2, -1], [1, 2], [-1, 2], [2, 1], [-2, 1]];
 // move/atk type - the rays a unit is spawned with: 0:+, 1:x 2:*, 3:knight, 4:around
 const RAYBASE = [[1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 1, 1]];
@@ -193,8 +197,6 @@ function initBoard() {
 	leftTotalThisLevel = 0;
 	leftUnitsThisLevel = [0, 0, 0];
 	leftGoldThisLevel = 0;
-	leftUnitConverted = 0;
-	goldFlies = [];
 	revealPlayerTile = 0;
 	state = 1;
 	showEnd = 0;
@@ -306,34 +308,13 @@ function countEnemiesLeft() {
 }
 
 function countEnemiesAndCoinsLeft() {
-	const golds = [];
-	const leps = [];
+	leftGoldThisLevel = 0;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (coins[y][x]) golds.push([x, y]);
-			if (enemies[y][x] == 1) leps.push([x, y]);
+			if (coins[y][x]) leftGoldThisLevel ++;
 		}
 	}
-	leftGoldThisLevel = golds.length;
-	leftUnitConverted = Math.min(golds.length, leps.length);
-	goldFlies = [];
-	for (let i = 0; i < leftUnitConverted; i++) {
-		const g = golds[i];
-		const l = leps[i];
-		coins[g[1]][g[0]] = 0;
-		const fly = { x: g[0], y: g[1] };
-		goldFlies.push(fly);
-		tween(fly, 60, { x: l[0], y: l[1] }, () => {
-			enemies[l[1]][l[0]] = 3;
-			const k = goldFlies.indexOf(fly);
-			if (k >= 0) goldFlies.splice(k, 1);
-			if (!goldFlies.length) {
-				countEnemiesLeft();
-				scheduleEndScreen();
-			}
-		}, -9);
-	}
-	if (!goldFlies.length) countEnemiesLeft();
+	countEnemiesLeft();
 }
 
 function waitDelay(callback, frames = 30) {
@@ -639,18 +620,6 @@ function drawMoveArrows(size) {
 	}
 }
 
-function drawGoldFlies(size) {
-	const n = goldFlies.length;
-	if (!n) return;
-	const cs = size * 0.8;
-	for (let i = 0; i < n; i++) {
-		const f = goldFlies[i];
-		const px = boardOffsetX + f.x * size + (size - cs) / 2;
-		const py = boardOffsetY + f.y * size + size - cs - size * 0.06;
-		blit(objectBitmaps[1], px, py, cs);
-	}
-}
-
 function checkCaptures(flushAcc) {
 	const clusters = getClusters();
 	for (let i = 0; i < clusters.length; i++) {
@@ -667,7 +636,7 @@ function checkCaptures(flushAcc) {
 		countEnemiesAndCoinsLeft();
 		revealPlayerTile = 1;
 		state = 2;
-		if (!goldFlies.length) scheduleEndScreen();
+		scheduleEndScreen();
 		return;
 	}
 
@@ -787,7 +756,6 @@ function clearLeftovers() {
 	leftoverKinds = [0, 0, 0];
 	leftUnitsThisLevel = [0, 0, 0];
 	leftGoldThisLevel = 0;
-	leftUnitConverted = 0;
 }
 
 function afterBattleWin() {
@@ -816,6 +784,7 @@ function restartCampaign() {
 	deadUnits = [];
 	levelCaptives = [];
 	generatedLevels = [];
+	battleWaves = [];
 	unitMods = {};
 	battleParty = [];
 	battleKind = 0;
@@ -920,7 +889,7 @@ function debugAdvance() {
 	countEnemiesAndCoinsLeft();
 	revealPlayerTile = 1;
 	state = 2;
-	if (!goldFlies.length) scheduleEndScreen();
+	scheduleEndScreen();
 }
 
 function debugClearLevel() {
@@ -937,7 +906,7 @@ function debugClearLevel() {
 	countEnemiesAndCoinsLeft();
 	revealPlayerTile = 1;
 	state = 2;
-	if (!goldFlies.length) scheduleEndScreen();
+	scheduleEndScreen();
 	redraw();
 }
 
@@ -1071,6 +1040,5 @@ function drawBoard() {
 
 	if (!battleActive) {
 		drawMoveArrows(size);
-		drawGoldFlies(size);
 	}
 }

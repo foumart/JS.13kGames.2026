@@ -57,7 +57,7 @@ function getBattleUIAlly() {
 
 function getBattleUIFoe() {
 	if (showPick) {
-		const v = BATTLES[levelIndex / 3 | 0][0];
+		const v = battleWave(levelIndex / 3 | 0)[0];
 		return createEnemy(v / 10 | 0, 0, 0, v % 10);
 	}
 	if (battleSelect && battleSelect.enemy && battleSelect.hp > 0) return battleSelect;

@@ -22,7 +22,6 @@ let upgradeCurUnit = 0;
 let upgradeCurOpt = 0;
 let battleKind = 0; // 1 regular, 2 boss
 
-
 function startBattle() {
 	battleActive = 1;
 	hideEndButtons();
@@ -152,7 +151,8 @@ function upgradeId(u) {
 	return u.hero ? 0 : u.name;
 }
 
-// 1 hp, 2 dmg, 3 move ray, 4 attack ray, 5 around — extras unlock after 1 then 2 picks
+// 1 hp, 2 dmg, 3 move ray, 4 attack ray, 5 around
+// 3 and 4 unlock after a few picks, 5 unlocks for unicorn only
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
@@ -228,10 +228,15 @@ function applyUpgradePicks() {
 	}
 }
 
+function smarten(u, on) {
+	u.smart = on;
+	return u;
+}
+
 function createEnemy(unitType, x, y, l) {
-	if (unitType > 2) return makeUnit(ENEMIES[unitType - 3], x, y, 5);
+	if (unitType > 2) return smarten(makeUnit(ENEMIES[unitType - 3], x, y, 5), 1);
 	l = l > 5 ? 5 : l || 1;
-	return makeUnit([
+	return smarten(makeUnit([
 		,
 		// unitType: 0 leprechaun, 1 hydra, 2 serpent, lvl 1-5
 		// HP:
@@ -240,14 +245,16 @@ function createEnemy(unitType, x, y, l) {
 		// DMG
 		unitType ? unitType - 1 + l * (3 - unitType)
 			: l < 3 ? 1 : 3,
+		// move & attack rays
 		unitType ? 2 : 0,
 		unitType ? 2 : 1,
+		//
 		2 + unitType,
 		getEnemyPalette(unitType, l),
-		// enemies never upgrade, so they are simply born at their ceiling
+		// enemies are created at their ray ceiling
 		unitType > 1 ? 22 : 0,
 		!unitType && l > 3 ? 2 : 0
-	], x, y, unitType ? 4 : 3);
+	], x, y, unitType ? 4 : 3), unitType ? l > 2 : l > 4);
 }
 
 function spawnEnemies() {
@@ -258,8 +265,8 @@ function spawnEnemies() {
 		taken[x] = 1;
 		clearRock(x, 0);
 	};
-	const wave = BATTLES[levelIndex / 3 | 0];
-	const xs = wave.length == 2 ? [cx - 2, cx + 2] : [cx, cx - 2, cx + 2];
+	const wave = battleWave(levelIndex / 3 | 0);
+	const xs = [cx, cx - 2, cx + 2];
 	for (let i = 0; i < wave.length; i++) {
 		const v = wave[i];
 		const kind = v / 10 | 0;
@@ -628,14 +635,15 @@ function pickKnightAim(u, dx, dy, dx2, dy2) {
 	return best;
 }
 
+// pass a turn (move/act) by unicorn
 function battleEndTurn() {
-	if (!battleActive || battleResult || animating || battlePhase) return;
+	if (!battleActive || battleResult || animating || battlePhase || thinking) return;
 	battleEpoch ++;
 	battleAim = null;
 	battleTiles = [];
 	battleHints = [];
 	battleControl = null;
-	startEnemyPhase();
+	nextRoundPhase();
 	updateUI();
 }
 

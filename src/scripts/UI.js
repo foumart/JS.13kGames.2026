@@ -154,22 +154,22 @@ function enemyCard(size) {
 		d.appendChild(line(4, "upcoming in"));
 		d.appendChild(line(4, (4-stageNumber()) + " puzzles"));
 	}
+	const seen = {};
 	const add = (n, v, s) => {
-		if (!n) return;
+		if (!n || seen[v]) return;
+		seen[v] = 1;
 		const r = row();
 		//if (v == 2 && !showPick) r.appendChild(line(3, "!"));
 		r.appendChild(foeThumb(v, s));
 		//if (v != 2) r.appendChild(line(4, ": " + n));
 		d.appendChild(r);
 	};
-	const w = BATTLES[levelIndex / 3 | 0];
-	for (let i = 0; i < w.length;) {
-		let n = 1;
-		while (w[i + n] == w[i]) n++;
-		add(n, w[i], size * .75);
-		i += n;
-	}
-	for (let k = 0; k < 3; k++) add(leftoverKinds[k], k + 1, size / 2);
+	const w = battleWave(levelIndex / 3 | 0);
+	const small = size * .45;
+	add(1, w[0], size * .8);
+	add(1, w[1], small);
+	add(1, w[2], small);
+	for (let k = 0; k < 3; k++) add(leftoverKinds[k], k + 1, small);
 	return d;
 }
 

@@ -41,7 +41,7 @@ function nextUnitInQueue(list, then) {
 	next();
 }
 
-// Highest scoring entry, ties randomly
+// get highest scoring entry, in case of a tie - pick randomly
 function bestByScore(list, scoreFn) {
 	let best = -1;
 	let bestS = -999;
@@ -57,14 +57,53 @@ function bestByScore(list, scoreFn) {
 
 function battleThink(u, done) {
 	const want = u.enemy ? 0 : 1;
+	const far = u.atkRay[0][2] > 1;
+	const danger = {};
+	const ownHp = u.hp;
+	u.hp = 0;
+	for (const t of battleUnits) {
+		if (t.hp <= 0 || t.enemy == u.enemy) continue;
+		const from = t.moves();
+		from.push(t);
+		for (let k = 0; k < from.length; k++) {
+			const scan = t.rayScan(from[k].x, from[k].y);
+			for (let i = 0; i < scan.length; i++) {
+				const cells = scan[i][0];
+				for (let j = 0; j < cells.length; j++) danger[cells[j]] = 1;
+			}
+		}
+	}
+	u.hp = ownHp;
+	const safeAt = m => !danger[[m.x, m.y]];
+	const score = m => {
+		const hp = u.hp;
+		u.hp = 0;
+		const h = u.hits(m.x, m.y).length;
+		u.hp = hp;
+		const safe = far && safeAt(m);
+		const p = getProbability(m.x, m.y, want);
+		return far ? (safe ? 2000 : 0) + h * 999 + (h ? -p : p) : h * 999 + p;
+	};
+	const retreat = m => (safeAt(m) ? 2000 : 0) + getProbability(m.x, m.y, want);
 	const stayHits = u.hits(u.x, u.y);
+	// smart enemies could either attack/move or move/attack depending on outcome
+	let better = 0;
+	if (u.smart) {
+		const step = u.moves();
+		const hp = u.hp;
+		u.hp = 0;
+		for (let i = 0; i < step.length; i++) {
+			if (u.hits(step[i].x, step[i].y).length > stayHits.length) better = 1;
+		}
+		u.hp = hp;
+	}
 
-	if (stayHits.length) {//u.strikeFirst &&
+	if (stayHits.length && !better) {
 		previewTiles(u, 1, () => performAttack(u, stayHits, () => {
 			if (checkForBattleEnd()) return;
 			const moves = u.moves();
-			const [best] = bestByScore(moves, m => getProbability(m.x, m.y, want));
-			if (best < 0) {
+			const [best, bestS] = bestByScore(moves, retreat);
+			if (best < 0 || retreat(u) > bestS) {
 				u.moved = 1;
 				done();
 				return;
@@ -75,10 +114,9 @@ function battleThink(u, done) {
 	}
 
 	const moves = u.moves();
-	// stayHits is empty here - the branch above returns when it is not
-	let stayS = getProbability(u.x, u.y, want);
-	if (u.advance) stayS = -1;
-	const [best, bestS] = bestByScore(moves, m => u.hits(m.x, m.y).length * 10 + getProbability(m.x, m.y, want));
+	let stayS = score(u);
+	if (u.advance) stayS = -9999;
+	const [best, bestS] = bestByScore(moves, score);
 	if (best < 0 || stayS > bestS || stayS == bestS && RNG(2)) {
 		u.moved = 1;
 		u.acted = 1;
