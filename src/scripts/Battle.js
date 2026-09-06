@@ -239,12 +239,10 @@ function createEnemy(unitType, x, y, l) {
 	return smarten(makeUnit([
 		,
 		// unitType: 0 leprechaun, 1 hydra, 2 serpent, lvl 1-5
-		// HP:
-		unitType ? unitType * 3 + l * (4 - unitType)
-			: l + 1,
-		// DMG
-		unitType ? unitType - 1 + l * (3 - unitType)
-			: l < 3 ? 1 : 3,
+		// HP: hydra levels 1-5 then serpent
+		unitType ? [5,8,12,16,20,8,12,16,20,24][unitType * 5 + l - 6] : l + 1,
+		// DMG - a grown serpent trades a point for striking every ray at once
+		unitType ? [2,4,5,6,8,5,6,8,7,9][unitType * 5 + l - 6] : l + 1 >> 1,
 		// move & attack rays
 		unitType ? 2 : 0,
 		unitType ? 2 : 1,
@@ -252,9 +250,9 @@ function createEnemy(unitType, x, y, l) {
 		2 + unitType,
 		getEnemyPalette(unitType, l),
 		// enemies are created at their ray ceiling
-		unitType > 1 ? 22 : 0,
+		unitType == 1 ? 11 : unitType == 2 ? 121 : 0,
 		!unitType && l > 3 ? 2 : 0
-	], x, y, unitType ? 4 : 3), unitType ? l > 2 : l > 4);
+	], x, y, unitType ? unitType < 2 || l > 3 ? 4 : 6 : 3), unitType ? l > 2 : l > 4);
 }
 
 function spawnEnemies() {

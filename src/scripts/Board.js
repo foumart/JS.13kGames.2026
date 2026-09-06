@@ -61,37 +61,34 @@ const UNITS = [
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
 	[0,          6, 2, 3, 3, 0, 0,     100, 100], // Unicorn
-	["Corwin",   9, 1, 0, 3, 7, "012", 121,  0],
-	["Merlin",   5, 1, 2, 0, 7, "b56", 131, 43], // yellow
-	["Benedict", 10,2, 0, 1, 6, "046", 21,  22], // blue
-	["Fiona",    4, 1, 1, 1, 5, 0,     33,  6],
-	["Random",   8, 1, 1, 1, 7, 0,     2,   12],
-	["Bleys",    7, 1, 0, 2, 6, 0,     1,   10],
-	["Julian",   7, 1, 1, 1, 5, "392", 3,   50],// green
-	["Caine",    9, 1, 0, 0, 6, "096", 20,  30],// blue
+	["Corwin",   9, 1, 0, 3, 7, "012", 121, 0],
+	["Merlin",   6, 1, 2, 0, 7, "b56", 131, 43], // yellow
+	["Benedict", 10,2, 0, 2, 6, "046", 21,  21], // blue
+	["Fiona",    5, 1, 1, 2, 5, 0,     33,  16],
+	["Random",   8, 1, 0, 1, 7, 0,     12,  22],
+	["Bleys",    8, 1, 0, 0, 6, 0,     21,  11],
+	["Julian",   7, 1, 0, 1, 5, "392", 121, 61],// green
+	["Caine",    8, 1, 0, 0, 6, "096", 11,  40],// blue
 	["Gerard",   12,2, 0, 0, 6, "356", 11,  21],
 ];
 const ENEMIES = [
-	["Manticore",20,5, 2, 1, 1, "cd6", 43,  16],
-	["Brand",    24,6, 3, 3, 7, "b16", 166, 11]
+	["Manticore",28,8, 3, 1, 1, "cd6", 143, 16],
+	["Brand",    32,9, 3, 3, 7, "b16", 166, 21]
 ];
 
 // A boss plus the two lesser foes are encoded like: kind * 10 + lvl
 // 0:leprechaun, 1:hydra, 2:serpent, 3:manticore, 4:brand
-let battleWaves = [];
+// Boss then escort for all 21 battles, one char each: kind * 5 + lvl - 1 off "0", so
+// 0-4 leprechaun, 5-9 hydra, 10-14 serpent, 15 manticore, 20 brand. Worlds 1-3 each
+// introduce a kind backed by the previous one's veterans, then it climbs to Brand.
+const WAVES = "213142516374:4;5<6768;86=;=6969<97?=><?>D?";
 
 function battleWave(b) {
-	if (battleWaves[b]) return battleWaves[b];
-	const w = b / 3 | 0;
-	const s = b % 3;
-	const lvl = 1 + (b / 5 | 0);
-	const foe = n => (w < 3 ? w : RNG(3)) * 10 + (n > 5 ? 5 : n);
-	const esc = lvl + (s > 1 ? 1 : 0);
-	return battleWaves[b] = [
-		w > 4 && s > 1 ? w * 10 - 20 : foe(lvl + (s ? 2 : 1)),
-		foe(esc),
-		foe(esc)
-	];
+	const foe = i => {
+		const c = WAVES.charCodeAt(b * 2 + i) - 48;
+		return (c / 5 | 0) * 10 + c % 5 + 1;
+	};
+	return [foe(0), foe(1), foe(1)];
 }
 
 // levels 2-5 color palettes, level 1 uses the unit's own palette
@@ -784,7 +781,6 @@ function restartCampaign() {
 	deadUnits = [];
 	levelCaptives = [];
 	generatedLevels = [];
-	battleWaves = [];
 	unitMods = {};
 	battleParty = [];
 	battleKind = 0;
