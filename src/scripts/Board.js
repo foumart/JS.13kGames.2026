@@ -81,7 +81,7 @@ const ENEMIES = [
 // Boss then escort for all 21 battles, one char each: kind * 5 + lvl - 1 off "0", so
 // 0-4 leprechaun, 5-9 hydra, 10-14 serpent, 15 manticore, 20 brand. Worlds 1-3 each
 // introduce a kind backed by the previous one's veterans, then it climbs to Brand.
-const WAVES = "213142516374:4;5<6768;86=;=6969<97?=><?>D?";
+/*const WAVES = "213142516374:4;5<6768;86=;=6969<97?=><?>D?";
 
 function battleWave(b) {
 	const foe = i => {
@@ -89,7 +89,26 @@ function battleWave(b) {
 		return (c / 5 | 0) * 10 + c % 5 + 1;
 	};
 	return [foe(0), foe(1), foe(1)];
+}*/
+
+// 21 battles, 4×21 digits: boss kind, boss lvl, escort kind, escort lvl
+const WAVES = "000111222111221113234345123123344445551511000000011121211212223223245512222222334351";
+
+function battleWave(b) {
+	const n = i => WAVES.charCodeAt(b + 21 * i) - 48;
+	b = n(2) * 10 + n(3);
+	return [n(0) * 10 + n(1), b, b];
 }
+
+
+// 21×2 chars, bitmap 6-bit: kind in bits 0-2, lvl in 3-5 (base 64 like sprites)
+/*const WAVES = "XP`PhXIPQ`YhJhRIZQYQaRaQbRbQiQiZiYKbjZKjLK";
+
+function battleWave(b) {
+	const n = i => (i = WAVES.charCodeAt(b * 2 + i), (i & 7) * 10 + (i >> 3 & 7));
+	return [n(0), n(1), n(1)];
+}*/
+
 
 // levels 2-5 color palettes, level 1 uses the unit's own palette
 const EnemyPalettes = [
@@ -697,19 +716,19 @@ function showBattleTurnButton() {
 
 function showEndButtons() {
 	Y.style.display = "block";
-	Y.textContent = "RE" + (lives ? "TRY" : "START");
+	Y.textContent = "Re" + (lives ? "try" : "start");
 	Y.onclick = lives ? resetHere : restartCampaign;
 	N.style.opacity = "1";
 	N.onclick = battleActive ? afterBattleWin : nextLevel;
 	N.textContent = battleActive && levelIndex > campaignLength - 2 ? "REPLAY"
-		: !puzzleMode && !battleActive && levelIndex % 3 == 2 ? "CONFRONT" : "NEXT";
+		: !puzzleMode && !battleActive && levelIndex % 3 == 2 ? "Confront" : "Next";
 	N.style.display = lives && state == 2 ? "block" : "none";
 	syncEndCursor();
 }
 
 function showObjectiveButtons() {
 	Y.style.display = "none";
-	N.textContent = "PLAY";
+	N.textContent = "Play";
 	N.onclick = showPick ? confirmParty : dismissObjective;
 	N.style.display = "block";
 	N.style.opacity = "1";

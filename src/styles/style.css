@@ -74,15 +74,15 @@ body {
 }
 
 .on {
-	background: #fff;
-	color: #103;
+	background: #fd6;
+	/*color: #103;*/
 	/*box-shadow: 0 0 0 2vmin #fe8;*/
-	outline: 2vmin solid #fe8;
+	/*outline: 1.5vmin solid #fe8;*/
 	/*margin: 2vmin;*/
 }
 
 .cur {
-	outline: 2vmin solid #6e6;
+	outline: 1.5vmin solid #6e6;
 	/*outline-offset: 2vmin;*/
 }
 
@@ -97,6 +97,10 @@ body {
 	padding: 2vmin;
 	margin: 1vmin;
 	/*outline: 2vmin solid #b9f8;*/
+}
+
+.of {
+	background: #bac;
 }
 
 button {
@@ -114,4 +118,8 @@ button {
 	font-size: 3vmin;
 	padding: 1vmin 2vmin;
 	margin: 2vmin;
+}
+
+hr {
+	margin: 1vmin;
 }

@@ -45,7 +45,7 @@ function appendLine(c, t) {
 
 function line(c = 3, t = "\xa0") {
 	const d = row();
-	d.className = ["x", "e", "l", "s", "m"][c];
+	d.className = "xelsm"[c];
 	d.textContent = t;
 	return d;
 }
@@ -70,8 +70,9 @@ function updateUI() {
 	if (menu == 1) {
 		//L.textContent = "FoumartGames presents:js13k game by Noncho Savov";
 		L.textContent = "";
-		L.appendChild(line(4, "FoumartGames presents:"));
-		L.appendChild(line(3, "js13k game by Noncho Savov"));
+		//L.appendChild(line(4, "FoumartGames presents:"));
+		//L.appendChild(line(3, "js13k game by Noncho Savov"));
+		L.appendChild(line(3, "by Noncho Savov"));
 		R.textContent = "v{VERSION}";
 		//R.textContent = "";
 		//R.appendChild(line(4, "Arrows - move"));
@@ -151,7 +152,7 @@ function enemyCard(size) {
 	const d = row();
 	d.style.display = "block";
 	if (!showPick) {
-		d.appendChild(line(4, "upcoming in"));
+		d.appendChild(line(4, "Upcoming in"));
 		d.appendChild(line(4, (4-stageNumber()) + " puzzles"));
 	}
 	const seen = {};
@@ -210,21 +211,19 @@ function fillPick() {
 	printProgress();
 	appendLine(3, need > 1 ? "Pick " + need + " allies" : "Your ally");
 	appendLine(4);
-	const r = row();
+	const pickRow = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
 		const dead = isDeadBmp(bmp);
 		if (dead) continue;
 		const wrap = row();
-		wrap.className = "g" + (battleParty.indexOf(bmp) >= 0 ? " on" : " in") + (i == pickCursor ? " cur" : "");
-		const c = createIcon(rescuedUnits[i], size);
-		/*if (dead) {
-			c.style.opacity = "0.5";
-		} else */wrap.onclick = toggleParty.bind(null, bmp);
-		wrap.appendChild(c);
-		r.appendChild(wrap);
+		wrap.className = "g" + (battleParty.indexOf(bmp) >= 0 ? " of" : " in") + (i == pickCursor ? " cur" : "");
+		const icon = createIcon(rescuedUnits[i], size);
+		wrap.onclick = toggleParty.bind(null, bmp);
+		wrap.appendChild(icon);
+		pickRow.appendChild(wrap);
 	}
-	msg.appendChild(r);
+	msg.appendChild(pickRow);
 	const name = rescuedUnits[pickCursor];
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
@@ -239,7 +238,7 @@ function fillPick() {
 function fillUpgrade() {
 	const size = uiSize();
 	appendLine(1, "VICTORY!");
-	appendLine(3, "Choose a bonus");
+	//appendLine(3, "Choose a bonus");
 	const list = battleRoster();
 	let live = 0;
 	for (let i = 0; i < list.length; i++) {
@@ -248,11 +247,20 @@ function fillUpgrade() {
 		const id = upgradeId(unit);
 		const pick = upgradePicks[id];
 		const kinds = upgradeKinds(unit);
-		const r = row();
-		const ic = createSpriteIcon(size, s => drawUnitIcon(unit, s / 2, s / 2, s));
-		if (fallen) ic.style.opacity = "0.5";
-		r.appendChild(ic);
-		const col = line(3);
+		
+		const upgradeTab = row();
+		
+		const thumb = line(3, "");
+		const name = line(4, unit.name || "Unicorn");
+		thumb.appendChild(name);
+
+		const icon = createIcon(unit, size * .65);
+		icon.className = "if";
+		if (fallen) icon.style.opacity = "0.5";
+		thumb.appendChild(name);
+		thumb.appendChild(icon);
+
+		const col = line(3, "");
 		if (fallen) col.textContent = "fallen";
 		else {
 			col.appendChild(createUnitStatsText(unit, ""));
@@ -261,15 +269,19 @@ function fillUpgrade() {
 			for (let k = 0; k < kinds.length; k++) {
 				const b = document.createElement("button");
 				b.textContent = upgradeLabel(kinds[k], unit);
-				b.className = (pick == kinds[k] ? "on" : "") + (curRow && k == upgradeCurOpt ? " cur" : "");
+				b.className = (pick == kinds[k] ? "on" : "of") + (curRow && k == upgradeCurOpt ? " cur" : "");
 				b.onclick = setUpgrade.bind(null, id, kinds[k]);
 				btns.appendChild(b);
 			}
 			col.appendChild(btns);
 			live++;
 		}
-		r.appendChild(col);
-		msg.appendChild(r);
+
+		upgradeTab.appendChild(thumb);
+		upgradeTab.appendChild(col);
+
+		msg.appendChild(upgradeTab);
+		msg.appendChild(document.createElement("hr"));
 	}
 }
 
@@ -291,7 +303,7 @@ function fillEnd() {
 		if (isPerfect()) {
 			const row1 = row();
 			appendLine(2, "Perfect!");
-			appendLine(3, "Bonus: 100");
+			//appendLine(3, "Bonus: 100");
 			//row1.appendChild(createSparkAnim(size));
 			//row1.appendChild(line(1, "+1"));
 			msg.appendChild(row1);
