@@ -1,5 +1,3 @@
-let debugKeys = 1; // 0 for release zip
-
 // arrow keys / WASD -> [dx, dy], else 0
 function arrowDXY(k) {
 	if (k == 38 || k == 87) return UP;
@@ -16,18 +14,9 @@ function resetHere() {
 }
 
 function onKeyDown(event) {
+	if (debugKeys && debugOnKey(event)) return;
 	const k = event.keyCode;
 	const d = arrowDXY(k);
-	if (debugKeys && (k == 78 || event.key == "n" || event.key == "N")) {
-		event.preventDefault();
-		if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-		debugAdvance();
-		return;
-	}
-	if (debugKeys && k == 66 && !battleActive) {
-		debugSkipToBattle();
-		return;
-	}
 	if (k == 27) {
 		event.preventDefault();
 		togglePause();
