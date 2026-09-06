@@ -91,13 +91,14 @@ function battleWave(b) {
 	return [foe(0), foe(1), foe(1)];
 }*/
 
-// 21 battles, 4×21 digits: boss kind, boss lvl, escort kind, escort lvl
-const WAVES = "000111222111221113234345123123344445551511000000011121211212223223245512222222334351";
+// 21 battles: boss kind,           boss lvl,            escort kind,         escort lvl
+//             .....................:::::::::::::::::::::.....................:::::::::::::::::::::
+const WAVES = "000111222111221113234345123123344445551511000000011121211212223123245512222222334351";
 
 function battleWave(b) {
 	const n = i => WAVES.charCodeAt(b + 21 * i) - 48;
-	b = n(2) * 10 + n(3);
-	return [n(0) * 10 + n(1), b, b];
+	const e = n(2) * 10 + n(3);
+	return [n(0) * 10 + n(1), e, e];
 }
 
 
