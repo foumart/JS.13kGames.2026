@@ -3,16 +3,8 @@
 let generatedLevels = [];
 const genDirs = ROOK;
 
-function isBossStage(stage) {
-	return stage % 9 == 8;
-}
-
 function hasRescue(stage) {
 	return stage < 9 ? stage % 3 == 2 : stage % 9 == 8;
-}
-
-function isBossBattle() {
-	return isBossStage(levelIndex);
 }
 
 function getLevelData(stage) {

@@ -20,8 +20,6 @@ let pickCursor = 0;
 let upgradePicks = {};
 let upgradeCurUnit = 0;
 let upgradeCurOpt = 0;
-let battleKind = 0; // 1 regular, 2 boss
-
 function startBattle() {
 	battleActive = 1;
 	hideEndButtons();

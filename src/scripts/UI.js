@@ -174,13 +174,9 @@ function enemyCard(size) {
 	return d;
 }
 
-function getTitle(battle) {
-	return "World " + worldNumber() + "-" + shadowNumber();
-}
-
 function printProgress() {
-	appendLine(1 - portrait, puzzleMode ? "Puzzle " + (levelIndex + 1) : getTitle());
-	if (!puzzleMode) appendLine(2 - portrait, battleActive ? "Vail " + battleKind + " - battle" : "Puzzle " + stageNumber());
+	appendLine(1 - portrait, puzzleMode ? "Puzzle " + (levelIndex + 1) : "World " + worldNumber() + "-" + shadowNumber());
+	if (!puzzleMode) appendLine(2 - portrait, (battleActive ? "Vail " : "Puzzle ") + (1 + (battleActive ? levelIndex / 3 | 0 : levelIndex) % 3));
 }
 
 function fillBrief() {

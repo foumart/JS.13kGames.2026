@@ -759,7 +759,6 @@ function nextLevel() {
 	leftTotalThisLevel = 0;
 	leftUnitsThisLevel = [0, 0, 0];
 	if (!puzzleMode && levelIndex % 3 == 2) {
-		battleKind = isBossBattle() ? 2 : 1;
 		startBattle();
 	} else if (levelIndex < campaignLength - 1) {
 		levelIndex ++;
@@ -783,7 +782,6 @@ function afterBattleWin() {
 	upgradePicks = {};
 	showPick = 0;
 	hideEndButtons();
-	battleKind = 0;
 	battleActive = 0;
 	battleResult = 0;
 	scoreStart = totalScore;
@@ -803,7 +801,6 @@ function restartCampaign() {
 	generatedLevels = [];
 	unitMods = {};
 	battleParty = [];
-	battleKind = 0;
 	battleActive = 0;
 	showPick = 0;
 	showUpgrade = 0;
@@ -936,7 +933,6 @@ function debugSkipToBattle() {
 		rescuedUnits.push(pool.splice(j, 1)[0]);
 	}
 	if (!leftoverEnemies) leftoverEnemies = leftTotalThisLevel || 3;
-	battleKind = 1;
 	startBattle();
 }
 
