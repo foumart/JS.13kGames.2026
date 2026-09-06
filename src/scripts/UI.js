@@ -102,6 +102,7 @@ function updateUI() {
 	ov.style.background = fade ? "#103c" : "";
 	if (!fade) {
 		msg.textContent = "";
+		hideEndButtons();
 		return;
 	}
 
@@ -117,12 +118,7 @@ function updateUI() {
 	else if (showObjective) fillBrief();
 	else fillEnd();
 
-	// bottom
-	if (menu) showMenuButtons();
-	else if (showPick || showObjective) showObjectiveButtons();
-	else if (showUpgrade || showEnd) showEndButtons();
-	else if (battleActive && !battleResult) showBattleTurnButton();
-	else hideEndButtons();
+	updateButtons();
 }
 
 function unitCard(unit, size, right) {
@@ -337,4 +333,63 @@ function fillEnd() {
 		appendLine(2, "STUCK - R");
 		appendLine(2, "SCORE " + currentScore() + "  MOVES " + moveCount);
 	}*/
+}
+
+let endBtnCur = 0;
+
+function hideEndButtons() {
+	Y.style.display = N.style.display = "none";
+}
+
+function btn(b, t, fn, on) {
+	b.style.display = t ? "block" : "none";
+	if (t) {
+		b.textContent = t;
+		b.onclick = fn;
+		b.style.opacity = on == 0 ? "0.3" : "1";
+	}
+}
+
+function updateButtons() {
+	if (menu) {
+		const t = menu == 1;
+		btn(Y, t ? "Story" : "Resume", t ? () => startMode(0) : togglePause);
+		btn(N, t ? "Puzzle" : "Quit", t ? () => startMode(1) : restartCampaign);
+	} else if (showPick || showObjective) {
+		btn(Y);
+		btn(N, "Play", showPick ? confirmParty : dismissObjective,
+			!showPick || battleParty.length >= Math.min(2, livingRescueCount()));
+	} else {
+		btn(Y, "Re" + (lives ? "try" : "start"), lives ? resetHere : restartCampaign);
+		btn(N, lives && state == 2 && (battleActive && levelIndex > campaignLength - 2 ? "REPLAY"
+			: !puzzleMode && !battleActive && levelIndex % 3 == 2 ? "Confront" : "Next"),
+			battleActive ? afterBattleWin : nextLevel);
+	}
+	syncEndCursor();
+}
+
+function endButtons() {
+	const a = [];
+	if (Y.style.display != "none") a.push(Y);
+	if (N.style.display != "none") a.push(N);
+	return a;
+}
+
+function syncEndCursor() {
+	const a = endButtons();
+	if (endBtnCur >= a.length) endBtnCur = a.length - 1;
+	const on = showUpgrade ? upgradeCurUnit >= upgradeRows().length : showEnd || menu;
+	for (let i = 0; i < a.length; i++) a[i].className = on && i == endBtnCur ? "cur" : "";
+}
+
+function moveEndCursor(dx) {
+	const n = endButtons().length;
+	if (!n || !dx) return;
+	endBtnCur = (endBtnCur + dx + n) % n;
+	syncEndCursor();
+}
+
+function activateEndButton() {
+	const b = endButtons()[endBtnCur];
+	if (b) b.onclick();
 }

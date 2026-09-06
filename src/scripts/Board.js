@@ -608,7 +608,6 @@ function scheduleEndScreen() {
 
 		showEnd = 1;
 		endBtnCur = 1; // start on NEXT; clamps back to RETRY when it is the only one
-		showEndButtons();
 		redraw();
 	});
 }
@@ -672,81 +671,9 @@ function checkCaptures(flushAcc) {
 	}
 }
 
-function hideEndButtons() {
-	Y.style.display = N.style.display = "none";
-}
-
-// Keyboard focus across the RETRY / NEXT buttons
-let endBtnCur = 0;
-
-function endButtons() {
-	const a = [];
-	if (Y.style.display != "none") a.push(Y);
-	if (N.style.display != "none") a.push(N);
-	return a;
-}
-
-function syncEndCursor() {
-	const a = endButtons();
-	if (endBtnCur >= a.length) endBtnCur = a.length - 1;
-	const on = showUpgrade ? upgradeCurUnit >= upgradeRows().length : showEnd || menu;
-	for (let i = 0; i < a.length; i++) a[i].className = on && i == endBtnCur ? "cur" : "";
-}
-
-function moveEndCursor(dx) {
-	const n = endButtons().length;
-	if (!n || !dx) return;
-	endBtnCur = (endBtnCur + dx + n) % n;
-	syncEndCursor();
-}
-
-function activateEndButton() {
-	const b = endButtons()[endBtnCur];
-	if (b) b.onclick();
-}
-
-function showBattleTurnButton() {
-	const on = !battlePhase && !animating && !thinking;
-	Y.style.display = "none";
-	N.style.display = "block";
-	N.textContent = "END ROUND";
-	N.style.opacity = on ? "1" : "0.3";
-	N.onclick = battleEndTurn;
-	syncEndCursor();
-}
-
-function showEndButtons() {
-	Y.style.display = "block";
-	Y.textContent = "Re" + (lives ? "try" : "start");
-	Y.onclick = lives ? resetHere : restartCampaign;
-	N.style.opacity = "1";
-	N.onclick = battleActive ? afterBattleWin : nextLevel;
-	N.textContent = battleActive && levelIndex > campaignLength - 2 ? "REPLAY"
-		: !puzzleMode && !battleActive && levelIndex % 3 == 2 ? "Confront" : "Next";
-	N.style.display = lives && state == 2 ? "block" : "none";
-	syncEndCursor();
-}
-
-function showObjectiveButtons() {
-	Y.style.display = "none";
-	N.textContent = "Play";
-	N.onclick = showPick ? confirmParty : dismissObjective;
-	N.style.display = "block";
-	N.style.opacity = "1";
-	syncEndCursor();
-	syncPickButton();
-}
-
-function syncPickButton() {
-	if (!showPick) return;
-	const need = Math.min(2, livingRescueCount());
-	N.style.opacity = battleParty.length >= need ? "1" : "0.3";
-}
-
 function dismissObjective() {
 	if (!showObjective) return;
 	showObjective = 0;
-	hideEndButtons();
 	redraw();
 }
 
@@ -781,7 +708,6 @@ function afterBattleWin() {
 	showUpgrade = 0;
 	upgradePicks = {};
 	showPick = 0;
-	hideEndButtons();
 	battleActive = 0;
 	battleResult = 0;
 	scoreStart = totalScore;
@@ -822,22 +748,10 @@ function startMode(puz) {
 	resetLevel();
 }
 
-function showMenuButtons() {
-	const t = menu == 1;
-	Y.style.display = N.style.display = "block";
-	Y.textContent = t ? "Story" : "Resume";
-	N.textContent = t ? "Puzzle" : "Quit";
-	Y.onclick = t ? () => startMode(0) : togglePause;
-	N.onclick = t ? () => startMode(1) : restartCampaign;
-	N.style.opacity = "1";
-	syncEndCursor();
-}
-
 function togglePause() {
 	if (menu == 1 || showPick || showUpgrade || showObjective || showEnd) return;
 	if (menu) {
 		menu = 0;
-		hideEndButtons();
 		redraw();
 		gameStart();
 	} else {

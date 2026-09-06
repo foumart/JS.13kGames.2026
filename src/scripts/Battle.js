@@ -22,7 +22,6 @@ let upgradeCurUnit = 0;
 let upgradeCurOpt = 0;
 function startBattle() {
 	battleActive = 1;
-	hideEndButtons();
 	showEnd = 0;
 	showUpgrade = 0;
 	upgradePicks = {};
@@ -80,7 +79,6 @@ function confirmParty() {
 	const need = Math.min(2, livingRescueCount());
 	if (battleParty.length < need) return;
 	showPick = 0;
-	hideEndButtons();
 	spawnBattleParty();
 	redraw();
 }
@@ -116,7 +114,6 @@ function pickPartyBmp(bmp) {
 	const i = battleParty.indexOf(bmp);
 	if (i >= 0) battleParty.splice(i, 1);
 	else if (battleParty.length < 2) battleParty.push(bmp);
-	syncPickButton();
 	redraw();
 }
 
