@@ -82,14 +82,17 @@ function updateUI() {
 	}
 	else {
 		L.textContent = "Score: " + sc;
-		L.appendChild(document.createElement("hr"));
-		if (!battleActive && !puzzleMode) {
-			L.appendChild(line(4, "The Unicorn"));
-			L.appendChild(line(4, "of Order"));
-			L.appendChild(playerCard(size));
+		if (!puzzleMode) {
+			L.appendChild(document.createElement("hr"));
+			if (!battleActive || battleResult) {
+				L.appendChild(line(4, "The Unicorn"));
+				L.appendChild(line(4, "of Order"));
+				L.appendChild(playerCard(size));
+			}
 		}
-		R.textContent = puzzleMode ? "Hi-score: " + hiscore : "Vail " + shadowNumber();
-		R.appendChild(document.createElement("hr"));
+		R.textContent = puzzleMode ? "Stage " + (levelIndex + 1) : "Vail " + shadowNumber();
+		if (!puzzleMode) R.appendChild(document.createElement("hr"));
+		if (battleResult == 2) R.appendChild(line(4, "cleared!"));
 		if (battleActive && !battleResult || showPick) {
 			if (ally) L.appendChild(unitCard(ally, size, 0));
 			if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
@@ -171,7 +174,7 @@ function enemyCard(size) {
 }
 
 function printProgress() {
-	appendLine(1 - portrait, puzzleMode ? "Puzzle " + (levelIndex + 1) : "World " + worldNumber() + "-" + shadowNumber());
+	appendLine(1 - portrait, puzzleMode ? "Stage " + (levelIndex + 1) : "World " + worldNumber() + "-" + shadowNumber());
 	if (!puzzleMode) appendLine(2 - portrait, (battleActive ? "Vail " : "Puzzle ") + (1 + (battleActive ? levelIndex / 3 | 0 : levelIndex) % 3));
 }
 
@@ -281,7 +284,6 @@ function fillEnd() {
 	if (!lives) {
 		appendLine(1, "GAME OVER");
 		appendLine(2, "SCORE " + currentScore());
-		appendLine(2, "HI-SCORE " + hiscore);
 		return;
 	}
 	if (battleActive) {

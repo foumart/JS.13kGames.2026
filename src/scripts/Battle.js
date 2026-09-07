@@ -343,7 +343,7 @@ function battleFinish(result) {
 	thinking = 0;
 	battleTiles = [];
 	battleHints = [];
-	if (result == 3 && !--lives && currentScore() > hiscore) hiscore = currentScore();
+	if (result == 3) --lives;
 	if (result == 2) {
 		showUpgrade = 1;
 		defaultUpgradePicks();
