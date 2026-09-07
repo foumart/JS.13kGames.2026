@@ -23,7 +23,7 @@ function encodeBitmap(group, dest) {
 }
 
 const unitData = [
-	"eda776433fd049b3592159c6e90465feff8bf59c44834", // color bank
+	"eda665433fd049b3592159c6e90465feff8bf59c44834", // color bank
 	"ab3ac3", // unicorn idle
 	"ab3ac3", // unicorn jump
 	"b52", // leprechaun

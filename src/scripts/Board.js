@@ -831,8 +831,8 @@ function drawBoard() {
 				}
 			} else if (coins[gy][gx]) {
 				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 3) {
-					const cs = size * 0.8;
-					blit(objectBitmaps[1], px + (size - cs) / 2, py + size - cs - size * 0.06, cs);
+					const cs = size * 2 / 3;
+					blit(objectBitmaps[1], px + (size - cs) / 2, py + size - cs, cs);
 				}
 			}
 		}
@@ -862,7 +862,7 @@ function drawBoard() {
 			for (let x = 0; x < boardWidth; x++) {
 				const px = ox + x * size, py = oy + y * size;
 				if (rescues[y][x]) {
-					drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size * 0.9);
+					drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size);
 					if (!rescueDying[y][x]) blit(objectBitmaps[5], px, py, size);
 				}
 				if (enemies[y][x]) {
