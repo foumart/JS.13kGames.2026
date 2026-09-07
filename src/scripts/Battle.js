@@ -651,12 +651,11 @@ function battleClick(event) {
 		dismissObjective();
 		return;
 	}
-	if (!battleActive) {
-		puzzleClick(event);
-		return;
-	}
-	if (battleResult) return;
-	if (animating) return;
+	swipe = event;
+}
+
+function battleTap(event) {
+	if (!battleActive || battleResult || animating) return;
 	const cell = getPosFromEvent(event);
 	if (!cell) return;
 	const occ = getUnitAt(cell.x, cell.y);
@@ -729,9 +728,14 @@ function battleKey(event) {
 	}
 
 	const d = arrowDXY(k);
-	if (!d) return;
-	const dx = d[0];
-	const dy = d[1];
+	if (d) battleDir(d);
+}
+
+function battleDir(d) {
+	if (battleResult || animating || battlePhase || thinking) return;
+	const u = battleControl;
+	if (!u || !u.hero || (u.moved && u.acted)) return;
+	const dx = d[0], dy = d[1];
 
 	if (u.moved && !u.acted && u.atk != 3) {
 		if (u.hits(u.x, u.y).length) playerAttack(u, u.x + dx, u.y + dy);

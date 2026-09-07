@@ -14,6 +14,8 @@ function init() {
 	gameCanvas.addEventListener("pointerdown", battleClick);
 	gameCanvas.addEventListener("pointermove", battleHover);
 	gameCanvas.addEventListener("pointerleave", battleHover);
+	document.addEventListener("pointerup", puzzlePointerUp);
+	document.addEventListener("pointercancel", e => swipe = 0);
 	/*gameCanvas.addEventListener("touchstart", e => { if (e.touches.length == 2) pinch = pinchGap(e); });
 
 	gameCanvas.addEventListener("touchmove", e => {

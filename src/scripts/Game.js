@@ -1,5 +1,7 @@
 function RNG(n) { return Math.random() * n | 0 }
 
+let swipe;
+
 function act(dx, dy) {
 	if (moving || state != 1 || menu || showObjective) return;
 	const nx = player.x + dx;
@@ -27,6 +29,16 @@ function puzzleClick(event) {
 	const dir = puzzleMoveAt(cell.x, cell.y);
 	if (dir) act(dir[0], dir[1]);
 	else startRetract(cell.x, cell.y);
+}
+
+function puzzlePointerUp(e) {
+	if (!swipe) return;
+	const dx = e.clientX - swipe.clientX, dy = e.clientY - swipe.clientY, ax = Math.abs(dx), ay = Math.abs(dy);
+	const start = swipe;
+	swipe = 0;
+	if (ax + ay < 32) return battleActive ? battleTap(start) : puzzleClick(e);
+	const d = ax > ay ? dx > 0 ? RIGHT : LEFT : dy > 0 ? DOWN : UP;
+	battleActive ? battleDir(d) : act(...d);
 }
 
 function gameStart() {
