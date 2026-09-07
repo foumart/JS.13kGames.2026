@@ -55,7 +55,7 @@ function getBattleUIFoe() {
 
 // the ray buttons name what the next step actually grants: R2, B1, or the knight leap
 function upgradeLabel(kind, unit) {
-	if (kind > 4) return "Around";
+	if (kind > 4) return kind > 5 ? "Life +1" : "Around";
 	if (kind < 3) return kind > 1 ? "Dmg +1" : "HP +2";
 	const atk = kind > 3;
 	return (atk ? "Att " : "Move ")
