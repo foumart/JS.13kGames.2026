@@ -743,6 +743,7 @@ function restartCampaign() {
 }
 
 function startMode(puz) {
+	audio = audio || new AudioContext();
 	puzzleMode = puz;
 	menu = 0;
 	resetLevel();
@@ -766,18 +767,19 @@ function blit(src, px, py, s) {
 	getCurrentContext().drawImage(src, 0, 0, tileWidth, tileWidth, px, py, s, s);
 }
 
-function fitBoard(c, r) {
-	const z = Math.max(2, (portrait ? width : height) / 99 - (portrait ? c : r) / 6);
-	const k = Math.min(width / (c + z), height / (r + z)) / cellSize || 1;
-	const w = width / k | 0, h = height / k | 0;
+function fitBoard() {
+	const pad = Math.max(2, (portrait ? width : height) / 99 - (portrait ? boardWidth : boardHeight) / 6 - 1);
+	const scale = Math.min(width / (boardWidth + pad), height / (boardHeight + pad)) / cellSize || 1;
+	const w = width / scale | 0;
+	const h = height / scale | 0;
 	if (gameCanvas.width - w | gameCanvas.height - h) {
 		gameCanvas.width = w;
 		gameCanvas.height = h;
 		bgKey = 0;
 	}
 	gameContext.imageSmoothingEnabled = false;
-	boardOffsetX = (w - c * cellSize) / 2 | 0;
-	boardOffsetY = (h - r * cellSize) / 2 | 0;
+	boardOffsetX = (w - boardWidth * cellSize) / 2 | 0;
+	boardOffsetY = (h - boardHeight * cellSize) / 2 | 0;
 	return cellSize;
 }
 
@@ -841,10 +843,9 @@ function drawBoard() {
 		for (let i = 0; i < battleTiles.length; i++) {
 			const bt = battleTiles[i];
 			const aimed = battleAim && battleHinted(bt.x, bt.y);
-			const hot = aimed || (bt.live && hoverTile && hoverTile.x == bt.x && hoverTile.y == bt.y);
-			gameContext.fillStyle = "#" + (bt.kind ? "f45" : hero ? "fe8" : "9f8") + (hot ? "c" : bt.live ? "8" : "4");
+			gameContext.fillStyle = "#" + (bt.kind ? "f45" : hero ? "fe8" : "9f8") + (aimed ? "c" : bt.live ? "8" : "4");
 			gameContext.fillRect(ox + bt.x * size, oy + bt.y * size, size, size);
-			if (hot && (bt.kind || aimed)) outlineUnit(bt, size, bt.kind ? "#f89" : "#fe8", 0.06, 2);
+			if (aimed) outlineUnit(bt, size, bt.kind ? "#f89" : "#fe8", 0.06, 2);
 		}
 		if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {
 			outlineUnit(battleSelect, size, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);

@@ -1,35 +1,3 @@
-let hoverTile = null;
-
-function battleHover(event) {
-	if (menu || showPick || showUpgrade || showObjective || showEnd) {
-		if (hoverTile) {
-			hoverTile = null;
-			gameCanvas.style.cursor = "";
-		}
-		return;
-	}
-	if (!battleActive) {
-		const cell = getPosFromEvent(event);
-		gameCanvas.style.cursor = cell && (puzzleMoveAt(cell.x, cell.y) || isTrail(cell.x, cell.y)) ? "pointer" : "";
-		return;
-	}
-	if (battleResult || animating) {
-		if (hoverTile) {
-			hoverTile = null;
-			gameCanvas.style.cursor = "";
-		}
-		return;
-	}
-	const cell = getPosFromEvent(event);
-	const tile = cell && getTileAt(cell.x, cell.y);
-	const nx = tile ? tile.x : -1;
-	const ny = tile ? tile.y : -1;
-	if (hoverTile && hoverTile.x == nx && hoverTile.y == ny) return;
-	if (!tile && !hoverTile) return;
-	hoverTile = tile ? {x: nx, y: ny} : null;
-	gameCanvas.style.cursor = tile ? "pointer" : "";
-}
-
 function outlineUnit(u, size, col, lw, inset) {
 	gameContext.strokeStyle = col;
 	gameContext.lineWidth = Math.max(1, size * lw);

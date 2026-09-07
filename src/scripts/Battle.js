@@ -1,6 +1,7 @@
 // expanded on https://www.foumartgames.com/games/AnimalTactics/ (laser chess)
 // by Noncho Savov' 2020
 // All Rights reserved!
+
 let battleActive = 0;
 let battleUnits = [];
 let battleSelect = null;
@@ -20,6 +21,7 @@ let pickCursor = 0;
 let upgradePicks = {};
 let upgradeCurUnit = 0;
 let upgradeCurOpt = 0;
+
 function startBattle() {
 	battleActive = 1;
 	showEnd = 0;
@@ -151,7 +153,12 @@ function upgradeId(u) {
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
-	return [1, 2].concat(rayStep(unit.mv, unit.range, m[2]) ? [3] : []).concat(rayStep(unit.atk, unit.reach, m[3]) ? [4] : []).concat(unit.hero && !m[4] ? [5] : []).slice(0, 2 + Math.min(2, m[0] / 2 + m[1] + m[2] + m[3] + !!m[4]));
+	const kinds = [1, 2];
+	if (rayStep(unit.mv, unit.range, m[2])) kinds.push(3);
+	if (rayStep(unit.atk, unit.reach, m[3])) kinds.push(4);
+	if (unit.hero && !m[4]) kinds.push(5);
+	const extra = Math.min(2, m[0] / 2 + m[1] + m[2] + m[3] + !!m[4]);
+	return kinds.slice(0, 2 + extra);
 }
 
 function upgradeRows() {
@@ -228,25 +235,25 @@ function smarten(u, on) {
 	return u;
 }
 
-function createEnemy(t, x, y, l) {
-	if (t > 2) return smarten(makeUnit(ENEMIES[t - 3], x, y, 5), 1);
-	l = l > 5 ? 5 : l || 1;
+function createEnemy(kind, x, y, level) {
+	if (kind > 2) return smarten(makeUnit(ENEMIES[kind - 3], x, y, 5), 1);
+	level = level > 5 ? 5 : level || 1;
 	return smarten(makeUnit([
 		,
 		// unitType: 0 leprechaun, 1 hydra, 2 serpent
 		// HP
-		t ? 4 * l + (t > 1 ? 4 : l < 2) : l + 1,
+		kind ? 4 * level + (kind > 1 ? 4 : level < 2) : level + 1,
 		// DMG
-		t ? t > 1 ? l + 4 + (l == 3) - (l == 4) : l + 1 + (l > 1) + (l > 4) : l + 1 >> 1,
+		kind ? kind > 1 ? level + 4 + (level == 3) - (level == 4) : level + 1 + (level > 1) + (level > 4) : level + 1 >> 1,
 		// move & attack rays
-		t && 2,
-		t ? 2 : 1,
-		2 + t,
-		getEnemyPalette(t, l),
+		kind && 2,
+		kind ? 2 : 1,
+		2 + kind,
+		getEnemyPalette(kind, level),
 		// enemies are created at their ray ceiling
-		[0, 11, 121][t],
-		!t && l > 3 && 2
-	], x, y, t ? t < 2 || l > 3 ? 4 : 6 : 3), t ? l > 2 : l > 4);
+		[0, 11, 121][kind],
+		!kind && level > 3 && 2
+	], x, y, kind ? kind < 2 || level > 3 ? 4 : 6 : 3), kind ? level > 2 : level > 4);
 }
 
 function spawnEnemies() {

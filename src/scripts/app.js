@@ -3,19 +3,18 @@ const gameContext = gameCanvas.getContext("2d");
 let width;
 let height;
 let portrait
+//let pinch;
+
 setLayout();
-let pinch;
 
 function init() {
 	window.addEventListener("resize", resize);
 	document.addEventListener("keydown", onKeyDown, true);
-	document.addEventListener("keydown", initSound);
-	document.addEventListener("pointerdown", initSound);
-	gameCanvas.addEventListener("pointerdown", battleClick);
-	gameCanvas.addEventListener("pointermove", battleHover);
-	gameCanvas.addEventListener("pointerleave", battleHover);
-	document.addEventListener("pointerup", puzzlePointerUp);
+	document.addEventListener("pointerup", pointerUp);
 	document.addEventListener("pointercancel", e => swipe = 0);
+	gameCanvas.addEventListener("pointerdown", battleClick);
+	document.oncontextmenu = e => { e.preventDefault(); };
+
 	/*gameCanvas.addEventListener("touchstart", e => { if (e.touches.length == 2) pinch = pinchGap(e); });
 
 	gameCanvas.addEventListener("touchmove", e => {
@@ -30,8 +29,6 @@ function init() {
 		//e.preventDefault();
 		zoomBoard(e.deltaY > 0 ? .2 : -.2);
 	}, {passive: 0});*/
-
-	document.oncontextmenu = e => { e.preventDefault(); };
 
 	/*const p = new CPlayer();
 	p.init(song);
@@ -59,7 +56,6 @@ function init() {
 }*/
 
 function resize() {
-	//console.log(showPick, showObjective, showUpgrade, showEnd, stageCaptive, battleActive, battleResult);
 	setLayout();
 	mainDiv.style.width = width + "px";
 	mainDiv.style.height = height + "px";

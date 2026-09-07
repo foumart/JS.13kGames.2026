@@ -15,7 +15,3 @@ function sfx(tune, vol = .3, step = .05) {
 		o.stop(t + step);
 	}
 }
-
-function initSound() {
-	audio = audio || new AudioContext();
-}

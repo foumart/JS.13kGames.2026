@@ -31,7 +31,7 @@ function puzzleClick(event) {
 	else startRetract(cell.x, cell.y);
 }
 
-function puzzlePointerUp(e) {
+function pointerUp(e) {
 	if (!swipe) return;
 	const dx = e.clientX - swipe.clientX, dy = e.clientY - swipe.clientY, ax = Math.abs(dx), ay = Math.abs(dy);
 	const start = swipe;
