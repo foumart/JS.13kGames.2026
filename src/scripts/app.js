@@ -13,6 +13,8 @@ function init() {
 	document.addEventListener("pointerup", pointerUp);
 	document.addEventListener("pointercancel", e => swipe = 0);
 	gameCanvas.addEventListener("pointerdown", battleClick);
+	gameCanvas.addEventListener("pointermove", battleHover);
+	gameCanvas.addEventListener("pointerleave", battleHover);
 	document.oncontextmenu = e => { e.preventDefault(); };
 
 	/*gameCanvas.addEventListener("touchstart", e => { if (e.touches.length == 2) pinch = pinchGap(e); });

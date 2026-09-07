@@ -1,4 +1,4 @@
-// expanded on https://www.foumartgames.com/games/AnimalTactics/ (laser chess)
+// expanded on https://www.foumartgames.com/games/AnimalTactics/ (lazer chess)
 // by Noncho Savov' 2020
 // All Rights reserved!
 

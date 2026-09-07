@@ -37,7 +37,7 @@ function pointerUp(e) {
 	const start = swipe;
 	swipe = 0;
 	if (ax + ay < 32) return battleActive ? battleTap(start) : puzzleClick(e);
-	const d = ax > ay ? dx > 0 ? RIGHT : LEFT : dy > 0 ? DOWN : UP;
+	const d = ax > ay ? dx > 0 ? LEFT : RIGHT : dy > 0 ? UP : DOWN;
 	battleActive ? battleDir(d) : act(...d);
 }
 
