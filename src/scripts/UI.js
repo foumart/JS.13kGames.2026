@@ -287,7 +287,10 @@ function fillEnd() {
 		return;
 	}
 	if (battleActive) {
-		appendLine(1, battleResult == 2 ? "VICTORY!" : "DEFEAT");
+		if (battleResult == 2 && levelIndex >= campaignLength - 1) {
+			appendLine(1, "GAME COMPLETE");
+			appendLine(2, "SCORE " + currentScore());
+		} else appendLine(1, battleResult == 2 ? "VICTORY!" : "DEFEAT");
 		return;
 	}
 	if (state == 2) {
@@ -361,10 +364,12 @@ function updateButtons() {
 		btn(Y);
 		btn(N, "Play", showPick ? confirmParty : dismissObjective,
 			!showPick || battleParty.length >= Math.min(2, livingRescueCount()));
+	} else if (battleResult == 2 && levelIndex >= campaignLength - 1) {
+		btn(Y, "Restart", restartCampaign);
+		btn(N);
 	} else {
 		btn(Y, "Re" + (lives ? "try" : "start"), lives ? resetHere : restartCampaign);
-		btn(N, lives && state == 2 && (battleActive && levelIndex > campaignLength - 2 ? "REPLAY"
-			: !puzzleMode && !battleActive && levelIndex % 3 == 2 ? "Confront" : "Next"),
+		btn(N, lives && state == 2 && (!puzzleMode && !battleActive && levelIndex % 3 == 2 ? "Confront" : "Next"),
 			battleActive ? afterBattleWin : nextLevel);
 	}
 	syncEndCursor();

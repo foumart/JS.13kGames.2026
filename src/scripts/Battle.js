@@ -345,7 +345,7 @@ function battleFinish(result) {
 	battleTiles = [];
 	battleHints = [];
 	if (result == 3) --lives;
-	if (result == 2) {
+	if (result == 2 && levelIndex < campaignLength - 1) {
 		showUpgrade = 1;
 		defaultUpgradePicks();
 	}
