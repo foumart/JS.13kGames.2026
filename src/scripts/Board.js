@@ -275,17 +275,10 @@ function isPassable(x, y, dx, dy) {
 	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || fillData[y][x] == 1) return 0;
 	if (rescues[y][x] && !rescueDying[y][x]) return 0;
 	if (exits[y][x] && remainingRescue()) return 0;
-	const cross = clouds[y][x];
-	if (pathStep[y][x]) {
-		if (cross) {
-			const pd = pathData[y][x];
-			const horiz = pd & 10; // E|W
-			const vert = pd & 5; // N|S
-			if (dx && !horiz) return 1;
-			if (dy && !vert) return 1;
-		}
-		return 0;
-	}
+	// A cross is only walked straight through
+	const od = pathData[y - dy][x - dx];
+	if (clouds[y - dy][x - dx] && (od & dirMask(dx, dy) || !(od & dirMask(-dx, -dy)))) return 0;
+	if (pathStep[y][x]) return clouds[y][x] && !(pathData[y][x] & dirMask(-dx, -dy));
 	return 1;
 }
 
