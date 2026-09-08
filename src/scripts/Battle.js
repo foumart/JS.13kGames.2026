@@ -274,7 +274,7 @@ function spawnEnemies() {
 		put(createEnemy(kind, x, 0, v % 10), x);
 	}
 	const queue = [];
-	for (let k = 0; k < 3; k++) {
+	for (let k = 0; k < 5; k++) {
 		for (let q = leftoverKinds[k]; q--;) queue.push(k + 1);
 	}
 	let n = queue.length;

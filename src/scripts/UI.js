@@ -169,7 +169,7 @@ function enemyCard(size) {
 	add(1, w[0], size * .8);
 	add(1, w[1], small);
 	add(1, w[2], small);
-	for (let k = 0; k < 3; k++) add(leftoverKinds[k], k + 1, small);
+	for (let k = 0; k < 5; k++) add(leftoverKinds[k], k + 1, small);
 	return d;
 }
 
@@ -317,7 +317,7 @@ function fillEnd() {
 		}
 		
 		let vailed = 0;
-		for (let kind = 0; kind < 3; kind++) {
+		for (let kind = 0; kind < 5; kind++) {
 			for (let n = leftUnitsThisLevel[kind]; n--;) {
 				const enemy = foeThumb(kind + 1, size);
 				row3.appendChild(enemy);

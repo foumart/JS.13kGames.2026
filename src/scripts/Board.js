@@ -47,8 +47,8 @@ let revealPlayerTile = 0;
 
 let leftoverEnemies = 0;
 let leftTotalThisLevel = 0;
-let leftoverKinds = [0, 0, 0];
-let leftUnitsThisLevel = [0, 0, 0];
+let leftoverKinds = [0, 0, 0, 0, 0];
+let leftUnitsThisLevel = [0, 0, 0, 0, 0];
 let leftGoldThisLevel = 0;
 let rescuedUnits = [];
 let deadUnits = [];
@@ -211,7 +211,7 @@ function initBoard() {
 	totalScore = scoreStart;
 	scoreBanked = 0;
 	leftTotalThisLevel = 0;
-	leftUnitsThisLevel = [0, 0, 0];
+	leftUnitsThisLevel = [0, 0, 0, 0, 0];
 	leftGoldThisLevel = 0;
 	revealPlayerTile = 0;
 	state = 1;
@@ -238,7 +238,7 @@ function initBoard() {
 		fillData[y] = [];
 		for (let x = 0; x < boardWidth; x++) {
 			const c = levelData[y][x];
-			enemies[y][x] = c == 1 ? 1 + (levelIndex > 3 && RNG(2)) : 0;
+			enemies[y][x] = c == 1 ? 1 + (levelIndex > 3 && RNG(2 + (levelIndex / 18 | 0))) : 0;
 			obstacles[y][x] = c == 3 ? 1 : 0;
 			coins[y][x] = c == 4 ? 1 : 0;
 			clouds[y][x] = c == 7 ? 1 : 0;
@@ -290,15 +290,15 @@ function isPassable(x, y, dx, dy) {
 }
 
 function leprechaunType(v) {
-	return v > 3 ? v - 3 : v;
+	return v > 5 ? v - 5 : v;
 }
 
 function leprechaunDying(v) {
-	return v > 3;
+	return v > 5;
 }
 
 function isLeprechaunAlive(v) {
-	return v > 0 && v < 4;
+	return v > 0 && v < 6;
 }
 
 function isJailed(x, y) {
@@ -320,7 +320,7 @@ function anyDying() {
 
 function countEnemiesLeft() {
 	leftTotalThisLevel = 0;
-	leftUnitsThisLevel = [0, 0, 0];
+	leftUnitsThisLevel = [0, 0, 0, 0, 0];
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			const v = enemies[y][x];
@@ -427,7 +427,7 @@ function markClusterDying(cluster) {
 	for (let i = 0; i < cluster.length; i++) {
 		const x = cluster[i][0];
 		const y = cluster[i][1];
-		if (isLeprechaunAlive(enemies[y][x])) enemies[y][x] += 3;
+		if (isLeprechaunAlive(enemies[y][x])) enemies[y][x] += 5;
 		if (rescues[y][x]) rescueDying[y][x] = 1;
 		fillData[y][x] = 1;
 	}
@@ -679,10 +679,10 @@ function nextLevel() {
 	scoreStart = totalScore;
 	if (!puzzleMode) {
 		leftoverEnemies += leftTotalThisLevel;
-		for (let i = 0; i < 3; i++) leftoverKinds[i] += leftUnitsThisLevel[i];
+		for (let i = 0; i < 5; i++) leftoverKinds[i] += leftUnitsThisLevel[i];
 	}
 	leftTotalThisLevel = 0;
-	leftUnitsThisLevel = [0, 0, 0];
+	leftUnitsThisLevel = [0, 0, 0, 0, 0];
 	if (!puzzleMode && levelIndex % 3 == 2) {
 		startBattle();
 	} else if (puzzleMode || levelIndex < campaignLength - 1) {
@@ -694,8 +694,8 @@ function nextLevel() {
 function clearLeftovers() {
 	leftoverEnemies = 0;
 	leftTotalThisLevel = 0;
-	leftoverKinds = [0, 0, 0];
-	leftUnitsThisLevel = [0, 0, 0];
+	leftoverKinds = [0, 0, 0, 0, 0];
+	leftUnitsThisLevel = [0, 0, 0, 0, 0];
 	leftGoldThisLevel = 0;
 }
 
