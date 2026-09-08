@@ -15,16 +15,17 @@ function getLevelData(stage) {
 function makeRandomLevel(stage) {
 	const progress = stage || 0;
 
-	let width = progress < 2 ? 7 : 7 + RNG(2 + (progress / 9 | 0));
-	let height = progress < 2 ? 6 : 6 + RNG(2 + (progress / 9 | 0));
+	let width = progress < 2 ? 7 : 7 + (progress / 13 | 0) + RNG(progress / 13 | 0);
+	let height = progress < 2 ? 6 : 6 + (progress / 13 | 0) + RNG(progress / 13 | 0);
+	
 	if (portrait && width > height || !portrait && width < height) {
 		const w = width;
 		width = height;
 		height = w;
 	}
 	const area = width * height;
-	let want = progress < 3 ? 3 + progress : 6 + RNG(3 + (progress / 9 | 0));
-	//if (want > 16) want = 16;
+	let want = progress < 3 ? 3 + progress : area / 6 + RNG(3) | 0;
+
 	if (hasRescue(progress)) want += 2;
 
 	function inMap(x, y) { return (x | y) >= 0 && x < width && y < height; }
@@ -50,17 +51,17 @@ function makeRandomLevel(stage) {
 			tint += shade;
 			return 1;
 		}
-		for (let n = want * 30, left = want; n -- && left;) {
-			if (plant(1 + RNG(width - 2), 1 + RNG(height - 2), 1)) left --;
-		}
-		for (let n = 12, left = progress > 8 ? 1 + RNG(3) : 0; n -- && left;) {
+		for (let n = 12, left = progress > 8 && RNG(9) >> 2; n -- && left;) {
 			const x = 2 + RNG(width - 4);
 			const y = 2 + RNG(height - 4);
 			if (!hasRoom(seed, x, y)) continue;
 			seed[id(x, y)] = 3;
 			left --;
 		}
-		let blockTiles = 2 + RNG(3) + ((area - 56) / 16 | 0) + (progress / 16 | 0);
+		for (let n = want * 30, left = want; n -- && left;) {
+			if (plant(1 + RNG(width - 2), 1 + RNG(height - 2), 1)) left --;
+		}
+		let blockTiles = 2 + RNG(3) + ((area - 56) / 24 | 0) + (progress / 9 | 0);
 		for (let n = blockTiles * 8; n -- && blockTiles;) {
 			const rim = progress < 5 || RNG(2);
 			const e = RNG(4);
@@ -217,6 +218,8 @@ function makeRandomLevel(stage) {
 		}
 	}
 
+	if (progress > 2 && enemies.length < area / 9) return makeRandomLevel(stage);
+
 	// cross
 	const twice = [];
 	for (let i = trail.length; i --;) {
@@ -238,16 +241,6 @@ function makeRandomLevel(stage) {
 
 	if (hasRescue(progress) && enemies.length) {
 		const prison = enemies[RNG(enemies.length)];
-		/*const px = from % width;
-		const py = from / width | 0;
-		let prison = enemies[0];
-		for (let i = enemies.length, k = RNG(i); i --; k = (k + 1) % enemies.length) {
-			const e = enemies[k];
-			if (Math.abs(e[0] - px) + Math.abs(e[1] - py) > 1) {
-				prison = e;
-				break;
-			}
-		}*/
 		grid[prison[1]][prison[0]] = 9;
 	}
 	return grid;

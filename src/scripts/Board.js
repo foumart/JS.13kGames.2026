@@ -685,7 +685,7 @@ function nextLevel() {
 	leftUnitsThisLevel = [0, 0, 0];
 	if (!puzzleMode && levelIndex % 3 == 2) {
 		startBattle();
-	} else if (levelIndex < campaignLength - 1) {
+	} else if (puzzleMode || levelIndex < campaignLength - 1) {
 		levelIndex ++;
 		resetLevel();
 	} else restartCampaign();
