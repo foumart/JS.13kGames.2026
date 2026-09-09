@@ -2,13 +2,13 @@ body {
 	overflow: hidden;
 	color: #fff;
 	background: #06221c;
+	font: 900 4vmin system-ui;
 }
 
 #mainDiv, #gameCanvas, #ui, #ov {
 	position: absolute;
 	inset: 0;
 	width: 100%;
-	/*height: 100%;*/
 	image-rendering: pixelated;
 	touch-action: none;
 }
@@ -19,9 +19,7 @@ body {
 
 #L, #R {
 	position: absolute;
-	font: 900 3vmin system-ui;
 	padding: 1vmin;
-	/*gap: 1vmin;*/
 	background: #879a;
 	text-align: center;
 }
@@ -41,7 +39,7 @@ body {
 #msg {
 	position: absolute;
 	align-self: center;
-	font: 900 7vmin arial;
+	font-size: 7vmin;
 	text-align: center;
 	padding: 0 0 6vmin;
 }
@@ -106,17 +104,16 @@ body {
 
 button {
 	padding: 2vmin 4vmin;
-	font: 900 4vmin system-ui;
 	border: 1vmin solid #fff;
 	border-radius: 2vmin;
 	cursor: pointer;
 	color: #103;
 	background: #fd6;
 	pointer-events: auto;
+	font: 900 3vmin system-ui;
 }
 
 #msg button {
-	font-size: 3vmin;
 	padding: 1vmin 2vmin;
 	margin: 2vmin;
 }

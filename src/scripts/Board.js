@@ -34,6 +34,7 @@ let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
 let showObjective = 0;
 let stageCaptive = 0;
+let stageItem = 0; // the jewel of justice to obtain before the exit opens
 
 let levelIndex = 0;
 let enemiesTotal = 0;
@@ -193,6 +194,7 @@ function initBoard() {
 	exits = [];
 	rescues = [];
 	stageCaptive = 0;
+	stageItem = 0;
 	unrescueLevel(levelIndex);
 	rescueDying = [];
 	pathData = [];
@@ -244,7 +246,11 @@ function initBoard() {
 			clouds[y][x] = c == 7 ? 1 : 0;
 			exits[y][x] = c == 8 ? 1 : 0;
 			rescues[y][x] = 0;
-			if (c == 9 && !puzzleMode) {
+			if (c == 9 && !puzzleMode && levelIndex % 9 == 8) {
+				// each world ends with a quest to obtain the jewel of justice
+				rescues[y][x] = 1;
+				stageItem = 1;
+			} else if (c == 9 && !puzzleMode) {
 				let bmp = levelCaptives[levelIndex][capIdx];
 				if (!bmp) {
 					bmp = pickRescueBmp();
@@ -263,6 +269,21 @@ function initBoard() {
 				startX = x;
 				startY = y;
 			}
+		}
+	}
+
+	// on puzzle mode every stage has the jewel of justice objective (an enemy is replaced with it)
+	if (puzzleMode) {
+		const spots = [];
+		for (let y = 0; y < boardHeight; y++) {
+			for (let x = 0; x < boardWidth; x++) if (enemies[y][x]) spots.push([x, y]);
+		}
+		if (spots.length) {
+			const s = spots[RNG(spots.length)];
+			enemies[s[1]][s[0]] = 0;
+			enemiesTotal --;
+			rescues[s[1]][s[0]] = 1;
+			stageItem = 1;
 		}
 	}
 
@@ -543,7 +564,7 @@ function collectRescue(x, y) {
 	rescues[y][x] = 0;
 	rescueDying[y][x] = 0;
 	fillData[y][x] = 1;
-	if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
+	if (k != 1 && rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
 	return [x, y, k];
 }
 
@@ -856,7 +877,10 @@ function drawBoard() {
 		} else {
 			for (let x = 0; x < boardWidth; x++) {
 				const px = ox + x * size, py = oy + y * size;
-				if (rescues[y][x]) {
+				// the jewel of justice bounces the same as enemies
+				if (rescues[y][x] == 1) blit(objectBitmaps[0], px,
+					py - ((time + x * 90 + y * 180) / (rescueDying[y][x] ? 180 : 720) & 1) * size / 8, size);
+				else if (rescues[y][x]) {
 					drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size);
 					if (!rescueDying[y][x]) blit(objectBitmaps[5], px, py, size);
 				}

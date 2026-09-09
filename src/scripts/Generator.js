@@ -4,7 +4,7 @@ let generatedLevels = [];
 const genDirs = ROOK;
 
 function hasRescue(stage) {
-	return stage < 9 ? stage % 3 == 2 : stage % 9 == 8;
+	return stage < 9 ? stage % 3 == 2 || stage == 7 : stage % 9 > 6;
 }
 
 function getLevelData(stage) {

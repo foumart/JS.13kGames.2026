@@ -205,7 +205,17 @@ function fillBrief() {
 		appendLine();
 	}
 
-	appendLine(3, (stageCaptive ? "and g" : "G") + "et to");
+	if (stageItem) {
+		const r = row();
+		r.appendChild(line(2, "Obtain"));
+		const c = createSpriteIcon(size, s => blit(objectBitmaps[0], 0, 0, s));
+		//c.className = "if";
+		r.appendChild(c);
+		msg.appendChild(r);
+		appendLine();
+	}
+
+	appendLine(3, (stageCaptive || stageItem ? "and g" : "G") + "et to");
 	msg.appendChild(createSparkAnim(size));
 }
 

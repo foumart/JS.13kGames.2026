@@ -24,8 +24,8 @@ function encodeBitmap(group, dest) {
 
 const unitData = [
 	"eda665433fd049b3592159c6e90465feff8bf59c44834", // color bank
-	"ab3ac3", // unicorn idle
-	"ab3ac3", // unicorn jump
+	"ab3", // unicorn idle
+	"ab3", // unicorn jump
 	"b52", // leprechaun
 	"712", // hydra
 	"792", // serpent
@@ -38,37 +38,37 @@ const unitData = [
 const backgroundsData = [
 	"4a5395385264133022001", // color bank
 	"012456", // grass
-	"023456", // tile bottom
-	"023456", // tile left
-	"023456", // tile bottom left
-	"023456", // tile top
-	"023456", // tile horizontal
-	"023456", // tile top left
-	"023456", // tile bay right
-	"023456", // tile right
-	"023456", // tile bottom right
-	"023456", // tile vertical
-	"023456", // tile bay top
-	"023456", // tile top right
-	"023456", // tile bay left
-	"023456", // tile bay bottom
-	"023456", // tile hole
+	"023", // tile bottom
+	"023", // tile left
+	"023", // tile bottom left
+	"023", // tile top
+	"023", // tile horizontal
+	"023", // tile top left
+	"023", // tile bay right
+	"023", // tile right
+	"023", // tile bottom right
+	"023", // tile vertical
+	"023", // tile bay top
+	"023", // tile top right
+	"023", // tile bay left
+	"023", // tile bay bottom
+	"023", // tile hole
 	"f_eYoYVYv{fUfZWm|q@B@C@@@l@P@PpV@\\@[wZH_LP@T@h@|@@@@@CLr{mfUg\\x`Lp@@LLDz@@@\\@p@CLVD\\ki|^@SL`HptV@@N@C@y@N@C@fyuNOCI@O@@@@pNl@pI@N@C@Vie^zSO`BpC@L@I@CCeCG@GovaErJCC@K@G|@lN@@pEcvagUuZJ_O`@pLDtW"
 ];
 
 const objectsData = [
 	"ffeffafd0deeabc465f44d33833", // color bank
-	"678", // tile 10
-	"125345", // coin
-	"035125", // cloudX
-	"012533", // sparkleA
-	"012533", // sparkleB
-	"034123", // prison
+	"678", // jewel
+	"125", // coin
+	"035", // cross
+	"012", // sparkleA
+	"012", // sparkleB
+	"034", // prison
 	"012", // up
 	"012", // right
 	"012", // down
 	"012", // left
-	"@@pC\\NlMlNpCH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
+	"`BXIXJXJlNpCH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
 ];
 
 const pathsData = [
