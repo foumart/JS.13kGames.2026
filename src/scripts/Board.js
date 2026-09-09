@@ -61,7 +61,7 @@ const UNITS = [
 	// name,     hp,dm,mv,at,bm,pttrn, rng, rc - born as 0:+ 1:x 2:* 3:knight 4:around
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
-	[0,          6, 2, 3, 3, 0, 0,     100, 100], // Unicorn
+	[0,          6, 2, 3, 3, 0, 0,     100, 121], // Unicorn
 	["Corwin",   9, 1, 0, 3, 7, "012", 121, 0], // grey
 	["Merlin",   6, 1, 2, 0, 7, "b56", 131, 43], // blue
 	["Benedict", 10,2, 0, 2, 6, "082", 21,  21], // orange
@@ -636,7 +636,7 @@ function drawUnitIcon(src, cx, cy, size, pal) {
 	const scale = size / Math.max(bmp.width, bmp.height);
 	const dw = bmp.width * scale;
 	const dh = bmp.height * scale;
-	if (pal.length ? pal : pal != null && bmp[2]) {
+	if (pal && pal.length ? pal : pal != null && bmp[2]) {
 		drawPaletted(bmp, pal, cx - dw / 2, cy - dh / 2, dw, dh, getCurrentContext());
 	} else getCurrentContext().drawImage(bmp, 0, 0, bmp.width, bmp.height, cx - dw / 2, cy - dh / 2, dw, dh);
 }

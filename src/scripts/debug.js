@@ -61,7 +61,7 @@ function debugAdvance() {
 				rescues[y][x] = 0;
 				if (rescueDying[y]) rescueDying[y][x] = 0;
 				if (fillData[y]) fillData[y][x] = 1;
-				if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
+				if (k != 1 && rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
 			}
 		}
 	}

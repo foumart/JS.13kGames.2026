@@ -40,6 +40,7 @@ function startBattle() {
 	battleControl = null;
 	totalScore = scoreStart;
 	battleUnits = [];
+	for (let i = rescuedUnits.length; i--;) if (rescuedUnits[i] == 1) rescuedUnits.splice(i, 1);
 	const n = rescuedUnits.length;
 	battleParty = n < 3 ? rescuedUnits.slice() : [];
 	pickCursor = 0;
@@ -118,13 +119,13 @@ function upgradeId(u) {
 }
 
 // 1 hp, 2 dmg, 3 move ray, 4 attack ray, 5 around, 6 life
-// 3 and 4 unlock after a few picks, 5 then 6 for unicorn only
+// 3 and 4 unlock after a few picks; unicorn gets 5, then 4 (R1/B1/R2) and 6
 function upgradeKinds(unit) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
 	const kinds = [1, 2];
 	if (rayStep(unit.mv, unit.range, m[2])) kinds.push(3);
-	if (rayStep(unit.atk, unit.reach, m[3])) kinds.push(4);
+	if ((!unit.hero || m[4]) && rayStep(unit.atk, unit.reach, m[3])) kinds.push(4);
 	if (unit.hero) kinds.push(m[4] ? 6 : 5);
 	const extra = Math.min(2, m[0] / 2 + m[1] + m[2] + m[3] + !!m[4]);
 	return kinds.slice(0, 2 + extra);
@@ -650,7 +651,8 @@ function battleTap(event) {
 
 	if (occ) {
 		if (!battlePhase && !thinking && battleControl && battleSelect == battleControl && !battleControl.acted) {
-			if (battleControl.actHits(occ.x, occ.y).length) {
+			const hits = battleControl.actHits(occ.x, occ.y);
+			if (hits.length && (!battleControl.around || hits.indexOf(occ) >= 0)) {
 				playerAttack(battleControl, occ.x, occ.y);
 				return;
 			}
@@ -715,7 +717,7 @@ function battleDir(d) {
 	if (!u || !u.hero || (u.moved && u.acted)) return;
 	const dx = d[0], dy = d[1];
 
-	if (u.moved && !u.acted && u.atk != 3) {
+	if (u.moved && !u.acted && (u.around || u.atk != 3)) {
 		if (u.hits(u.x, u.y).length) playerAttack(u, u.x + dx, u.y + dy);
 		else battleFinishUnit(u);
 		return;

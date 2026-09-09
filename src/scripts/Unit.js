@@ -110,12 +110,10 @@ class Unit {
 	addAttackTiles(allowClick) {
 		if (allowClick == null) allowClick = 1;
 		const scan = this.rayScan(this.x, this.y);
-		let any = 0;
-		for (let i = 0; i < scan.length; i++) if (scan[i][1]) any = 1;
 		for (let i = 0; i < scan.length; i++) {
 			const cells = scan[i][0];
 			const foe = scan[i][1];
-			const live = allowClick && (this.around ? any : foe) ? 1 : 0;
+			const live = allowClick && !this.around && foe ? 1 : 0;
 			if (!this.hero) {
 				for (let j = 0; j < cells.length; j++) {
 					battleTiles.push({x: cells[j][0], y: cells[j][1], kind: 1, live});
