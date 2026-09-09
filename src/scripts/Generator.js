@@ -24,7 +24,7 @@ function makeRandomLevel(stage) {
 		height = w;
 	}
 	const area = width * height;
-	let want = progress < 3 ? 3 + progress : area / 6 + RNG(3) | 0;
+	let want = progress < 3 ? 3 + progress : area / (hard ? 6 : 7) + RNG(3) | 0;
 
 	if (hasRescue(progress)) want += 2;
 
@@ -51,7 +51,7 @@ function makeRandomLevel(stage) {
 			tint += shade;
 			return 1;
 		}
-		for (let n = 12, left = progress > 8 && RNG(9) >> 2; n -- && left;) {
+		for (let n = 12, left = hard && progress > 8 && RNG(9) >> 2; n -- && left;) {
 			const x = 2 + RNG(width - 4);
 			const y = 2 + RNG(height - 4);
 			if (!hasRoom(seed, x, y)) continue;
@@ -218,7 +218,7 @@ function makeRandomLevel(stage) {
 		}
 	}
 
-	if (progress > 2 && enemies.length < area / 9) return makeRandomLevel(stage);
+	if (progress > 2 && enemies.length < area / (hard ? 9 : 11)) return makeRandomLevel(stage);
 
 	// cross
 	const twice = [];

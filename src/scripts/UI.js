@@ -115,6 +115,13 @@ function updateUI() {
 	if (menu == 1) {
 		appendLine(2, "The Fourth");
 		appendLine(0, "Labyrinth");
+		appendLine(0);
+		// crossings are the hard mode - switch before starting
+		const d = document.createElement("button");
+		d.textContent = hard ? "Hard" : "Easy";
+		d.className = "of";
+		d.onclick = toggleHard;
+		msg.appendChild(d);
 	} else if (menu == 2) appendLine(1, "PAUSED");
 	else if (showPick) fillPick();
 	else if (showUpgrade) fillUpgrade();

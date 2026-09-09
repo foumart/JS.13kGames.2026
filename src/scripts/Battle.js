@@ -223,7 +223,7 @@ function createEnemy(kind, x, y, level) {
 		// enemies are created at their ray ceiling
 		[0, 11, 121][kind],
 		!kind && level > 3 && 2
-	], x, y, kind ? kind < 2 || level > 3 ? 4 : 6 : 3), kind ? level > 2 : level > 4);
+	], x, y, kind ? kind < 2 || level > 3 ? 4 : 6 : 3), hard && (kind ? level > 2 : level > 4));
 }
 
 function spawnEnemies() {

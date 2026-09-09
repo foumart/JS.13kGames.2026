@@ -27,6 +27,7 @@ let pathCount = 0;
 let lives = 3;
 let puzzleMode = 0;
 let menu = 1; // 1 title, 2 pause
+let hard = 0; // crossings only appear on hard
 let perfects = 0;
 
 let state = 1; // 1 play, 2 win, 3 lose
@@ -728,6 +729,12 @@ function restartCampaign() {
 	endBtnCur = 0;
 	resetLevel();
 	gameStart();
+}
+
+function toggleHard() {
+	hard = !hard;
+	generatedLevels = [];
+	updateUI();
 }
 
 function startMode(puz) {
