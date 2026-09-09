@@ -114,8 +114,7 @@ function battleThink(u, done) {
 	}
 
 	const moves = u.moves();
-	let stayS = score(u);
-	if (u.advance) stayS = -9999;
+	const stayS = score(u);
 	const [best, bestS] = bestByScore(moves, score);
 	if (best < 0 || stayS > bestS || stayS == bestS && RNG(2)) {
 		u.moved = 1;

@@ -17,7 +17,6 @@ class Unit {
 		this.enemy = this.type > 2;
 		this.hero = !this.type;
 		this.around = this.type == 4 || this.atk == 4 || this.hero && allyMod(this.name)[4];
-		this.advance = this.type == 3;
 		this.range = d[i] || 0;
 		this.reach = d[i + 1] || 0;
 		const upgradeLevels = this.enemy ? [0, 0, 9, 9] : allyMod(this.name);

@@ -318,20 +318,17 @@ function isMapEmptyAt(x, y) {
 
 function checkForBattleEnd() {
 	if (battleResult) return 1;
-	let p = 0, e = 0, hero = 0, lose = 0;
+	let p = 0, e = 0, hero = 0;
 	for (const u of battleUnits) {
 		if (u.hp <= 0) continue;
-		if (u.enemy) {
-			e ++;
-			if (u.advance && u.y >= boardHeight - 1) lose = 1;
-		} else {
+		if (u.enemy) e ++;
+		else {
 			p ++;
 			hero |= u.hero;
 		}
 	}
-	lose = lose || !p || !hero;
-	if (lose || !e) {
-		battleFinish(lose ? 3 : 2);
+	if (!p || !hero || !e) {
+		battleFinish(!p || !hero ? 3 : 2);
 		return 1;
 	}
 }

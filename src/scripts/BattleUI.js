@@ -41,16 +41,14 @@ function getBattleUIFoe() {
 		return createEnemy(v / 10 | 0, 0, 0, v % 10);
 	}
 	if (battleSelect && battleSelect.enemy && battleSelect.hp > 0) return battleSelect;
-	let pink = null;
 	let fallback = null;
 	for (let i = 0; i < battleUnits.length; i++) {
 		const u = battleUnits[i];
 		if (!u.enemy || u.hp <= 0) continue;
 		if (u.type == 4) return u;
-		if (u.advance && u.reach > 1) pink = u;
-		else if (!fallback) fallback = u;
+		if (!fallback) fallback = u;
 	}
-	return pink || fallback;
+	return fallback;
 }
 
 // the ray buttons name what the next step actually grants: R2, B1, or the knight leap
