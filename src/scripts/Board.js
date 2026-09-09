@@ -62,15 +62,15 @@ const UNITS = [
 	//           |  |  |  |  |  |      |    |    rn/rc cap each ladder: K*100 + maxR*10 + maxB
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
 	[0,          6, 2, 3, 3, 0, 0,     100, 100], // Unicorn
-	["Corwin",   9, 1, 0, 3, 7, "012", 121, 0],
-	["Merlin",   6, 1, 2, 0, 7, "b56", 131, 43],
-	["Benedict", 10,2, 0, 2, 6, "046", 21,  21],
-	["Fiona",    5, 1, 1, 2, 5, 0,     33,  16],
-	["Random",   8, 1, 0, 1, 7, 0,     12,  22],
-	["Bleys",    8, 1, 0, 0, 6, 0,     21,  11],
-	["Julian",   7, 1, 0, 1, 5, "392", 121, 61],
-	["Caine",    8, 1, 0, 0, 6, "096", 11,  40],
-	["Gerard",   12,2, 0, 0, 6, "356", 11,  21],
+	["Corwin",   9, 1, 0, 3, 7, "012", 121, 0], // grey
+	["Merlin",   6, 1, 2, 0, 7, "b56", 131, 43], // blue
+	["Benedict", 10,2, 0, 2, 6, "082", 21,  21], // orange
+	["Fiona",    5, 1, 1, 2, 5, 0,     33,  16], // blue
+	["Random",   8, 1, 0, 1, 7, 0,     12,  22], // dark red
+	["Bleys",    8, 1, 0, 0, 6, 0,     21,  11], // red
+	["Julian",   7, 1, 0, 1, 5, "392", 121, 61], // dark green
+	["Caine",    8, 1, 0, 0, 6, "096", 11,  40], // dark green
+	["Gerard",   12,2, 0, 0, 6, "356", 11,  21], // blue
 ];
 const ENEMIES = [
 	["Manticore",28,8, 3, 1, 1, "cd6", 143, 16],
@@ -438,7 +438,7 @@ function isClusterSurrounded(cluster) {
 	return 1;
 }
 
-function markClusterDying(cluster) {
+function markClusterDying(cluster, ahead) {
 	for (let i = 0; i < cluster.length; i++) {
 		const x = cluster[i][0];
 		const y = cluster[i][1];
@@ -451,6 +451,7 @@ function markClusterDying(cluster) {
 		rainbowDone = 0;
 		rainbowWait = 0;
 	}
+	sfx(ahead ? "048" : "840");
 }
 
 function flushDyingEnemies() {
@@ -462,13 +463,13 @@ function flushDyingEnemies() {
 				enemies[y][x] = 0;
 				fillData[y][x] = 1;
 				enemiesCleared ++;
-				sfx("AI", .2);
 				flushed.push([x, y, 0, kind]);
 			}
 			const rescued = collectRescue(x, y);
 			if (rescued) flushed.push(rescued);
 		}
 	}
+	if (flushed.length) sfx("7<C");// capture enemy
 	return flushed;
 }
 
@@ -497,7 +498,7 @@ function collectCoin(x, y) {
 	if (!coins[y][x]) return 0;
 	coins[y][x] = 0;
 	coinsCollected ++;
-	sfx("QX");
+	sfx("QX"); // coin
 	return [x, y, 0, -1];
 }
 
@@ -565,7 +566,10 @@ function collectRescue(x, y) {
 	rescues[y][x] = 0;
 	rescueDying[y][x] = 0;
 	fillData[y][x] = 1;
-	if (k != 1 && rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
+	if (k != 1) {
+		if (rescuedUnits.indexOf(k) < 0) rescuedUnits.push(k);
+		//"IM");
+	}
 	return [x, y, k];
 }
 
@@ -652,7 +656,7 @@ function drawMoveArrows(size) {
 function checkCaptures(flushAcc) {
 	const clusters = getClusters();
 	for (let i = 0; i < clusters.length; i++) {
-		if (isClusterSurrounded(clusters[i])) markClusterDying(clusters[i]);
+		if (isClusterSurrounded(clusters[i])) markClusterDying(clusters[i], flushAcc);
 	}
 
 	if (exits[player.y][player.x] && !remainingRescue()) {
@@ -784,6 +788,10 @@ function blit(src, px, py, s) {
 	getCurrentContext().drawImage(src, 0, 0, tileWidth, tileWidth, px, py, s, s);
 }
 
+function bounce(x, y, dying) {
+	return (time + x * 90 + y * 180) / (dying ? 180 : 720) & 1;
+}
+
 function fitBoard() {
 	const pad = Math.max(2, (portrait ? width : height) / 99 - (portrait ? boardWidth : boardHeight) / 6 - 1);
 	const scale = Math.min(width / (boardWidth + pad), height / (boardHeight + pad)) / cellSize || 1;
@@ -808,7 +816,6 @@ function drawBoard() {
 	const size = fitBoard(boardWidth, boardHeight);
 	const ox = boardOffsetX, oy = boardOffsetY;
 	const vw = gc.width, vh = gc.height;
-	// the canvas is never cleared, so the far backdrop keeps between frames
 	const bgNow = ox + oy * 7 + size;
 	const bgStale = bgNow != bgKey;
 	bgKey = bgNow;
@@ -875,20 +882,17 @@ function drawBoard() {
 			}
 		} else {
 			for (let x = 0; x < boardWidth; x++) {
-				const px = ox + x * size, py = oy + y * size;
-				// the jewel of justice bounces the same as enemies
-				if (rescues[y][x] == 1) blit(objectBitmaps[0], px,
-					py - ((time + x * 90 + y * 180) / (rescueDying[y][x] ? 180 : 720) & 1) * size / 8, size);
-				else if (rescues[y][x]) {
-					drawUnitIcon(rescues[y][x], px + size / 2, py + size / 2, size);
+				const px = ox + x * size, py = oy + y * size, r = rescues[y][x], k = enemies[y][x];
+				const hop = bounce(x, y, r == 1 ? rescueDying[y][x] : leprechaunDying(k)) * size / 8;
+				if (r == 1) {
+					blit(objectBitmaps[0], px, py - hop, size);
+				} else if (r) {
+					drawUnitIcon(r, px + size / 2, py + size / 2, size);
 					if (!rescueDying[y][x]) blit(objectBitmaps[5], px, py, size);
 				}
-				if (enemies[y][x]) {
-					const k = enemies[y][x];
-					const hop = (time + x * 90 + y * 180) / (leprechaunDying(k) ? 180 : 720) & 1;
+				if (k) {
 					drawUnitIcon({bgr: 2, palette: getEnemyPalette(0, leprechaunType(k))},
-						px + size / 2, py + size / 2 - hop * size / 8,
-						size / tileWidth * unitBitmaps[2].width * unitScale);
+					px + size / 2, py + size / 2 - hop, size);
 				}
 			}
 			if ((player.y + player.offsetY | 0) == y) player.draw();

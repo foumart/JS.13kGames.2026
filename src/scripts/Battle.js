@@ -480,20 +480,24 @@ function startEnemyPhase() {
 	updateUI();
 }
 
-function performMove(u, x, y, done) {
-	sfx("A");// simple step
+function performMove(unit, x, y, done) {
+	if (unit.enemy) {
+		sfx("0*", 0.01); // enemy battle move
+	} else {
+		sfx("*09", 0.005); // player battle move
+	}
 	animating = 1;
-	u.offsetX = u.x - x;
-	u.offsetY = u.y - y;
-	if (x < u.x) u.face = 1;
-	if (x > u.x) u.face = -1;
-	u.x = x;
-	u.y = y;
-	u.moved = 1;
+	unit.offsetX = unit.x - x;
+	unit.offsetY = unit.y - y;
+	if (x < unit.x) unit.face = 1;
+	if (x > unit.x) unit.face = -1;
+	unit.x = x;
+	unit.y = y;
+	unit.moved = 1;
 	battleTiles = [];
 	battleHints = [];
 	updateUI();
-	tween(u, 9, {offsetX: 0, offsetY: 0}, () => {
+	tween(unit, 9, {offsetX: 0, offsetY: 0}, () => {
 		animating = 0;
 		updateUI();
 		done();
@@ -528,8 +532,8 @@ function performAttack(u, hits, done) {
 	updateUI();
 	const t = hits[0];
 	poke(u, t ? t.x : u.x, t ? t.y : u.y, () => {
-		sfx("SG", .2);
-		for (let i = 0; i < hits.length; i++) if ((hits[i].hp -= u.dmg) <= 0) sfx("MGA", .2);
+		sfx("SG"); // attack
+		for (let i = 0; i < hits.length; i++) if ((hits[i].hp -= u.dmg) <= 0) sfx("MGA"); // destroy
 		if (!u.enemy) {
 			const mul = u.hero ? 2 : 1;
 			for (let i = 0; i < hits.length; i++) {

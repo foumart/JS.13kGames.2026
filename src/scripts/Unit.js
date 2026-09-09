@@ -135,7 +135,7 @@ class Unit {
 		const hop = (this.offsetX || this.offsetY)
 			? Math.sin(Math.PI * Math.max(Math.abs(this.offsetX), Math.abs(this.offsetY))) * size * 0.22
 			: 0;
-		const t = this.enemy && (time + this.x * 90 + this.y * 180) / (this.hp ? 720 : 180) & 1;
+		const t = this.enemy && bounce(this.x, this.y, !this.hp);
 		gameContext.save();
 		gameContext.translate(px + size / 2, py + size / 2 - hop - (this.bgr != 3 && t) * size / 8);
 		gameContext.scale(this.face * (this.bgr == 3 && t ? -1 : 1), 1);

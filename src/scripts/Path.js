@@ -34,7 +34,8 @@ function placeStartPath(x, y) {
 }
 
 function extendPath(ox, oy, nx, ny, dx, dy) {
-	sfx("Q");
+	//sfx(")(!", 0.005);// step end
+	sfx(")", 0.03);
 	pathCount ++;
 	pathStep[ny][nx] = pathCount;
 	pathData[oy][ox] |= dirMask(dx, dy);
@@ -62,7 +63,7 @@ function isTrail(x, y) {
 // retrace back to the older trail tile, one hop per rendered frame
 function startRetract(x, y) {
 	if (!player || moving || state != 1 || menu || showObjective || showEnd) return;
-	
+
 	if (!isTrail(x, y)) {
 		sfx("Aa");// blocked
 		retractX = -1;
@@ -72,11 +73,11 @@ function startRetract(x, y) {
 		retractX = x;
 		retractY = y;
 		moving = 1;
-		sfx("OP");// attempt to get back
+		sfx("@20");// attempt to get back
 		poke(player, x, y, () => tween(player, 6, {offsetX: 0, offsetY: 0}, () => moving = 0));
 		return;
 	}
-	sfx("HZ");// get back on old trail
+	sfx(">0+$'");// get back on old trail
 	moving = 1;
 	hopping = 1;
 	stepRetract();
