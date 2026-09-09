@@ -23,9 +23,9 @@ function debugAdvance() {
 			return;
 		}
 		if (showPick) {
-			const need = Math.min(2, livingRescueCount());
+			const need = Math.min(2, rescuedUnits.length);
 			for (let i = 0; i < rescuedUnits.length && battleParty.length < need; i++) {
-				if (!isDeadBmp(rescuedUnits[i]) && battleParty.indexOf(rescuedUnits[i]) < 0) {
+				if (battleParty.indexOf(rescuedUnits[i]) < 0) {
 					battleParty.push(rescuedUnits[i]);
 				}
 			}

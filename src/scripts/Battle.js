@@ -40,14 +40,9 @@ function startBattle() {
 	battleControl = null;
 	totalScore = scoreStart;
 	battleUnits = [];
-	battleParty = [];
-	const n = livingRescueCount();
-	if (n < 3) {
-		for (const w of rescuedUnits) {
-			if (!isDeadBmp(w)) battleParty.push(w);
-		}
-	}
-	pickCursor = firstLivingPick();
+	const n = rescuedUnits.length;
+	battleParty = n < 3 ? rescuedUnits.slice() : [];
+	pickCursor = 0;
 	if (n) showPick = 1;
 	else {
 		spawnBattleParty();
@@ -78,41 +73,15 @@ function spawnBattleParty() {
 
 function confirmParty() {
 	if (!showPick) return;
-	const need = Math.min(2, livingRescueCount());
+	const need = Math.min(2, rescuedUnits.length);
 	if (battleParty.length < need) return;
 	showPick = 0;
 	spawnBattleParty();
 	redraw();
 }
 
-function isDeadBmp(bmp) {
-	return deadUnits.indexOf(bmp) >= 0;
-}
-
-function livingRescueCount() {
-	let n = 0;
-	for (const g of rescuedUnits) {
-		if (!isDeadBmp(g)) n ++;
-	}
-	return n;
-}
-
-function firstLivingPick() {
-	for (let i = 0; i < rescuedUnits.length; i++) {
-		if (!isDeadBmp(rescuedUnits[i])) return i;
-	}
-	return 0;
-}
-
-function movePickCursor(dir) {
-	const n = rescuedUnits.length;
-	if (!n) return;
-	pickCursor = (pickCursor + dir + n) % n;
-	redraw();
-}
-
 function pickPartyBmp(bmp) {
-	if (!bmp || isDeadBmp(bmp)) return;
+	if (!bmp) return;
 	const i = battleParty.indexOf(bmp);
 	if (i >= 0) battleParty.splice(i, 1);
 	else if (battleParty.length < 2) battleParty.push(bmp);
@@ -123,11 +92,11 @@ function pickCursorUnit() {
 	pickPartyBmp(rescuedUnits[pickCursor]);
 }
 
-function markHeroesDead() {
-	for (const unit of battleUnits) {
-		if (unit.enemy || unit.hero || unit.hp > 0) continue;
-		if (deadUnits.indexOf(unit.name) < 0) deadUnits.push(unit.name);
-	}
+function movePickCursor(dir) {
+	const n = rescuedUnits.length;
+	if (!n) return;
+	pickCursor = (pickCursor + dir + n) % n;
+	redraw();
 }
 
 function toggleParty(bmp) {
@@ -162,7 +131,7 @@ function upgradeKinds(unit) {
 }
 
 function upgradeRows() {
-	const list = battleRoster();
+	const list = battleRoster(1);
 	const rows = [];
 	for (const b of list) {
 		const kinds = upgradeKinds(b);

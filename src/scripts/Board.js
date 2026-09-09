@@ -51,7 +51,6 @@ let leftoverKinds = [0, 0, 0, 0, 0];
 let leftUnitsThisLevel = [0, 0, 0, 0, 0];
 let leftGoldThisLevel = 0;
 let rescuedUnits = [];
-let deadUnits = [];
 let levelCaptives = [];
 let rescueDying = [];
 let unitMods = {}; // name -> [hp, att, move steps taken, attack steps taken, around]
@@ -694,7 +693,6 @@ function clearLeftovers() {
 
 function afterBattleWin() {
 	applyUpgradePicks();
-	markHeroesDead();
 	clearLeftovers();
 	showUpgrade = 0;
 	upgradePicks = {};
@@ -713,7 +711,6 @@ function afterBattleWin() {
 function restartCampaign() {
 	clearLeftovers();
 	rescuedUnits = [];
-	deadUnits = [];
 	levelCaptives = [];
 	generatedLevels = [];
 	unitMods = {};

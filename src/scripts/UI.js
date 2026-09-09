@@ -202,15 +202,13 @@ function fillBrief() {
 
 function fillPick() {
 	const size = Math.max(40, Math.min(width / (rescuedUnits.length + 1), height * 0.14) | 0);
-	const need = Math.min(2, livingRescueCount());
+	const need = Math.min(2, rescuedUnits.length);
 	printProgress();
 	appendLine(3, need > 1 ? "Pick " + need + " allies" : "Your ally");
 	appendLine(4);
 	const pickRow = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
-		const dead = isDeadBmp(bmp);
-		if (dead) continue;
 		const wrap = row();
 		wrap.className = "g" + (battleParty.indexOf(bmp) >= 0 ? " of" : " in") + (i == pickCursor ? " cur" : "");
 		const icon = createIcon(rescuedUnits[i], size);
@@ -233,48 +231,32 @@ function fillPick() {
 function fillUpgrade() {
 	const size = uiSize();
 	appendLine(1, "VICTORY!");
-	//appendLine(3, "Choose a bonus");
-	const list = battleRoster();
-	let live = 0;
+	const list = upgradeRows();
 	for (let i = 0; i < list.length; i++) {
-		const unit = list[i];
-		const fallen = unit.hp <= 0;
-		const id = upgradeId(unit);
+		const unit = list[i].u;
+		const id = list[i].id;
+		const kinds = list[i].kinds;
 		const pick = upgradePicks[id];
-		const kinds = upgradeKinds(unit);
-		
 		const upgradeTab = row();
-		
 		const thumb = line(3, "");
 		const name = line(4, unit.name || "Unicorn");
-		thumb.appendChild(name);
-
 		const icon = createIcon(unit, size * .65);
 		icon.className = "if";
-		if (fallen) icon.style.opacity = "0.5";
 		thumb.appendChild(name);
 		thumb.appendChild(icon);
-
 		const col = line(3, "");
-		if (fallen) col.textContent = "fallen";
-		else {
-			col.appendChild(createUnitStatsText(unit, ""));
-			const btns = row();
-			const curRow = live == upgradeCurUnit;
-			for (let k = 0; k < kinds.length; k++) {
-				const b = document.createElement("button");
-				b.textContent = upgradeLabel(kinds[k], unit);
-				b.className = (pick == kinds[k] ? "on" : "of") + (curRow && k == upgradeCurOpt ? " cur" : "");
-				b.onclick = setUpgrade.bind(null, id, kinds[k]);
-				btns.appendChild(b);
-			}
-			col.appendChild(btns);
-			live++;
+		col.appendChild(createUnitStatsText(unit, ""));
+		const btns = row();
+		for (let k = 0; k < kinds.length; k++) {
+			const b = document.createElement("button");
+			b.textContent = upgradeLabel(kinds[k], unit);
+			b.className = (pick == kinds[k] ? "on" : "of") + (i == upgradeCurUnit && k == upgradeCurOpt ? " cur" : "");
+			b.onclick = setUpgrade.bind(null, id, kinds[k]);
+			btns.appendChild(b);
 		}
-
+		col.appendChild(btns);
 		upgradeTab.appendChild(thumb);
 		upgradeTab.appendChild(col);
-
 		msg.appendChild(upgradeTab);
 		msg.appendChild(document.createElement("hr"));
 	}
@@ -363,7 +345,7 @@ function updateButtons() {
 	} else if (showPick || showObjective) {
 		btn(Y);
 		btn(N, "Play", showPick ? confirmParty : dismissObjective,
-			!showPick || battleParty.length >= Math.min(2, livingRescueCount()));
+			!showPick || battleParty.length >= Math.min(2, rescuedUnits.length));
 	} else if (battleResult == 2 && levelIndex >= campaignLength - 1) {
 		btn(Y, "Restart", restartCampaign);
 		btn(N);
