@@ -4,24 +4,17 @@
  * @externs
  */
 
-
-/**
- * Keep canvas roundRect (gets mangled for some reason)
- * @record
- */
-CanvasRenderingContext2D.prototype.roundRect
-
 /**
  * Main div
  * @type {!HTMLElement}
  */
-var mainDiv
+var md
 
 /**
- * gameCanvas
+ * Game canvas
  * @type {!HTMLCanvasElement}
  */
-var gameCanvas
+var gc
 
 /**
  * Left panel - player stats
@@ -54,10 +47,10 @@ var ov
 var spr
 
 /**
- * msg
+ * UI message
  * @type {!HTMLElement}
  */
-var msg
+var ms
 
 /**
  * retry

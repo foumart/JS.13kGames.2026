@@ -1,10 +1,10 @@
 function battleHover(event) {
 	if (menu || showPick || showUpgrade || showObjective || showEnd || event.type == "pointerleave") {
-		gameCanvas.style.cursor = "";
+		gc.style.cursor = "";
 		return;
 	}
 	const cell = getPosFromEvent(event);
-	gameCanvas.style.cursor = cell && (battleActive
+	gc.style.cursor = cell && (battleActive
 		? !battleResult && !animating && getTileAt(cell.x, cell.y)
 		: puzzleMoveAt(cell.x, cell.y) || isTrail(cell.x, cell.y)
 	) ? "pointer" : "";

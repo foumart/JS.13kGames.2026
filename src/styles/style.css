@@ -1,11 +1,12 @@
 body {
 	overflow: hidden;
 	color: #fff;
-	background: #06221c;
-	font: 900 4vmin system-ui;
+	/*background: #06221c;*/
+	font: 900 3vmin system-ui;
+	text-align: center;
 }
 
-#mainDiv, #gameCanvas, #ui, #ov {
+#md, #gc, #ui, #ov {
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -15,13 +16,16 @@ body {
 
 #ui {
 	pointer-events: none;
+	/* CRT: scanlines */
+	/*background:
+		repeating-linear-gradient(#0000 0 2px, #0003 2px 3px),
+		radial-gradient(#0000 60%, #0007);*/
 }
 
 #L, #R {
 	position: absolute;
 	padding: 1vmin;
 	background: #879a;
-	text-align: center;
 }
 
 #R {
@@ -32,16 +36,14 @@ body {
 	display: flex;
 	justify-content: center;
 	align-items: flex-end;
-	padding-bottom: 8vmin;
+	padding: 0 0 8vmin;
 	gap: 8vmin;
 }
 
-#msg {
+#ms {
 	position: absolute;
 	align-self: center;
-	font-size: 7vmin;
-	text-align: center;
-	padding: 0 0 6vmin;
+	padding: 0 0 8vmin;
 }
 
 .m {
@@ -69,15 +71,10 @@ body {
 	align-items: center;
 	justify-content: center;
 	gap: 1vmin;
-	/*padding: 2vmin;*/
 }
 
 .on {
 	background: #fd6;
-	/*color: #103;*/
-	/*box-shadow: 0 0 0 2vmin #fe8;*/
-	/*outline: 1.5vmin solid #fe8;*/
-	/*margin: 2vmin;*/
 }
 
 .cur {
@@ -113,7 +110,7 @@ button {
 	font: 900 3vmin system-ui;
 }
 
-#msg button {
+#ms button {
 	padding: 1vmin 2vmin;
 	margin: 2vmin;
 }

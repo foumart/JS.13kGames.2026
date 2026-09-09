@@ -40,7 +40,7 @@ function createUnitStatsText(unit, sep = "\n") {
 }
 
 function appendLine(c, t) {
-	msg.appendChild(line(c, t));
+	ms.appendChild(line(c, t));
 }
 
 function line(c = 3, t = "\xa0") {
@@ -68,11 +68,11 @@ function updateUI() {
 	const size = uiSize();
 
 	if (menu == 1) {
-		//L.textContent = "FoumartGames presents:js13k game by Noncho Savov";
-		L.textContent = "";
+		L.textContent = "by Noncho Savov";
+		//L.textContent = "";
 		//L.appendChild(line(4, "FoumartGames presents:"));
 		//L.appendChild(line(3, "js13k game by Noncho Savov"));
-		L.appendChild(line(3, "by Noncho Savov"));
+		//L.appendChild(line(3, "by Noncho Savov"));
 		R.textContent = "v{VERSION}";
 		//R.textContent = "";
 		//R.appendChild(line(4, "Arrows - move"));
@@ -104,14 +104,14 @@ function updateUI() {
 	const fade = menu || showPick || showUpgrade || showObjective || (showEnd && (state > 1 || battleResult > 1));
 	ov.style.background = fade ? "#103c" : "";
 	if (!fade) {
-		msg.textContent = "";
+		ms.textContent = "";
 		hideEndButtons();
 		return;
 	}
 
 	// overlay
-	msg.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
-	msg.textContent = "";
+	ms.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
+	ms.textContent = "";
 	if (menu == 1) {
 		appendLine(2, "The Fourth");
 		appendLine(0, "Labyrinth");
@@ -121,7 +121,7 @@ function updateUI() {
 		d.textContent = hard ? "Hard" : "Easy";
 		d.className = "of";
 		d.onclick = toggleHard;
-		msg.appendChild(d);
+		ms.appendChild(d);
 	} else if (menu == 2) appendLine(1, "PAUSED");
 	else if (showPick) fillPick();
 	else if (showUpgrade) fillUpgrade();
@@ -201,7 +201,7 @@ function fillBrief() {
 		r.appendChild(line(2, stageCaptive));
 		r.className = "g";
 		c.className = "if";
-		msg.appendChild(r);
+		ms.appendChild(r);
 		appendLine();
 	}
 
@@ -211,12 +211,12 @@ function fillBrief() {
 		const c = createSpriteIcon(size, s => blit(objectBitmaps[0], 0, 0, s));
 		//c.className = "if";
 		r.appendChild(c);
-		msg.appendChild(r);
+		ms.appendChild(r);
 		appendLine();
 	}
 
 	appendLine(3, (stageCaptive || stageItem ? "and g" : "G") + "et to");
-	msg.appendChild(createSparkAnim(size));
+	ms.appendChild(createSparkAnim(size));
 }
 
 function fillPick() {
@@ -235,7 +235,7 @@ function fillPick() {
 		wrap.appendChild(icon);
 		pickRow.appendChild(wrap);
 	}
-	msg.appendChild(pickRow);
+	ms.appendChild(pickRow);
 	const name = rescuedUnits[pickCursor];
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
@@ -276,8 +276,8 @@ function fillUpgrade() {
 		col.appendChild(btns);
 		upgradeTab.appendChild(thumb);
 		upgradeTab.appendChild(col);
-		msg.appendChild(upgradeTab);
-		msg.appendChild(document.createElement("hr"));
+		ms.appendChild(upgradeTab);
+		ms.appendChild(document.createElement("hr"));
 	}
 }
 
@@ -304,7 +304,7 @@ function fillEnd() {
 			//appendLine(3, "Bonus: 100");
 			//row1.appendChild(createSparkAnim(size));
 			//row1.appendChild(line(1, "+1"));
-			msg.appendChild(row1);
+			ms.appendChild(row1);
 		}
 
 		const row3 = line(3, "");
@@ -316,7 +316,7 @@ function fillEnd() {
 			ic.className = "if";
 			row2.appendChild(ic);
 			appendLine();
-			msg.appendChild(row2);
+			ms.appendChild(row2);
 			row2.appendChild(line(3, stageCaptive + " joined!"));
 		}
 		
@@ -332,7 +332,7 @@ function fillEnd() {
 		if (vailed && !puzzleMode) {
 			numbersLine.textContent = vailed + " leprechaun" + (vailed > 1 ? "s" : "");
 			appendLine();
-			msg.appendChild(row3);
+			ms.appendChild(row3);
 			row3.appendChild(line(3, "enter the Vail"));
 		}
 	}/* else {

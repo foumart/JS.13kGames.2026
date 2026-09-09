@@ -1,4 +1,4 @@
-const gameContext = gameCanvas.getContext("2d");
+const gameContext = gc.getContext("2d");
 
 let width;
 let height;
@@ -12,14 +12,14 @@ function init() {
 	document.addEventListener("keydown", onKeyDown, true);
 	document.addEventListener("pointerup", pointerUp);
 	document.addEventListener("pointercancel", e => swipe = 0);
-	gameCanvas.addEventListener("pointerdown", battleClick);
-	gameCanvas.addEventListener("pointermove", battleHover);
-	gameCanvas.addEventListener("pointerleave", battleHover);
+	gc.addEventListener("pointerdown", battleClick);
+	gc.addEventListener("pointermove", battleHover);
+	gc.addEventListener("pointerleave", battleHover);
 	document.oncontextmenu = e => { e.preventDefault(); };
 
-	/*gameCanvas.addEventListener("touchstart", e => { if (e.touches.length == 2) pinch = pinchGap(e); });
+	/*gc.addEventListener("touchstart", e => { if (e.touches.length == 2) pinch = pinchGap(e); });
 
-	gameCanvas.addEventListener("touchmove", e => {
+	gc.addEventListener("touchmove", e => {
 		//if (e.touches.length != 2) return;
 		//e.preventDefault();
 		const gap = pinchGap(e);
@@ -27,7 +27,7 @@ function init() {
 		pinch = gap;
 	}, {passive: 0});
 
-	gameCanvas.addEventListener("wheel", e => {
+	gc.addEventListener("wheel", e => {
 		//e.preventDefault();
 		zoomBoard(e.deltaY > 0 ? .2 : -.2);
 	}, {passive: 0});*/
@@ -40,7 +40,7 @@ function init() {
 		a.loop = 1;
 		const go = () => a.play();
 		go();
-		gameCanvas.addEventListener("pointerdown", go, {once: 1});
+		gc.addEventListener("pointerdown", go, {once: 1});
 	})();*/
 
 	initBoard();
@@ -59,10 +59,10 @@ function init() {
 
 function resize() {
 	setLayout();
-	mainDiv.style.width = width + "px";
-	mainDiv.style.height = height + "px";
-	mainDiv.style.left = "0";
-	mainDiv.style.top = "0";
+	md.style.width = width + "px";
+	md.style.height = height + "px";
+	md.style.left = "0";
+	md.style.top = "0";
 	redraw();
 }
 

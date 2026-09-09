@@ -2,6 +2,7 @@ const tileWidth = 6;
 const cellSize = 18;
 const unitScale = 2 / 3;
 const campaignLength = 63;
+let bgKey = 0;
 
 let boardWidth;
 let boardHeight;
@@ -62,13 +63,13 @@ const UNITS = [
 	//           |  |  |  |  |  |      |    |    and 0 means it never upgrades
 	[0,          6, 2, 3, 3, 0, 0,     100, 100], // Unicorn
 	["Corwin",   9, 1, 0, 3, 7, "012", 121, 0],
-	["Merlin",   6, 1, 2, 0, 7, "b56", 131, 43], // yellow
-	["Benedict", 10,2, 0, 2, 6, "046", 21,  21], // blue
+	["Merlin",   6, 1, 2, 0, 7, "b56", 131, 43],
+	["Benedict", 10,2, 0, 2, 6, "046", 21,  21],
 	["Fiona",    5, 1, 1, 2, 5, 0,     33,  16],
 	["Random",   8, 1, 0, 1, 7, 0,     12,  22],
 	["Bleys",    8, 1, 0, 0, 6, 0,     21,  11],
-	["Julian",   7, 1, 0, 1, 5, "392", 121, 61],// green
-	["Caine",    8, 1, 0, 0, 6, "096", 11,  40],// blue
+	["Julian",   7, 1, 0, 1, 5, "392", 121, 61],
+	["Caine",    8, 1, 0, 0, 6, "096", 11,  40],
 	["Gerard",   12,2, 0, 0, 6, "356", 11,  21],
 ];
 const ENEMIES = [
@@ -788,9 +789,9 @@ function fitBoard() {
 	const scale = Math.min(width / (boardWidth + pad), height / (boardHeight + pad)) / cellSize || 1;
 	const w = width / scale | 0;
 	const h = height / scale | 0;
-	if (gameCanvas.width - w | gameCanvas.height - h) {
-		gameCanvas.width = w;
-		gameCanvas.height = h;
+	if (gc.width - w | gc.height - h) {
+		gc.width = w;
+		gc.height = h;
 		bgKey = 0;
 	}
 	gameContext.imageSmoothingEnabled = false;
@@ -799,8 +800,6 @@ function fitBoard() {
 	return cellSize;
 }
 
-let bgKey = 0;
-
 function drawBoard() {
 	if (!battleActive) {
 		rainbowPulse = anyDying() || state == 2;
@@ -808,7 +807,7 @@ function drawBoard() {
 	}
 	const size = fitBoard(boardWidth, boardHeight);
 	const ox = boardOffsetX, oy = boardOffsetY;
-	const vw = gameCanvas.width, vh = gameCanvas.height;
+	const vw = gc.width, vh = gc.height;
 	// the canvas is never cleared, so the far backdrop keeps between frames
 	const bgNow = ox + oy * 7 + size;
 	const bgStale = bgNow != bgKey;
