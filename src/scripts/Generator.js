@@ -231,14 +231,6 @@ function makeRandomLevel(stage) {
 	grid[from / width | 0][from % width] = 2;
 	grid[to / width | 0][to % width] = 8;
 
-	// gold
-	for (let drops = 2 + RNG(2); drops --;) {
-		const k = trail[RNG(trail.length)];
-		const x = k % width;
-		const y = k / width | 0;
-		if (grid[y][x] == 0) grid[y][x] = 4;
-	}
-
 	if (hasRescue(progress) && enemies.length) {
 		const prison = enemies[RNG(enemies.length)];
 		grid[prison[1]][prison[0]] = 9;

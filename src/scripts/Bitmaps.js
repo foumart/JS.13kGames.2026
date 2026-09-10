@@ -59,7 +59,6 @@ const backgroundsData = [
 const objectsData = [
 	"ffeffafd0deeabc465faad33622", // color bank
 	"678", // jewel
-	"125", // coin
 	"035", // cross
 	"012", // sparkleA
 	"012", // sparkleB
@@ -68,7 +67,7 @@ const objectsData = [
 	"012", // right
 	"012", // down
 	"012", // left
-	"`BXIXJhJlNpCH@fHkfXzlOp@`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
+	"`BXIXJhJlNpC`A`BYffYo~PB@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
 ];
 
 const pathsData = [

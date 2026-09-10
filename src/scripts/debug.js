@@ -52,10 +52,6 @@ function debugAdvance() {
 				enemies[y][x] = 0;
 				if (fillData[y]) fillData[y][x] = 1;
 			}
-			if (coins[y] && coins[y][x]) {
-				coins[y][x] = 0;
-				coinsCollected ++;
-			}
 			const k = rescues[y] && rescues[y][x];
 			if (k) {
 				rescues[y][x] = 0;
@@ -66,7 +62,7 @@ function debugAdvance() {
 		}
 	}
 	enemiesCleared = enemiesTotal;
-	countEnemiesAndCoinsLeft();
+	countEnemiesLeft();
 	revealPlayerTile = 1;
 	state = 2;
 	scheduleEndScreen();
@@ -83,7 +79,7 @@ function debugClearLevel() {
 		}
 	}
 	enemiesCleared = enemiesTotal;
-	countEnemiesAndCoinsLeft();
+	countEnemiesLeft();
 	revealPlayerTile = 1;
 	state = 2;
 	scheduleEndScreen();
