@@ -171,7 +171,7 @@ function app(callback) {
 			.pipe(replace('let debugKeys = 1;', `let debugKeys = ${roadroll ? 0 : 1};`, replaceOptions))
 			.pipe(gulpif(pwa, replace('service_worker', 'sw', replaceOptions)))
 			.pipe(replace('{VERSION}', version, replaceOptions))
-			.pipe(gulpif(!pwa, replace('function init', 'window.addEventListener("load",init);function init', replaceOptions)))
+			.pipe(gulpif(!pwa, replace(/function init\(/g, 'window.addEventListener("load",init);function init(', replaceOptions)))
 			.pipe(dest(dir + '/src/scripts/'))
 			.on('end', callback);
 	} else {
@@ -181,7 +181,7 @@ function app(callback) {
 			.pipe(replace('let debugKeys = 1;', `let debugKeys = ${roadroll ? 0 : 1};`, replaceOptions))
 			.pipe(gulpif(pwa, replace('service_worker', 'sw', replaceOptions)))
 			.pipe(replace('{VERSION}', version, replaceOptions))
-			.pipe(gulpif(!pwa, replace('function init', 'window.addEventListener("load",init);function init', replaceOptions)))
+			.pipe(gulpif(!pwa, replace(/function init\(/g, 'window.addEventListener("load",init);function init(', replaceOptions)))
 			.pipe(gulpif(!debug,
 				closureCompiler({
 					compilation_level: 'ADVANCED_OPTIMIZATIONS',
@@ -272,7 +272,7 @@ function pack(callback) {
 
 	if (raw) {
 		// Use glob to get all JavaScript files
-		const scriptFiles = glob.sync('src/scripts/*.js').reverse();
+		const scriptFiles = glob.sync('src/scripts/*.js').sort();
 		// Add initialization scripts as well
 		if (pwa) {
 			scriptFiles.unshift('src/scripts/sw_init.js');
@@ -311,9 +311,9 @@ function pack(callback) {
 function prep(callback) {
 	(async () => {
 		del = (await import('del')).deleteAsync;
-		del(dir);
+		await del(dir);
 		callback();
-	})();
+	})().catch(callback);
 }
 
 // Delete the temporary folder generated during packaging
@@ -347,11 +347,11 @@ async function roadrollHtml() {
 
 // Package zip (exclude any fonts that are used locally, like Twemoji.ttf)
 function archive(callback) {
-	if (debug) callback();
+	if (debug || raw) callback();
 	else {
 		(async () => {
 			zip = (await import('gulp-zip')).default;
-			src([dir + '/*', dir + '/*/*', '!'+ dir + '/*.ttf'], { allowEmpty: true })
+			src([dir + '/**/*', '!' + dir + '/**/*.ttf'], { allowEmpty: true })
 				.pipe(zip(test ? 'game.zip' : 'game_' + timestamp + '.zip'))
 				.pipe(advzip({ optimizationLevel: 4, iterations: 10 }))
 				.pipe(dest('zip/'))
@@ -362,7 +362,7 @@ function archive(callback) {
 
 // Output the zip filesize
 function check(callback) {
-	if (debug) callback();
+	if (debug || raw) callback();
 	else {
 		var fs = require('fs');
 		const size = fs.statSync(test ? 'zip/game.zip' : 'zip/game_' + timestamp + '.zip').size;
@@ -411,9 +411,9 @@ function getDateString(shorter) {
 }
 
 // Exports
-exports.default = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, archive, check, watch);
-exports.build = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, archive, check);
-exports.prod = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
+exports.default = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
+exports.build = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
+exports.prod = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, archive, check, watch);
 exports.sync = series(ico, app, cs, mangle, assets, pack, clean, reload);
 exports.zip = series(archive, check);
 exports.roadroll = series(roadrollHtml, archive, check);
