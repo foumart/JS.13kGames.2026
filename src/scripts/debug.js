@@ -62,6 +62,7 @@ function debugAdvance() {
 		}
 	}
 	enemiesCleared = enemiesTotal;
+	jewelX = jewelY = -1;
 	countEnemiesLeft();
 	revealPlayerTile = 1;
 	state = 2;
@@ -79,6 +80,7 @@ function debugClearLevel() {
 		}
 	}
 	enemiesCleared = enemiesTotal;
+	jewelX = jewelY = -1;
 	countEnemiesLeft();
 	revealPlayerTile = 1;
 	state = 2;

@@ -213,7 +213,7 @@ function makeRandomLevel(stage) {
 		for (let j = cells.length; j --;) {
 			const x = cells[j] % width;
 			const y = cells[j] / width | 0;
-			grid[y][x] = rock ? (cells.length == 1 && !RNG(4) ? 4 : 3) : beside ? 0 : 1;
+	grid[y][x] = rock ? (cells.length == 1 && !RNG(4) ? 0 : 3) : beside ? 0 : 1;
 			if (!rock && !beside) enemies.push([x, y]);
 		}
 	}
@@ -231,9 +231,19 @@ function makeRandomLevel(stage) {
 	grid[from / width | 0][from % width] = 2;
 	grid[to / width | 0][to % width] = 8;
 
-	if (hasRescue(progress) && enemies.length) {
+	if (hasRescue(progress) && progress % 9 != 8 && enemies.length) {
 		const prison = enemies[RNG(enemies.length)];
 		grid[prison[1]][prison[0]] = 9;
+	} else {
+		const spots = [];
+		for (let i = trail.length; i--;) {
+			const x = trail[i] % width, y = trail[i] / width | 0;
+			if (!grid[y][x]) spots.push(trail[i]);
+		}
+		if (spots.length) {
+			const k = spots[RNG(spots.length)];
+			grid[k / width | 0][k % width] = 4;
+		}
 	}
 	return grid;
 }
