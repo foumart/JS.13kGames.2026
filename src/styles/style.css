@@ -1,7 +1,6 @@
 body {
 	overflow: hidden;
 	color: #fff;
-	/*background: #06221c;*/
 	font: 900 3vmin system-ui;
 	text-align: center;
 }
@@ -16,10 +15,6 @@ body {
 
 #ui {
 	pointer-events: none;
-	/* CRT: scanlines */
-	/*background:
-		repeating-linear-gradient(#0000 0 2px, #0003 2px 3px),
-		radial-gradient(#0000 60%, #0007);*/
 }
 
 #L, #R {
@@ -50,9 +45,9 @@ body {
 	font-size: 2vmin;
 }
 
-.s {
+/*.s {
 	font-size: 3vmin;
-}
+}*/
 
 .l {
 	font-size: 5vmin;
@@ -73,6 +68,12 @@ body {
 	gap: 1vmin;
 }
 
+.p {
+	margin: 0 1vmin;
+	padding: 1vmin;
+	border-radius: 2vmin;
+}
+
 .on {
 	background: #fd6;
 }
@@ -83,7 +84,7 @@ body {
 }
 
 .in {
-	background: #96f4;
+	background: #8696;
 	/*margin: 2vmin;*/
 	/*padding: 2vmin;*/
 }
@@ -113,7 +114,7 @@ button {
 
 #ms button {
 	padding: 1vmin 2vmin;
-	margin: 2vmin;
+	margin: 2vmin 1vmin;
 }
 
 hr {

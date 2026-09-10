@@ -85,14 +85,14 @@ function updateUI() {
 		if (!puzzleMode) {
 			L.appendChild(document.createElement("hr"));
 			if (!battleActive || battleResult) {
-				L.appendChild(line(4, "The Unicorn"));
+				L.appendChild(line(4, "\xa0 The Unicorn \xa0"));
 				L.appendChild(line(4, "of Order"));
 				L.appendChild(playerCard(size));
 			}
 		}
-		R.textContent = puzzleMode ? "Stage " + (levelIndex + 1) : "Vail " + shadowNumber();
+		R.textContent = puzzleMode ? "Stage " + (levelIndex + 1) : "World " + worldNumber() + "-" + shadowNumber();
 		if (!puzzleMode) R.appendChild(document.createElement("hr"));
-		if (battleResult == 2) R.appendChild(line(4, "cleared!"));
+		if (battleResult == 2) R.appendChild(line(4, "Vail cleared!"));
 		if (battleActive && !battleResult || showPick) {
 			if (ally) L.appendChild(unitCard(ally, size, 0));
 			if (foe && foe.hp > 0) R.appendChild(unitCard(foe, size, 1));
@@ -163,8 +163,8 @@ function enemyCard(size) {
 	const d = row();
 	d.style.display = "block";
 	if (!showPick) {
-		d.appendChild(line(4, "Upcoming in"));
-		d.appendChild(line(4, (4-stageNumber()) + " puzzles"));
+		d.appendChild(line(4, "Vail upcoming"));
+		d.appendChild(line(4, "in " + (4-stageNumber()) + " puzzles"));
 	}
 	// display boss support and leprechauns left in the enemy panel
 	/*const seen = {};
@@ -188,8 +188,9 @@ function enemyCard(size) {
 }
 
 function printProgress() {
-	appendLine(1 - portrait, puzzleMode ? "Stage " + (levelIndex + 1) : "World " + worldNumber() + "-" + shadowNumber());
-	if (!puzzleMode) appendLine(2 - portrait, (battleActive ? "Vail " : "Puzzle ") + (1 + (battleActive ? levelIndex / 3 | 0 : levelIndex) % 3));
+	appendLine(0, puzzleMode ? "Stage " + (levelIndex + 1) : (battleActive ? "Vail " + shadowNumber() : "World " + worldNumber() + "-" + shadowNumber()));
+	if (battleActive) appendLine(3);
+	else if (!puzzleMode) appendLine(1, "Puzzle " + (1 + levelIndex % 3));
 }
 
 function fillBrief() {
@@ -225,16 +226,16 @@ function fillBrief() {
 }
 
 function fillPick() {
-	const size = Math.max(40, Math.min(width / (rescuedUnits.length + 1), height * 0.14) | 0);
+	const size = Math.min(width, height) / (rescuedUnits.length < 5 ? 6 : rescuedUnits.length + 2) | 0;
 	const need = Math.min(2, rescuedUnits.length);
 	printProgress();
-	appendLine(3, need > 1 ? "Pick " + need + " allies" : "Your ally");
+	appendLine(3, need > 2 ? "Pick 2 allies" : "Your all" + (need == 2 ? "ies" : "y"));
 	appendLine(4);
 	const pickRow = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
 		const wrap = row();
-		wrap.className = "g" + (battleParty.indexOf(bmp) >= 0 ? " of" : " in") + (i == pickCursor ? " cur" : "");
+		wrap.className = "g p" + (battleParty.indexOf(bmp) >= 0 ? " of" : " in") + (i == pickCursor ? " cur" : "");
 		const icon = createIcon(rescuedUnits[i], size);
 		wrap.onclick = toggleParty.bind(null, bmp);
 		wrap.appendChild(icon);
