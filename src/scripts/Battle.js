@@ -439,7 +439,9 @@ function playerMove(u, x, y) {
 			return;
 		}
 		battleRefreshTiles();
-		if (!u.hits(u.x, u.y).length) battleFinishUnit(u);
+		const hits = u.hits(u.x, u.y);
+		if (!hits.length) battleFinishUnit(u);
+		else if (u.around) playerAttack(u, hits[0].x, hits[0].y);
 	});
 }
 
@@ -651,8 +653,7 @@ function battleTap(event) {
 
 	if (occ) {
 		if (!battlePhase && !thinking && battleControl && battleSelect == battleControl && !battleControl.acted) {
-			const hits = battleControl.actHits(occ.x, occ.y);
-			if (hits.length && (!battleControl.around || hits.indexOf(occ) >= 0)) {
+			if (battleControl.actHits(occ.x, occ.y).length) {
 				playerAttack(battleControl, occ.x, occ.y);
 				return;
 			}
@@ -717,7 +718,7 @@ function battleDir(d) {
 	if (!u || !u.hero || (u.moved && u.acted)) return;
 	const dx = d[0], dy = d[1];
 
-	if (u.moved && !u.acted && (u.around || u.atk != 3)) {
+	if (u.moved && !u.acted && u.atk != 3) {
 		if (u.hits(u.x, u.y).length) playerAttack(u, u.x + dx, u.y + dy);
 		else battleFinishUnit(u);
 		return;

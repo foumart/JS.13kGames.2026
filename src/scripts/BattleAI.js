@@ -34,7 +34,7 @@ function nextUnitInQueue(list, then) {
 			if (battleResult || epoch != battleEpoch) return;
 			if (checkForBattleEnd()) return;
 
-			waitDelay(next, 20);
+			waitDelay(next, 9);
 		});
 	};
 	next();
@@ -43,10 +43,10 @@ function nextUnitInQueue(list, then) {
 // get highest scoring entry, in case of a tie - pick randomly
 function bestByScore(list, scoreFn) {
 	let best = -1;
-	let bestS = -999;
+	let bestS = -99;
 	for (let i = 0; i < list.length; i++) {
 		const s = scoreFn(list[i]);
-		if (s > bestS || s == bestS && RNG(2)) {
+		if (s >= bestS || s == bestS && RNG(2)) {
 			bestS = s;
 			best = i;
 		}
@@ -57,12 +57,13 @@ function bestByScore(list, scoreFn) {
 function battleThink(unit, done) {
 	const want = unit.enemy ? 0 : 1;
 	const far = unit.atkRay[0][2] > 1;
+	const hide = hard || RNG(2);
 	const danger = {};
 	const ownHp = unit.hp;
 	unit.hp = 0;
 	for (const battleUnit of battleUnits) {
 		if (battleUnit.hp <= 0 || battleUnit.enemy == unit.enemy) continue;
-		const from = battleUnit.moves();
+		const from = hard ? battleUnit.moves() : [];
 		from.push(battleUnit);
 		for (let k = 0; k < from.length; k++) {
 			const scan = battleUnit.rayScan(from[k].x, from[k].y);
@@ -73,17 +74,17 @@ function battleThink(unit, done) {
 		}
 	}
 	unit.hp = ownHp;
-	const safeAt = m => !danger[[m.x, m.y]];
-	const score = m => {
+	const safeAt = unitToMeasure => !danger[[unitToMeasure.x, unitToMeasure.y]];
+	const getActScore = unitToMeasure => {
 		const hp = unit.hp;
 		unit.hp = 0;
-		const h = unit.hits(m.x, m.y).length;
+		const h = unit.hits(unitToMeasure.x, unitToMeasure.y).length;
 		unit.hp = hp;
-		const safe = far && safeAt(m);
-		const p = getProbability(m, want);
-		return far ? (safe ? 2000 : 0) + h * 999 + (h ? -p : p) : h * 999 + p;
+		const safe = far && hide && safeAt(unitToMeasure);
+		const p = getProbability(unitToMeasure, want);
+		return far ? (safe ? 99 : 0) + h * 99 + (h ? -p : p) : h * 99 + p;
 	};
-	const retreat = m => (safeAt(m) ? 2000 : 0) + getProbability(m, want);
+	const retreat = unitToMeasure => (hide && safeAt(unitToMeasure) ? 99 : 0) + getProbability(unitToMeasure, want);
 	const stayHits = unit.hits(unit.x, unit.y);
 	// smart enemies could either attack/move or move/attack depending on outcome
 	let better = 0;
@@ -113,8 +114,8 @@ function battleThink(unit, done) {
 	}
 
 	const moves = unit.moves();
-	const stayS = score(unit);
-	const [best, bestS] = bestByScore(moves, score);
+	const stayS = getActScore(unit);
+	const [best, bestS] = bestByScore(moves, getActScore);
 	if (best < 0 || stayS > bestS || stayS == bestS && RNG(2)) {
 		unit.moved = 1;
 		unit.acted = 1;

@@ -28,7 +28,7 @@ Turn-based tactics - The Unicorn always fights; rescued heroes you picked take t
 
 The Unicorn moves as a **knight**. With keyboard you aim an L-shaped jump in two arrow presses: first a cardinal direction (the long leg), then left or right (or up and down) to pick the landing. Yellow tiles are moves, red tiles are attacks. **Space** attacks if anyone is in range (or skips the attack if you already moved). Click or tap a highlighted tile to move or strike. **Tab** cycles allies; **Enter** ends the Unicorn’s turn early.
 
-After the Unicorn learns **Around**, you no longer aim a single attack tile - Space, or any arrow after moving, hits every foe in range at once.
+After the Unicorn learns **Around**, after a move the unicorn attacks all foes at range automatically.
 
 ## Keyboard Controls
 
