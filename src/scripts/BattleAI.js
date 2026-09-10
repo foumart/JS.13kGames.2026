@@ -1,9 +1,8 @@
-function getProbability(x, y, wantEnemy) {
+function getProbability(unitToMeasure, want) {
 	let p = 0;
-	for (const t of battleUnits) {
-		if (t.hp <= 0 || t.enemy != wantEnemy) continue;
-		p += boardWidth - Math.min(boardWidth - 1, Math.abs(t.x - x));
-		p += boardHeight - Math.min(boardHeight - 1, Math.abs(t.y - y));
+	for (const battleUnit of battleUnits) {
+		if (battleUnit.hp <= 0 || battleUnit.enemy != want) continue;
+		p -= Math.abs(battleUnit.x - unitToMeasure.x) + Math.abs(battleUnit.y - unitToMeasure.y);
 	}
 	return p;
 }
@@ -29,9 +28,9 @@ function nextUnitInQueue(list, then) {
 			then();
 			return;
 		}
-		const u = list[i++];
-		battleSelect = u;
-		battleThink(u, () => {
+		const unit = list[i++];
+		battleSelect = unit;
+		battleThink(unit, () => {
 			if (battleResult || epoch != battleEpoch) return;
 			if (checkForBattleEnd()) return;
 
@@ -55,78 +54,78 @@ function bestByScore(list, scoreFn) {
 	return [best, bestS];
 }
 
-function battleThink(u, done) {
-	const want = u.enemy ? 0 : 1;
-	const far = u.atkRay[0][2] > 1;
+function battleThink(unit, done) {
+	const want = unit.enemy ? 0 : 1;
+	const far = unit.atkRay[0][2] > 1;
 	const danger = {};
-	const ownHp = u.hp;
-	u.hp = 0;
-	for (const t of battleUnits) {
-		if (t.hp <= 0 || t.enemy == u.enemy) continue;
-		const from = t.moves();
-		from.push(t);
+	const ownHp = unit.hp;
+	unit.hp = 0;
+	for (const battleUnit of battleUnits) {
+		if (battleUnit.hp <= 0 || battleUnit.enemy == unit.enemy) continue;
+		const from = battleUnit.moves();
+		from.push(battleUnit);
 		for (let k = 0; k < from.length; k++) {
-			const scan = t.rayScan(from[k].x, from[k].y);
+			const scan = battleUnit.rayScan(from[k].x, from[k].y);
 			for (let i = 0; i < scan.length; i++) {
 				const cells = scan[i][0];
 				for (let j = 0; j < cells.length; j++) danger[cells[j]] = 1;
 			}
 		}
 	}
-	u.hp = ownHp;
+	unit.hp = ownHp;
 	const safeAt = m => !danger[[m.x, m.y]];
 	const score = m => {
-		const hp = u.hp;
-		u.hp = 0;
-		const h = u.hits(m.x, m.y).length;
-		u.hp = hp;
+		const hp = unit.hp;
+		unit.hp = 0;
+		const h = unit.hits(m.x, m.y).length;
+		unit.hp = hp;
 		const safe = far && safeAt(m);
-		const p = getProbability(m.x, m.y, want);
+		const p = getProbability(m, want);
 		return far ? (safe ? 2000 : 0) + h * 999 + (h ? -p : p) : h * 999 + p;
 	};
-	const retreat = m => (safeAt(m) ? 2000 : 0) + getProbability(m.x, m.y, want);
-	const stayHits = u.hits(u.x, u.y);
+	const retreat = m => (safeAt(m) ? 2000 : 0) + getProbability(m, want);
+	const stayHits = unit.hits(unit.x, unit.y);
 	// smart enemies could either attack/move or move/attack depending on outcome
 	let better = 0;
-	if (u.smart) {
-		const step = u.moves();
-		const hp = u.hp;
-		u.hp = 0;
+	if (unit.smart) {
+		const step = unit.moves();
+		const hp = unit.hp;
+		unit.hp = 0;
 		for (let i = 0; i < step.length; i++) {
-			if (u.hits(step[i].x, step[i].y).length > stayHits.length) better = 1;
+			if (unit.hits(step[i].x, step[i].y).length > stayHits.length) better = 1;
 		}
-		u.hp = hp;
+		unit.hp = hp;
 	}
 
 	if (stayHits.length && !better) {
-		previewTiles(u, 1, () => performAttack(u, stayHits, () => {
+		previewTiles(unit, 1, () => performAttack(unit, stayHits, () => {
 			if (checkForBattleEnd()) return;
-			const moves = u.moves();
+			const moves = unit.moves();
 			const [best, bestS] = bestByScore(moves, retreat);
-			if (best < 0 || retreat(u) > bestS) {
-				u.moved = 1;
+			if (best < 0 || retreat(unit) > bestS) {
+				unit.moved = 1;
 				done();
 				return;
 			}
-			previewTiles(u, 0, () => performMove(u, moves[best].x, moves[best].y, done));
+			previewTiles(unit, 0, () => performMove(unit, moves[best].x, moves[best].y, done));
 		}));
 		return;
 	}
 
-	const moves = u.moves();
-	const stayS = score(u);
+	const moves = unit.moves();
+	const stayS = score(unit);
 	const [best, bestS] = bestByScore(moves, score);
 	if (best < 0 || stayS > bestS || stayS == bestS && RNG(2)) {
-		u.moved = 1;
-		u.acted = 1;
+		unit.moved = 1;
+		unit.acted = 1;
 		done();
 	} else {
-		previewTiles(u, 0, () => {
-			performMove(u, moves[best].x, moves[best].y, () => {
-				const hits = u.hits(u.x, u.y);
-				if (hits.length) previewTiles(u, 1, () => performAttack(u, hits, done));
+		previewTiles(unit, 0, () => {
+			performMove(unit, moves[best].x, moves[best].y, () => {
+				const hits = unit.hits(unit.x, unit.y);
+				if (hits.length) previewTiles(unit, 1, () => performAttack(unit, hits, done));
 				else {
-					u.acted = 1;
+					unit.acted = 1;
 					done();
 				}
 			});
