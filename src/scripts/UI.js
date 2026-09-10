@@ -113,6 +113,11 @@ function updateUI() {
 	ms.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
 	ms.textContent = "";
 	if (menu == 1) {
+		/*const t = tileWidth, c = document.createElement("canvas"), x = c.getContext("2d");
+		c.width = 60 * t;
+		c.height = 30 * t;
+		for (let i = 24; i--;) drawPaletted(backgroundsBitmaps["644444462000000831111119"[i]], "234", i % 8 * t, (i / 8 | 0) * t, t, t, x);
+		ms.appendChild(c);*/
 		appendLine(2, "The Fourth");
 		appendLine(0, "Labyrinth");
 		appendLine(0);
