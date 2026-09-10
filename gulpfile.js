@@ -413,7 +413,7 @@ function getDateString(shorter) {
 // Exports
 exports.default = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
 exports.build = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
-exports.prod = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, archive, check, watch);
+exports.prod = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, archive, check);
 exports.sync = series(ico, app, cs, mangle, assets, pack, clean, reload);
 exports.zip = series(archive, check);
 exports.roadroll = series(roadrollHtml, archive, check);

@@ -106,10 +106,10 @@ function toggleParty(bmp) {
 	pickPartyBmp(bmp);
 }
 
-function battleRoster(aliveOnly) {
+function battleRoster(aliveOnly, foes) {
 	const list = [];
 	for (const unit of battleUnits) {
-		if (!unit.enemy && (!aliveOnly || unit.hp > 0)) list.push(unit);
+		if (unit.enemy == !!foes && (!aliveOnly || unit.hp > 0)) list.push(unit);
 	}
 	return list;
 }
@@ -683,11 +683,10 @@ function battleKey(event) {
 	if (k == 9) {
 		event.preventDefault();
 		if (battlePhase || thinking) return;
-		const list = battleRoster(1);
+		const list = battleRoster(1, event.shiftKey);
 		if (!list.length) return;
-		let i = list.indexOf(battleSelect || battleControl);
-		if (i < 0) i = event.shiftKey ? 0 : -1;
-		selectUnit(list[(i + (event.shiftKey ? -1 : 1) + list.length) % list.length]);
+		const i = list.indexOf(battleSelect || battleControl);
+		selectUnit(list[(i + 1) % list.length]);
 		return;
 	}
 	if (battlePhase || thinking) return;

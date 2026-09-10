@@ -32,14 +32,14 @@ After the Unicorn learns **Around**, after a move the unicorn attacks all foes a
 
 ## Keyboard Controls
 
-| Input | Puzzle | Vail |
+| Input | Puzzle | Vail Battle |
 |-------|--------|------|
 | Arrows / WASD | Step, or retract along the trail | Knight move or attack (two keypresses) |
 | Click / tap | Step onto the neighbouring tile, or retract toward a trail cell | Select a unit to see stats, or perform move/attack on a highlighted tile |
 | Drag / swipe | Move in the drag direction | Same as an arrow |
 | Space | — | Attack, or skip attack after a move |
 | Enter | Confirm menus | Pass and skip the Unicorn's turn |
-| Tab | — | Cycle through unit stats |
+| Tab / Shift + Tab | — | Cycle through player / enemy unit stats |
 | Esc | Pause (Resume / Quit) | Pause |
 | R | Restart the stage | Restart the battle |
 
