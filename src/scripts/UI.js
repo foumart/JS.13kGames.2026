@@ -45,14 +45,14 @@ function appendLine(c, t) {
 
 function line(c = 3, t = "\xa0") {
 	const d = row();
-	d.className = "xelsm"[c];
+	d.className = ["css_display", "css_headline", "css_subtitle", "css_body", "css_caption"][c];
 	d.textContent = t;
 	return d;
 }
 
 function row() {
 	const d = document.createElement("div");
-	d.className = "g";
+	d.className = "css_row";
 	return d;
 }
 
@@ -124,7 +124,7 @@ function updateUI() {
 		// crossings are the hard mode - switch before starting
 		const d = document.createElement("button");
 		d.textContent = hard ? "Hard" : "Easy";
-		d.className = "of";
+		d.className = "css_muted";
 		d.onclick = toggleHard;
 		ms.appendChild(d);
 	} else if (menu == 2) appendLine(1, "PAUSED");
@@ -205,8 +205,8 @@ function fillBrief() {
 		const c = createIcon(stageCaptive, size);
 		r.appendChild(c);
 		r.appendChild(line(2, stageCaptive));
-		r.className = "g";
-		c.className = "if";
+		r.className = "css_row";
+		c.className = "css_frame";
 		ms.appendChild(r);
 		appendLine();
 	}
@@ -215,7 +215,7 @@ function fillBrief() {
 		const r = row();
 		r.appendChild(line(2, "Obtain"));
 		const c = createSpriteIcon(size, s => blit(objectBitmaps[0], 0, 0, s));
-		//c.className = "if";
+		//c.className = "css_frame";
 		r.appendChild(c);
 		ms.appendChild(r);
 		appendLine();
@@ -235,7 +235,7 @@ function fillPick() {
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
 		const wrap = row();
-		wrap.className = "g p" + (battleParty.indexOf(bmp) >= 0 ? " of" : " in") + (i == pickCursor ? " cur" : "");
+		wrap.className = "css_row css_chip" + (battleParty.indexOf(bmp) >= 0 ? " css_muted" : " css_idle") + (i == pickCursor ? " css_focused" : "");
 		const icon = createIcon(rescuedUnits[i], size);
 		wrap.onclick = toggleParty.bind(null, bmp);
 		wrap.appendChild(icon);
@@ -266,7 +266,7 @@ function fillUpgrade() {
 		const thumb = line(3, "");
 		const name = line(4, unit.name || "Unicorn");
 		const icon = createIcon(unit, size * .65);
-		icon.className = "if";
+		icon.className = "css_frame";
 		thumb.appendChild(name);
 		thumb.appendChild(icon);
 		const col = line(3, "");
@@ -275,7 +275,7 @@ function fillUpgrade() {
 		for (let k = 0; k < kinds.length; k++) {
 			const b = document.createElement("button");
 			b.textContent = upgradeLabel(kinds[k], unit);
-			b.className = (pick == kinds[k] ? "on" : "of") + (i == upgradeCurUnit && k == upgradeCurOpt ? " cur" : "");
+			b.className = (pick == kinds[k] ? "css_picked" : "css_muted") + (i == upgradeCurUnit && k == upgradeCurOpt ? " css_focused" : "");
 			b.onclick = setUpgrade.bind(null, id, kinds[k]);
 			btns.appendChild(b);
 		}
@@ -319,7 +319,7 @@ function fillEnd() {
 		if (stageCaptive && rescuedUnits.indexOf(stageCaptive) >= 0) {
 			const row2 = line(3, "");
 			const ic = createIcon(stageCaptive, size);
-			ic.className = "if";
+			ic.className = "css_frame";
 			row2.appendChild(ic);
 			appendLine();
 			ms.appendChild(row2);
@@ -331,7 +331,7 @@ function fillEnd() {
 			for (let n = leftUnitsThisLevel[kind]; n--;) {
 				const enemy = foeThumb(kind + 1, size);
 				row3.appendChild(enemy);
-				enemy.className = "if";
+				enemy.className = "css_frame";
 				vailed ++;
 			}
 		}
@@ -393,7 +393,7 @@ function syncEndCursor() {
 	const a = endButtons();
 	if (endBtnCur >= a.length) endBtnCur = a.length - 1;
 	const on = showUpgrade ? upgradeCurUnit >= upgradeRows().length : showEnd || menu;
-	for (let i = 0; i < a.length; i++) a[i].className = on && i == endBtnCur ? "cur" : "";
+	for (let i = 0; i < a.length; i++) a[i].className = on && i == endBtnCur ? "css_focused" : "";
 }
 
 function moveEndCursor(dx) {

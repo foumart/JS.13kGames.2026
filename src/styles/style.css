@@ -41,55 +41,55 @@ body {
 	padding: 0 0 8vmin;
 }
 
-.m {
+.css_caption {
 	font-size: 2vmin;
 }
 
-/*.s {
+/*.css_body {
 	font-size: 3vmin;
 }*/
 
-.l {
+.css_subtitle {
 	font-size: 5vmin;
 }
 
-.e {
+.css_headline {
 	font-size: 7vmin;
 }
 
-.x {
+.css_display {
 	font-size: 9vmin;
 }
 
-.g {
+.css_row {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 1vmin;
 }
 
-.p {
+.css_chip {
 	margin: 0 1vmin;
 	padding: 1vmin;
 	border-radius: 2vmin;
 }
 
-.on {
+.css_picked {
 	background: #fd6;
 }
 
-.cur {
+.css_focused {
 	outline: 1.5vmin solid #6e6;
 	/*outline-offset: 2vmin;*/
 }
 
-.in {
+.css_idle {
 	background: #8696;
 	/*margin: 2vmin;*/
 	/*padding: 2vmin;*/
 }
 
-.if {
+.css_frame {
 	background: #768;
 	padding: 2vmin;
 	margin: 1vmin;
@@ -97,7 +97,7 @@ body {
 	/*outline: 2vmin solid #b9f8;*/
 }
 
-.of {
+.css_muted {
 	background: #bac;
 }
 

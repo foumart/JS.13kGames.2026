@@ -236,6 +236,23 @@ async function mangle() {
 		const fs = require('fs');
 		css = fs.readFileSync(dir + '/tmp/temp.css', 'utf8');
 		js = fs.readFileSync(dir + '/tmp/app.js', 'utf8');
+
+		// Shorten css_* class names to a, b, c...
+		if (!debug) {
+			const classIds = [
+				'css_caption', 'css_body', 'css_subtitle', 'css_headline', 'css_display',
+				'css_row', 'css_chip', 'css_picked', 'css_focused', 'css_idle',
+				'css_frame', 'css_muted'
+			];
+			for (let i = 0; i < classIds.length; i++) {
+				const regex = new RegExp(classIds[i], 'g');
+				const letter = String.fromCharCode(i + 97);
+				css = css.replace(regex, letter);
+				js = js.replace(regex, letter);
+			}
+			// ["e","d","c","b","a"][i] -> "edcba"[i]
+			js = js.replace(/\[("[a-z]")(,"[a-z]")+\]/g, m => '"' + m.replace(/[^a-z]/g, '') + '"');
+		}
 	}
 
 	if (roadroll && !debug) {
