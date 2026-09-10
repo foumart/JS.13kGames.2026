@@ -29,13 +29,13 @@ function createIcon(unit, size) {
 	return createSpriteIcon(size, s => drawUnitIcon(unit, s / 2, s / 2, s))
 }
 
-function createUnitStatsText(unit, sep = "\n", add = "") {
+function createUnitStatsText(unit, size = 4, sep = " \xa0 | \xa0 ") {
 	const hp = sep == "\n" ? Math.max(0, unit.hp) + "/" : "";
 	const cap = (cur, n) => sep[0] == " " && (n = rayText(n)) && n != cur ? " (" + n + ")" : "";
-	if (!sep) sep = " | ";
-	const txt = line(4);
+	//if (!sep) sep = " \xa0 | \xa0 ";
+	const txt = line(size);
 	txt.style.whiteSpace = "pre";
-	txt.textContent = (add && add + sep) + "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
+	txt.textContent = "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
 		+ sep + "Move: " + unit.mvMax + cap(unit.mvMax, unit.range)
 		+ sep + "Att: " + unit.atkMax + cap(unit.atkMax, unit.reach);
 	return txt;
@@ -70,13 +70,13 @@ function updateUI() {
 	const size = uiSize();
 
 	if (menu == 1) {
-		L.textContent = "by Noncho Savov";
-		//L.textContent = "";
+		//L.textContent = "by Noncho Savov";
+		L.textContent = "";
 		//L.appendChild(line(4, "FoumartGames presents:"));
 		//L.appendChild(line(3, "js13k game by Noncho Savov"));
 		//L.appendChild(line(3, "by Noncho Savov"));
-		R.textContent = "v{VERSION}";
-		//R.textContent = "";
+		//R.textContent = "v{VERSION}";
+		R.textContent = "";
 		//R.appendChild(line(4, "Arrows - move"));
 		//R.appendChild(line(4, "Space - select"));
 		//R.appendChild(line(4, "Enter - confirm"));
@@ -142,7 +142,7 @@ function unitCard(unit, size, right) {
 	const div = row();
 	if (right) div.style.flexDirection = "row-reverse";
 	div.appendChild(createIcon(unit, size));
-	div.appendChild(createUnitStatsText(unit));
+	div.appendChild(createUnitStatsText(unit, 4, "\n"));
 	return div;
 }
 
@@ -191,7 +191,7 @@ function enemyCard(size) {
 
 function printProgress() {
 	appendLine(0, puzzleMode ? "Stage " + (levelIndex + 1) : (battleActive ? "Vail " + shadowNumber() : "World " + worldNumber() + "-" + shadowNumber()));
-	if (battleActive) appendLine(3);
+	if (battleActive) appendLine(2);
 	else if (!puzzleMode) appendLine(1, "Puzzle " + (1 + levelIndex % 3));
 }
 
@@ -249,7 +249,9 @@ function fillPick() {
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
 	appendLine(4);
 	appendLine(2, unit.name);
-	appendLine(3, createUnitStatsText(unit, " \xa0 ").textContent);
+	appendLine(3, "Level: " + (upgradeLvl(unit) + 1));
+	appendLine(4);
+	ms.appendChild(createUnitStatsText(unit, 3, " \xa0 "));
 	//const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
 	//appendLine(3, "Move: " + n[unit.mv] + " / Attack: " + (unit.around ? n[4] : n[unit.atk]));
 	//appendLine(4);
@@ -260,6 +262,7 @@ function fillPick() {
 function fillUpgrade() {
 	const size = uiSize();
 	appendLine(1, "VICTORY!");
+	appendLine(3);
 	const list = upgradeRows();
 	for (let i = 0; i < list.length; i++) {
 		const unit = list[i].u;
@@ -268,13 +271,13 @@ function fillUpgrade() {
 		const pick = upgradePicks[id];
 		const upgradeTab = row();
 		const thumb = line(3, "");
-		const name = line(4, unit.name || "Unicorn");
-		const icon = createIcon(unit, size * .65);
+		const name = line(3, unit.name || "Unicorn");
+		const icon = createIcon(unit, size * .7);
 		icon.className = "css_frame";
 		thumb.appendChild(name);
 		thumb.appendChild(icon);
 		const col = line(3, "");
-		col.appendChild(createUnitStatsText(unit, "", "Lvl: " + (upgradeLvl(unit) + 1)));
+		col.appendChild(createUnitStatsText(unit));
 		const btns = row();
 		const all = upgradeKinds(unit, 1);
 		for (let k = 0; k < all.length; k++) {
