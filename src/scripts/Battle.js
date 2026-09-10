@@ -120,15 +120,19 @@ function upgradeId(u) {
 
 // 1 hp, 2 dmg, 3 move ray, 4 attack ray, 5 around, 6 life
 // 3 and 4 unlock after a few picks; unicorn gets 5, then 4 (R1/B1/R2) and 6
-function upgradeKinds(unit) {
+function upgradeLvl(u) {
+	const m = allyMod(u.name);
+	return m[0] / 2 + m[1] + m[2] + m[3] + !!m[4];
+}
+
+function upgradeKinds(unit, all) {
 	if (!unit || unit.hp <= 0) return [];
 	const m = allyMod(unit.name);
 	const kinds = [1, 2];
 	if (rayStep(unit.mv, unit.range, m[2])) kinds.push(3);
 	if ((!unit.hero || m[4]) && rayStep(unit.atk, unit.reach, m[3])) kinds.push(4);
 	if (unit.hero) kinds.push(m[4] ? 6 : 5);
-	const extra = Math.min(2, m[0] / 2 + m[1] + m[2] + m[3] + !!m[4]);
-	return kinds.slice(0, 2 + extra);
+	return all ? kinds : kinds.slice(0, 2 + Math.min(2, upgradeLvl(unit)));
 }
 
 function upgradeRows() {

@@ -29,13 +29,15 @@ function createIcon(unit, size) {
 	return createSpriteIcon(size, s => drawUnitIcon(unit, s / 2, s / 2, s))
 }
 
-function createUnitStatsText(unit, sep = "\n") {
-	const hp = sep ? Math.max(0, unit.hp) + "/" : "";
+function createUnitStatsText(unit, sep = "\n", add = "") {
+	const hp = sep == "\n" ? Math.max(0, unit.hp) + "/" : "";
+	const cap = (cur, n) => sep[0] == " " && (n = rayText(n)) && n != cur ? " (" + n + ")" : "";
 	if (!sep) sep = " | ";
 	const txt = line(4);
 	txt.style.whiteSpace = "pre";
-	txt.textContent = "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
-		+ sep + "Move: " + unit.mvMax + sep + "Att: " + unit.atkMax;
+	txt.textContent = (add && add + sep) + "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
+		+ sep + "Move: " + unit.mvMax + cap(unit.mvMax, unit.range)
+		+ sep + "Att: " + unit.atkMax + cap(unit.atkMax, unit.reach);
 	return txt;
 }
 
@@ -247,10 +249,12 @@ function fillPick() {
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
 	appendLine(4);
 	appendLine(2, unit.name);
-	appendLine(3, createUnitStatsText(unit).textContent);
-	const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
-	const atkN = unit.around ? n[4] : n[unit.atk];
-	appendLine(3, unit.mv == unit.atk && !unit.around ? n[unit.mv] : n[unit.mv] + " / " + atkN);
+	appendLine(3, createUnitStatsText(unit, " \xa0 ").textContent);
+	//const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
+	//appendLine(3, "Move: " + n[unit.mv] + " / Attack: " + (unit.around ? n[4] : n[unit.atk]));
+	//appendLine(4);
+	//appendLine(4, "Legend:");
+	//appendLine(4, "R: Rook, B: Bishop, Q: Queen, K: Knight");
 }
 
 function fillUpgrade() {
@@ -270,13 +274,16 @@ function fillUpgrade() {
 		thumb.appendChild(name);
 		thumb.appendChild(icon);
 		const col = line(3, "");
-		col.appendChild(createUnitStatsText(unit, ""));
+		col.appendChild(createUnitStatsText(unit, "", "Lvl: " + (upgradeLvl(unit) + 1)));
 		const btns = row();
-		for (let k = 0; k < kinds.length; k++) {
+		const all = upgradeKinds(unit, 1);
+		for (let k = 0; k < all.length; k++) {
 			const b = document.createElement("button");
-			b.textContent = upgradeLabel(kinds[k], unit);
-			b.className = (pick == kinds[k] ? "css_picked" : "css_muted") + (i == upgradeCurUnit && k == upgradeCurOpt ? " css_focused" : "");
-			b.onclick = setUpgrade.bind(null, id, kinds[k]);
+			b.textContent = upgradeLabel(all[k], unit);
+			const lock = k >= kinds.length;
+			b.className = (pick == all[k] ? "css_picked" : "css_muted") + (!lock && i == upgradeCurUnit && k == upgradeCurOpt ? " css_focused" : "");
+			if (lock) b.style.opacity = .4;
+			else b.onclick = setUpgrade.bind(null, id, all[k]);
 			btns.appendChild(b);
 		}
 		col.appendChild(btns);

@@ -170,6 +170,7 @@ function rayStep(t, lim, n) {
 }
 
 function rayText(g) {
+	g.pop || (g = [g / 10 % 10 | 0, g % 10, g > 99]);
 	let s = g[0] ? "R" + g[0] : "";
 	if (g[1]) s += (s && "-") + "B" + g[1];
 	if (g[2]) s += (s && "-") + "K";
