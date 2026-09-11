@@ -11,6 +11,7 @@ let viewLeft = 0;
 let viewTop = 0;
 let viewScale = 1;
 let iconContext;
+let scanHPattern;
 
 let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
 let obstacles = [];
@@ -761,21 +762,27 @@ function bounce(x, y, dying) {
 }
 
 function fitBoard() {
-	const crtTile = cellSize * 2;
-	const zoom = Math.max(1, (Math.min(width / (boardWidth * crtTile), height / (boardHeight * crtTile)) | 0) - (boardWidth < 7 | boardHeight < 7));
-	const canvasW = Math.max(boardWidth + 2, width / zoom / crtTile + 1 | 0) * crtTile;
-	const canvasH = Math.max(boardHeight + 2, height / zoom / crtTile + 1 | 0) * crtTile;
+	const crtTile = cellSize * 2, dpr = window.devicePixelRatio;
+	const zoom = Math.max(1, (Math.min(width * dpr / (boardWidth * crtTile), height * dpr / (boardHeight * crtTile)) | 0) - (boardWidth < 7 | boardHeight < 7));
+	const canvasW = Math.max(boardWidth + 2, width * dpr / zoom / crtTile + 1 | 0) * crtTile;
+	const canvasH = Math.max(boardHeight + 2, height * dpr / zoom / crtTile + 1 | 0) * crtTile;
 	if (gc.width - canvasW | gc.height - canvasH) {
 		gc.width = canvasW;
 		gc.height = canvasH;
 		gameContext.scale(2, 2);
 		gameContext.imageSmoothingEnabled = 0;
+		const c = document.createElement("canvas"), x = c.getContext("2d");
+		c.width = 1;
+		c.height = 2;
+		x.fillStyle = "#8484";
+		x.fillRect(0, 0, 1, 1);
+		scanHPattern = gameContext.createPattern(c, "repeat");
 	}
-	viewScale = zoom;
-	viewLeft = (width - canvasW * zoom) / 2;
-	viewTop = (height - canvasH * zoom) / 2;
-	gc.style.width = canvasW * zoom + "px";
-	gc.style.height = canvasH * zoom + "px";
+	viewScale = zoom / dpr;
+	viewLeft = (width - canvasW * viewScale) / 2;
+	viewTop = (height - canvasH * viewScale) / 2;
+	gc.style.width = canvasW * viewScale + "px";
+	gc.style.height = canvasH * viewScale + "px";
 	gc.style.left = viewLeft + "px";
 	gc.style.top = viewTop + "px";
 	boardOffsetX = canvasW - boardWidth * crtTile >> 2;
@@ -868,6 +875,10 @@ function drawBoard() {
 	if (!battleActive) {
 		drawMoveArrows(size);
 	}
-	gameContext.fillStyle = "#0002";
-	for (let y = vh; y--;) gameContext.fillRect(0, y, vw, .5);
+	gameContext.save();
+	gameContext.scale(.5, .5);
+	gameContext.globalCompositeOperation = "hard-light";
+	gameContext.fillStyle = scanHPattern;
+	gameContext.fillRect(0, 0, gc.width, gc.height);
+	gameContext.restore();
 }

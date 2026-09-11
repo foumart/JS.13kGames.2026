@@ -23,7 +23,7 @@ function makeRandomLevel(stage) {
 		width = height;
 		height = swap;
 	}
-	portrait ? width = Math.min(10, width) : height = Math.min(10, height);
+	portrait ? width = Math.min(9, width) : height = Math.min(9, height);
 
 	const area = width * height;
 	let want = progress < 3 ? 3 + progress : area / (hard ? 6 : 7) + RNG(3) | 0;
