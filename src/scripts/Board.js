@@ -2,7 +2,6 @@ const tileWidth = 6;
 const cellSize = 18;
 const unitScale = 2 / 3;
 const campaignLength = 63;
-let bgKey = 0;
 
 let boardWidth;
 let boardHeight;
@@ -769,7 +768,6 @@ function fitBoard() {
 	if (gc.width - canvasW | gc.height - canvasH) {
 		gc.width = canvasW;
 		gc.height = canvasH;
-		bgKey = 0;
 		gameContext.scale(2, 2);
 		gameContext.imageSmoothingEnabled = 0;
 	}
@@ -793,14 +791,10 @@ function drawBoard() {
 	const size = fitBoard();
 	const ox = boardOffsetX, oy = boardOffsetY;
 	const vw = gc.width / 2, vh = gc.height / 2;
-	const bgNow = ox + oy * 7 + size;
-	const bgStale = bgNow != bgKey;
-	bgKey = bgNow;
 	for (let gy = -oy / size - 1 | 0; gy < (vh - oy) / size + 1 | 0; gy++) {
 		for (let gx = -ox / size - 1 | 0; gx < (vw - ox) / size + 1 | 0; gx++) {
 			const px = ox + gx * size, py = oy + gy * size;
 			if (!isMapTile(gx, gy)) {
-				if (!bgStale && (gx < -1 || gy < -1 || gx > boardWidth || gy > boardHeight)) continue;
 				drawPaletted(backgroundsBitmaps[0], 1, px, py, size, size, gameContext);
 				let m = 0;
 				for (let i = 4; i--;) if (isMapTile(gx + ROOK[i][0], gy + ROOK[i][1])) m |= 1 << i;
@@ -875,9 +869,5 @@ function drawBoard() {
 		drawMoveArrows(size);
 	}
 	gameContext.fillStyle = "#0002";
-	const scanX = bgStale ? 0 : ox - size;
-	const scanY = bgStale ? 0 : oy - size;
-	const scanW = bgStale ? vw : (boardWidth + 2) * size;
-	const scanH = bgStale ? vh : (boardHeight + 2) * size;
-	for (let y = scanH; y--;) gameContext.fillRect(scanX, scanY + y, scanW, .5);
+	for (let y = vh; y--;) gameContext.fillRect(0, y, vw, .5);
 }
