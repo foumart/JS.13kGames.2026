@@ -763,7 +763,7 @@ function bounce(x, y, dying) {
 
 function fitBoard() {
 	const crtTile = cellSize * 2, dpr = window.devicePixelRatio;
-	const zoom = Math.max(1, Math.min(width / Math.max(boardWidth, 6), height / Math.max(boardHeight, 6)) * dpr / crtTile | 0);
+	const zoom = Math.max(1, Math.min(3 * dpr, Math.min(width / Math.max(boardWidth, 6), height / Math.max(boardHeight, 6)) * dpr / crtTile) | 0);
 	const canvasW = Math.max(boardWidth + 2, width * dpr / zoom / crtTile + 1 | 0) * crtTile;
 	const canvasH = Math.max(boardHeight + 2, height * dpr / zoom / crtTile + 1 | 0) * crtTile;
 	if (gc.width - canvasW | gc.height - canvasH) {
