@@ -15,7 +15,6 @@ let scanHPattern;
 
 let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
 let obstacles = [];
-let clouds = []; // 1 cross
 let exits = [];
 let rescues = []; // 0 empty, else unit bitmap index
 let pathData = [];
@@ -30,7 +29,6 @@ let pathCount = 0;
 let lives = 3;
 let puzzleMode = 0;
 let menu = 1; // 1 title, 2 pause
-let hard = 0; // crossings only appear on hard
 let perfects = 0;
 
 let state = 1; // 1 play, 2 win, 3 lose
@@ -67,7 +65,7 @@ const UNITS = [
 	["Benedict", 10,2, 0, 0, 6, "082", 21,  21], // orange
 	["Fiona",    5, 1, 2, 1, 5, 0,     33,  16], // blue
 	["Random",   8, 1, 1, 1, 7, 0,     12,  22], // dark red
-	["Bleys",    8, 1, 0, 0, 6, 0,     21,  11], // red
+	["Bleys",    8, 1, 0, 0, 6, 0,     21,  13], // red
 	["Julian",   7, 1, 0, 0, 5, "392", 121, 61], // dark green
 	["Caine",    8, 1, 0, 0, 6, "096", 11,  40], // dark green
 	["Gerard",   12,2, 0, 0, 6, "356", 11,  21], // blue
@@ -191,7 +189,6 @@ function initBoard() {
 	boardWidth = levelData[0].length;
 	enemies = [];
 	obstacles = [];
-	clouds = [];
 	exits = [];
 	rescues = [];
 	stageCaptive = 0;
@@ -229,7 +226,6 @@ function initBoard() {
 	for (let y = 0; y < boardHeight; y++) {
 		enemies[y] = [];
 		obstacles[y] = [];
-		clouds[y] = [];
 		exits[y] = [];
 		rescues[y] = [];
 		rescueDying[y] = [];
@@ -240,7 +236,6 @@ function initBoard() {
 			const c = levelData[y][x];
 			enemies[y][x] = c == 1 ? 1 + (levelIndex > 3 && RNG(2 + (levelIndex / 18 | 0))) : 0;
 			obstacles[y][x] = c == 3 ? 1 : 0;
-			clouds[y][x] = c == 7 ? 1 : 0;
 			exits[y][x] = c == 8 ? 1 : 0;
 			rescues[y][x] = 0;
 			if (c == 9 && !puzzleMode) {
@@ -285,13 +280,9 @@ function initBoard() {
 }
 
 function isPassable(x, y, dx, dy) {
-	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || fillData[y][x] == 1) return 0;
+	if (!inBounds(x, y) || enemies[y][x] || obstacles[y][x] || fillData[y][x] == 1 || pathStep[y][x]) return 0;
 	if (rescues[y][x] && !rescueDying[y][x]) return 0;
 	if (exits[y][x] && remainingRescue()) return 0;
-	// A cross is only walked straight through
-	const od = pathData[y - dy][x - dx];
-	if (clouds[y - dy][x - dx] && (od & dirMask(dx, dy) || !(od & dirMask(-dx, -dy)))) return 0;
-	if (pathStep[y][x]) return clouds[y][x] && !(pathData[y][x] & dirMask(-dx, -dy));
 	return 1;
 }
 
@@ -477,7 +468,7 @@ function getCurrentContext() {
 }
 
 function drawSparkle(x, y, size, frame) {
-	blit(objectBitmaps[2 + (frame & 1)], x, y, size);
+	blit(objectBitmaps[1 + (frame & 1)], x, y, size);
 }
 
 function pickRescueBmp() {
@@ -619,7 +610,7 @@ function drawMoveArrows(size) {
 		const ny = player.y + ROOK[i][1];
 		if (!puzzleMoveAt(nx, ny) || isPrevPath(nx, ny)) continue;
 		if (exits[ny][nx] && blink) continue;
-		blit(objectBitmaps[5 + i], boardOffsetX + nx * size, boardOffsetY + ny * size, size);
+		blit(objectBitmaps[4 + i], boardOffsetX + nx * size, boardOffsetY + ny * size, size);
 	}
 }
 
@@ -726,12 +717,6 @@ function restartCampaign() {
 	gameStart();
 }
 
-function toggleHard() {
-	hard = !hard;
-	generatedLevels = [];
-	updateUI();
-}
-
 function startMode(puz) {
 	audio = audio || new AudioContext();
 	puzzleMode = puz;
@@ -824,7 +809,6 @@ function drawBoard() {
 			}
 			if (fillData[gy][gx] || (pathStep[gy][gx] && !tipOnly)) drawPurifiedTile(gx, gy);
 			else blit(backgroundsBitmaps[0], px, py, size);
-			if (clouds[gy][gx]) blit(objectBitmaps[1], px, py, size);
 			if (exits[gy][gx]) {
 				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 3) {
 					drawSparkle(px, py, size, (time / 180 | 0) + gx + gy);
@@ -861,7 +845,7 @@ function drawBoard() {
 					blit(objectBitmaps[0], px, py - hop, size);
 				} else if (r) {
 					drawUnitIcon(r, px + size / 2, py + size / 2, size);
-					if (!rescueDying[y][x]) blit(objectBitmaps[4], px, py, size);
+					if (!rescueDying[y][x]) blit(objectBitmaps[3], px, py, size);
 				}
 				if (k) {
 					drawUnitIcon({bgr: 2, palette: getEnemyPalette(0, leprechaunType(k))},

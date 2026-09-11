@@ -32,7 +32,6 @@ function createIcon(unit, size) {
 function createUnitStatsText(unit, size = 4, sep = " \xa0 | \xa0 ") {
 	const hp = sep == "\n" ? Math.max(0, unit.hp) + "/" : "";
 	const cap = (cur, n) => sep[0] == " " && (n = rayText(n)) && n != cur ? " (" + n + ")" : "";
-	//if (!sep) sep = " \xa0 | \xa0 ";
 	const txt = line(size);
 	txt.style.whiteSpace = "pre";
 	txt.textContent = "HP: " + hp + unit.hpMax + sep + "Dmg: " + unit.dmg
@@ -47,7 +46,7 @@ function appendLine(c, t) {
 
 function line(c = 3, t = "\xa0") {
 	const d = row();
-	d.className = ["css_display", "css_headline", "css_subtitle", "css_body", "css_caption"][c];
+	d.className = ["css_display", "css_headline", "css_subtitle", "css_body", "css_caption", "css_small"][c];
 	d.textContent = t;
 	return d;
 }
@@ -122,13 +121,6 @@ function updateUI() {
 		ms.appendChild(c);*/
 		appendLine(2, "The Fourth");
 		appendLine(0, "Labyrinth");
-		appendLine(0);
-		// crossings are the hard mode - switch before starting
-		const d = document.createElement("button");
-		d.textContent = hard ? "Hard" : "Easy";
-		d.className = "css_muted";
-		d.onclick = toggleHard;
-		ms.appendChild(d);
 	} else if (menu == 2) appendLine(1, "PAUSED");
 	else if (showPick) fillPick();
 	else if (showUpgrade) fillUpgrade();
@@ -142,7 +134,7 @@ function unitCard(unit, size, right) {
 	const div = row();
 	if (right) div.style.flexDirection = "row-reverse";
 	div.appendChild(createIcon(unit, size));
-	div.appendChild(createUnitStatsText(unit, 4, "\n"));
+	div.appendChild(createUnitStatsText(unit, 4 + portrait, "\n"));
 	return div;
 }
 
@@ -166,7 +158,7 @@ function enemyCard(size) {
 	d.style.display = "block";
 	if (!showPick) {
 		d.appendChild(line(4, "Vail upcoming"));
-		d.appendChild(line(4, "in " + (4-stageNumber()) + " puzzles"));
+		d.appendChild(line(4, "in " + (4-stageNumber()) + " stage" + (4-stageNumber() > 1 ? "s" : "")));
 	}
 	// display boss support and leprechauns left in the enemy panel
 	/*const seen = {};
@@ -190,9 +182,7 @@ function enemyCard(size) {
 }
 
 function printProgress() {
-	appendLine(0, puzzleMode ? "Stage " + (levelIndex + 1) : (battleActive ? "Vail " + shadowNumber() : "World " + worldNumber() + "-" + shadowNumber()));
-	if (battleActive) appendLine(2);
-	else if (!puzzleMode) appendLine(1, "Puzzle " + (1 + levelIndex % 3));
+	appendLine(0, battleActive ? "Vail " + shadowNumber() : "Stage " + (puzzleMode ? levelIndex + 1 : 1 + levelIndex % 3));
 }
 
 function fillBrief() {
@@ -248,10 +238,10 @@ function fillPick() {
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
 	appendLine(4);
-	appendLine(2, unit.name);
+	appendLine(1, unit.name);
 	appendLine(3, "Level: " + (upgradeLvl(unit) + 1));
 	appendLine(4);
-	ms.appendChild(createUnitStatsText(unit, 3, " \xa0 "));
+	ms.appendChild(createUnitStatsText(unit, 3 + portrait, " \xa0 "));
 	//const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
 	//appendLine(3, "Move: " + n[unit.mv] + " / Attack: " + (unit.around ? n[4] : n[unit.atk]));
 	//appendLine(4);

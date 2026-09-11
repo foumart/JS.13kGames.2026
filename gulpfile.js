@@ -240,7 +240,7 @@ async function mangle() {
 		// Shorten css_* class names to a, b, c...
 		if (!debug) {
 			const classIds = [
-				'css_caption', 'css_body', 'css_subtitle', 'css_headline', 'css_display',
+				'css_caption', 'css_body', 'css_subtitle', 'css_headline', 'css_display', 'css_small',
 				'css_row', 'css_chip', 'css_picked', 'css_focused', 'css_idle',
 				'css_frame', 'css_muted'
 			];

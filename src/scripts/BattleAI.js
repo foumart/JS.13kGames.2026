@@ -57,13 +57,14 @@ function bestByScore(list, scoreFn) {
 function battleThink(unit, done) {
 	const want = unit.enemy ? 0 : 1;
 	const far = unit.atkRay[0][2] > 1;
-	const hide = hard || RNG(2);
+	const easy = unit.type == 3 && unit.hpMax > 2;
+	const hide = !easy || RNG(2);
 	const danger = {};
 	const ownHp = unit.hp;
 	unit.hp = 0;
 	for (const battleUnit of battleUnits) {
 		if (battleUnit.hp <= 0 || battleUnit.enemy == unit.enemy) continue;
-		const from = hard ? battleUnit.moves() : [];
+		const from = easy ? [] : battleUnit.moves();
 		from.push(battleUnit);
 		for (let k = 0; k < from.length; k++) {
 			const scan = battleUnit.rayScan(from[k].x, from[k].y);

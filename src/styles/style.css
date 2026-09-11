@@ -2,7 +2,7 @@ body {
 	overflow: hidden;
 	color: #fff;
 	/*background: #000;*/
-	font: 900 3vmin system-ui;
+	font: 900 4vmin system-ui;
 	text-align: center;
 }
 
@@ -42,8 +42,12 @@ body {
 	padding: 0 0 8vmin;
 }
 
-.css_caption {
+.css_small {
 	font-size: 2vmin;
+}
+
+.css_caption {
+	font-size: 3vmin;
 }
 
 .css_subtitle {
