@@ -57,17 +57,23 @@ function clearRock(x, y) {
 	if (obstacles[y]) obstacles[y][x] = 0;
 }
 
+// portrait: enemies on y=0, heroes on y=H-2; landscape: heroes on x=1, enemies on x=W-1
+function battleEdge(ally) {
+	const w = boardWidth > boardHeight;
+	const m = (w ? boardHeight : boardWidth) / 2 | 0;
+	return w ? [ally || boardWidth - 1, m, 0, 1] : [m, ally && boardHeight - 2, 1, 0];
+}
+
 function spawnBattleParty() {
-	// using the puzzle's stage for battle
-	const cx = boardWidth / 2 | 0;
-	const row = boardHeight - 2;
-	clearRock(cx, row);
-	battleUnits = [makeUnit(getUnitDefinition(UNITS[0][0]), cx, row)];
-	for (let i = 0; i < battleParty.length && i < 2; i++) {
-		const x = cx + (i ? 2 : -2);
-		clearRock(x, row);
-		battleUnits.push(makeUnit(getUnitDefinition(battleParty[i]), x, row));
-	}
+	const e = battleEdge(1);
+	battleUnits = [];
+	const add = (def, d) => {
+		const x = e[0] + e[2] * d, y = e[1] + e[3] * d;
+		clearRock(x, y);
+		battleUnits.push(makeUnit(getUnitDefinition(def), x, y));
+	};
+	add(UNITS[0][0], 0);
+	for (let i = 0; i < battleParty.length && i < 2; i++) add(battleParty[i], i ? 2 : -2);
 	spawnEnemies();
 	beginRound();
 }
@@ -232,20 +238,13 @@ function createEnemy(kind, x, y, level) {
 }
 
 function spawnEnemies() {
-	const cx = boardWidth / 2 | 0;
-	const taken = {};
-	const put = (u, x) => {
-		battleUnits.push(u);
-		taken[x] = 1;
-		clearRock(x, 0);
-	};
+	const e = battleEdge();
 	const wave = battleWave(levelIndex / 3 | 0);
-	const xs = [cx, cx - 2, cx + 2];
 	for (let i = 0; i < wave.length; i++) {
-		const v = wave[i];
-		const kind = v / 10 | 0;
-		const x = xs[i];
-		put(createEnemy(kind, x, 0, v % 10), x);
+		const v = wave[i], d = [0, -2, 2][i];
+		const x = e[0] + e[2] * d, y = e[1] + e[3] * d;
+		clearRock(x, y);
+		battleUnits.push(createEnemy(v / 10 | 0, x, y, v % 10));
 	}
 	const queue = [];
 	for (let k = 0; k < 5; k++) {
@@ -253,9 +252,9 @@ function spawnEnemies() {
 	}
 	let n = queue.length;
 	const spots = [];
-	for (let y = 0; y < 3; y++) {
-		for (let x = 0; x < boardWidth; x++) {
-			if (!y && taken[x] || hasObstacle(x, y)) continue;
+	for (let y = 0; y < (e[2] ? 3 : boardHeight); y++) {
+		for (let x = e[2] ? 0 : boardWidth - 3; x < boardWidth; x++) {
+			if (getUnitAt(x, y) || hasObstacle(x, y)) continue;
 			spots.push([x, y]);
 		}
 	}
