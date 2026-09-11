@@ -100,6 +100,7 @@ button {
 	color: #103;
 	background: #fd6;
 	pointer-events: auto;
+	cursor: pointer;
 	font: inherit;
 }
 

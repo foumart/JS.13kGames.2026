@@ -875,5 +875,9 @@ function drawBoard() {
 		drawMoveArrows(size);
 	}
 	gameContext.fillStyle = "#0002";
-	for (let y = vh; y--;) gameContext.fillRect(0, y, vw, .5);
+	const scanX = bgStale ? 0 : ox - size;
+	const scanY = bgStale ? 0 : oy - size;
+	const scanW = bgStale ? vw : (boardWidth + 2) * size;
+	const scanH = bgStale ? vh : (boardHeight + 2) * size;
+	for (let y = scanH; y--;) gameContext.fillRect(scanX, scanY + y, scanW, .5);
 }
