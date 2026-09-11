@@ -625,8 +625,8 @@ function battleEndTurn() {
 }
 
 function getPosFromEvent(e) {
-	const x = (e.clientX * gc.width / width - boardOffsetX) / cellSize | 0;
-	const y = (e.clientY * gc.height / height - boardOffsetY) / cellSize | 0;
+	const x = ((e.clientX - viewLeft) / viewScale / 2 - boardOffsetX) / cellSize | 0;
+	const y = ((e.clientY - viewTop) / viewScale / 2 - boardOffsetY) / cellSize | 0;
 	return inBounds(x, y) && {x, y};
 }
 

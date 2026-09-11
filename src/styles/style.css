@@ -1,6 +1,7 @@
 body {
 	overflow: hidden;
 	color: #fff;
+	/*background: #000;*/
 	font: 900 3vmin system-ui;
 	text-align: center;
 }
@@ -45,10 +46,6 @@ body {
 	font-size: 2vmin;
 }
 
-/*.css_body {
-	font-size: 3vmin;
-}*/
-
 .css_subtitle {
 	font-size: 5vmin;
 }
@@ -80,21 +77,16 @@ body {
 
 .css_focused {
 	outline: 1.5vmin solid #6e6;
-	/*outline-offset: 2vmin;*/
 }
 
 .css_idle {
 	background: #8696;
-	/*margin: 2vmin;*/
-	/*padding: 2vmin;*/
 }
 
 .css_frame {
 	background: #879;
 	padding: 2vmin;
 	margin: 1vmin;
-	/*border-radius: 2vmin;*/
-	/*outline: 2vmin solid #b9f8;*/
 }
 
 .css_muted {
@@ -105,11 +97,10 @@ button {
 	padding: 2vmin 4vmin;
 	border: 1vmin solid #fff;
 	border-radius: 2vmin;
-	cursor: pointer;
 	color: #103;
 	background: #fd6;
 	pointer-events: auto;
-	font: 900 3vmin system-ui;
+	font: inherit;
 }
 
 #ms button {

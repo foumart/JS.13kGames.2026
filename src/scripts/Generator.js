@@ -15,14 +15,16 @@ function getLevelData(stage) {
 function makeRandomLevel(stage) {
 	const progress = stage || 0;
 
-	let width = progress < 2 ? 7 : 7 + (progress / 13 | 0) + RNG(progress / 13 | 0);
-	let height = progress < 2 ? 6 : 6 + (progress / 13 | 0) + RNG(progress / 13 | 0);
-	
-	if (portrait && width > height || !portrait && width < height) {
-		const w = width;
+	const grow = progress / 13 | 0;
+	let width = 7 + (progress > 8 && 1 + grow + RNG(grow));
+	let height = 6 + (progress > 8 && grow + RNG(grow));
+	if (portrait == width > height) {
+		const swap = width;
 		width = height;
-		height = w;
+		height = swap;
 	}
+	portrait ? width = Math.min(10, width) : height = Math.min(10, height);
+
 	const area = width * height;
 	let want = progress < 3 ? 3 + progress : area / (hard ? 6 : 7) + RNG(3) | 0;
 
@@ -72,7 +74,7 @@ function makeRandomLevel(stage) {
 		return seed;
 	}
 
-	// never crosses the trail itself (except cross), keeps walking through free tiles
+	// prevent crossing the trail itself (except on cross tile)
 	function carveTrail(seed) {
 		const at = [];
 		let head;
@@ -234,16 +236,6 @@ function makeRandomLevel(stage) {
 	if (hasRescue(progress) && progress % 9 != 8 && enemies.length) {
 		const prison = enemies[RNG(enemies.length)];
 		grid[prison[1]][prison[0]] = 9;
-	} else {
-		const spots = [];
-		for (let i = trail.length; i--;) {
-			const x = trail[i] % width, y = trail[i] / width | 0;
-			if (!grid[y][x]) spots.push(trail[i]);
-		}
-		if (spots.length) {
-			const k = spots[RNG(spots.length)];
-			grid[k / width | 0][k % width] = 4;
-		}
 	}
 	return grid;
 }

@@ -59,10 +59,6 @@ function init() {
 
 function resize() {
 	setLayout();
-	md.style.width = width + "px";
-	md.style.height = height + "px";
-	md.style.left = "0";
-	md.style.top = "0";
 	redraw();
 }
 

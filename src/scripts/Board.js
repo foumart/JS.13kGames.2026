@@ -8,6 +8,9 @@ let boardWidth;
 let boardHeight;
 let boardOffsetX = 0;
 let boardOffsetY = 0;
+let viewLeft = 0;
+let viewTop = 0;
+let viewScale = 1;
 let iconContext;
 
 let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
@@ -34,9 +37,7 @@ let state = 1; // 1 play, 2 win, 3 lose
 let showEnd = 0;
 let showObjective = 0;
 let stageCaptive = 0;
-let stageItem = 0; // jewel of justice still on the board
-let jewelX = -1;
-let jewelY = -1;
+let stageItem = 0; // the jewel of judgement to obtain before the exit opens
 
 let levelIndex = 0;
 let enemiesTotal = 0;
@@ -195,7 +196,6 @@ function initBoard() {
 	rescues = [];
 	stageCaptive = 0;
 	stageItem = 0;
-	jewelX = jewelY = -1;
 	unrescueLevel(levelIndex);
 	rescueDying = [];
 	pathData = [];
@@ -243,11 +243,7 @@ function initBoard() {
 			clouds[y][x] = c == 7 ? 1 : 0;
 			exits[y][x] = c == 8 ? 1 : 0;
 			rescues[y][x] = 0;
-			if (c == 4) {
-				jewelX = x;
-				jewelY = y;
-				stageItem = 1;
-			} else if (c == 9 && !puzzleMode) {
+			if (c == 9 && !puzzleMode) {
 				let bmp = levelCaptives[levelIndex][capIdx];
 				if (!bmp) {
 					bmp = pickRescueBmp();
@@ -266,6 +262,20 @@ function initBoard() {
 				startX = x;
 				startY = y;
 			}
+		}
+	}
+
+	if (!stageCaptive) {
+		const spots = [];
+		for (let y = 0; y < boardHeight; y++) {
+			for (let x = 0; x < boardWidth; x++) if (enemies[y][x]) spots.push([x, y]);
+		}
+		if (spots.length) {
+			const s = spots[RNG(spots.length)];
+			enemies[s[1]][s[0]] = 0;
+			enemiesTotal --;
+			rescues[s[1]][s[0]] = 1;
+			stageItem = 1;
 		}
 	}
 
@@ -455,9 +465,6 @@ function restoreFlushed(flushed) {
 			rescueDying[y][x] = 0;
 			const k = rescuedUnits.indexOf(bmp);
 			if (k >= 0) rescuedUnits.splice(k, 1);
-		} else if (flushed[i][3] < 0) {
-			jewelX = x;
-			jewelY = y;
 		} else {
 			enemies[y][x] = flushed[i][3] || 1;
 			enemiesCleared --;
@@ -536,15 +543,7 @@ function collectRescue(x, y) {
 	return [x, y, k];
 }
 
-function collectJewel(x, y) {
-	if (x != jewelX || y != jewelY) return 0;
-	jewelX = jewelY = -1;
-	sfx("QX");
-	return [x, y, 0, -1];
-}
-
 function remainingRescue() {
-	if (jewelX >= 0) return 1;
 	for (let y = 0; y < boardHeight; y++) {
 		for (let x = 0; x < boardWidth; x++) {
 			if (isJailed(x, y)) return 1;
@@ -763,18 +762,26 @@ function bounce(x, y, dying) {
 }
 
 function fitBoard() {
-	const pad = Math.max(2, (portrait ? width : height) / 99 - (portrait ? boardWidth : boardHeight) / 6 - 1);
-	const scale = Math.min(width / (boardWidth + pad), height / (boardHeight + pad)) / cellSize || 1;
-	const w = width / scale | 0;
-	const h = height / scale | 0;
-	if (gc.width - w | gc.height - h) {
-		gc.width = w;
-		gc.height = h;
+	const crtTile = cellSize * 2;
+	const zoom = Math.max(1, (Math.min(width / (boardWidth * crtTile), height / (boardHeight * crtTile)) | 0) - (boardWidth < 7 | boardHeight < 7));
+	const canvasW = Math.max(boardWidth + 2, width / zoom / crtTile + 1 | 0) * crtTile;
+	const canvasH = Math.max(boardHeight + 2, height / zoom / crtTile + 1 | 0) * crtTile;
+	if (gc.width - canvasW | gc.height - canvasH) {
+		gc.width = canvasW;
+		gc.height = canvasH;
 		bgKey = 0;
+		gameContext.scale(2, 2);
+		gameContext.imageSmoothingEnabled = 0;
 	}
-	gameContext.imageSmoothingEnabled = false;
-	boardOffsetX = (w - boardWidth * cellSize) / 2 | 0;
-	boardOffsetY = (h - boardHeight * cellSize) / 2 | 0;
+	viewScale = zoom;
+	viewLeft = (width - canvasW * zoom) / 2;
+	viewTop = (height - canvasH * zoom) / 2;
+	gc.style.width = canvasW * zoom + "px";
+	gc.style.height = canvasH * zoom + "px";
+	gc.style.left = viewLeft + "px";
+	gc.style.top = viewTop + "px";
+	boardOffsetX = canvasW - boardWidth * crtTile >> 2;
+	boardOffsetY = canvasH - boardHeight * crtTile >> 2;
 	return cellSize;
 }
 
@@ -783,9 +790,9 @@ function drawBoard() {
 		rainbowPulse = anyDying() || state == 2;
 		scrollRainbow();
 	}
-	const size = fitBoard(boardWidth, boardHeight);
+	const size = fitBoard();
 	const ox = boardOffsetX, oy = boardOffsetY;
-	const vw = gc.width, vh = gc.height;
+	const vw = gc.width / 2, vh = gc.height / 2;
 	const bgNow = ox + oy * 7 + size;
 	const bgStale = bgNow != bgKey;
 	bgKey = bgNow;
@@ -848,16 +855,16 @@ function drawBoard() {
 		} else {
 			for (let x = 0; x < boardWidth; x++) {
 				const px = ox + x * size, py = oy + y * size, r = rescues[y][x], k = enemies[y][x];
-				const hop = bounce(x, y, r == 1 ? rescueDying[y][x] : leprechaunDying(k));
-				if (x == jewelX && y == jewelY || r == 1) {
-					blit(objectBitmaps[0], px, py - hop * size / tileWidth, size);
+				const hop = bounce(x, y, r == 1 ? rescueDying[y][x] : leprechaunDying(k)) * size / 8;
+				if (r == 1) {
+					blit(objectBitmaps[0], px, py - hop, size);
 				} else if (r) {
 					drawUnitIcon(r, px + size / 2, py + size / 2, size);
 					if (!rescueDying[y][x]) blit(objectBitmaps[4], px, py, size);
 				}
 				if (k) {
 					drawUnitIcon({bgr: 2, palette: getEnemyPalette(0, leprechaunType(k))},
-					px + size / 2, py + size / 2 - hop * size / 8, size);
+					px + size / 2, py + size / 2 - hop, size);
 				}
 			}
 			if ((player.y + player.offsetY | 0) == y) player.draw();
@@ -867,4 +874,6 @@ function drawBoard() {
 	if (!battleActive) {
 		drawMoveArrows(size);
 	}
+	gameContext.fillStyle = "#0002";
+	for (let y = vh; y--;) gameContext.fillRect(0, y, vw, .5);
 }
