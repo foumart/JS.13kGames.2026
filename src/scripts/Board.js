@@ -263,7 +263,10 @@ function initBoard() {
 	if (!stageCaptive) {
 		const spots = [];
 		for (let y = 0; y < boardHeight; y++) {
-			for (let x = 0; x < boardWidth; x++) if (enemies[y][x]) spots.push([x, y]);
+			// spawn jewel away from the unicorn
+			for (let x = 0; x < boardWidth; x++) {
+				if (enemies[y][x] && Math.abs(x - startX) + Math.abs(y - startY) > 1) spots.push([x, y]);
+			}
 		}
 		if (spots.length) {
 			const s = spots[RNG(spots.length)];

@@ -134,7 +134,7 @@ function unitCard(unit, size, right) {
 	const div = row();
 	if (right) div.style.flexDirection = "row-reverse";
 	div.appendChild(createIcon(unit, size));
-	div.appendChild(createUnitStatsText(unit, 4 + portrait));
+	div.appendChild(createUnitStatsText(unit));
 	return div;
 }
 
@@ -182,7 +182,7 @@ function enemyCard(size) {
 }
 
 function printProgress() {
-	appendLine(0, battleActive ? "Vail " + shadowNumber() : "Stage " + (puzzleMode ? levelIndex + 1 : 1 + levelIndex % 3));
+	appendLine(0, battleActive ? "Vail " + shadowNumber() : "Stage " + (levelIndex + 1));
 }
 
 function fillBrief() {
@@ -270,7 +270,7 @@ function fillUpgrade() {
 		thumb.appendChild(name);
 		thumb.appendChild(icon);
 		const col = line(4, "");
-		col.appendChild(createUnitStatsText(unit, 5, portrait ? " | " : " \xa0 | \xa0 "));
+		col.appendChild(createUnitStatsText(unit, 5, " | "));//portrait ? " | " : " \xa0 | \xa0 "));
 		const btns = row();
 		const all = upgradeKinds(unit, 1);
 		for (let k = 0; k < all.length; k++) {

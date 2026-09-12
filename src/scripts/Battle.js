@@ -42,8 +42,8 @@ function startBattle() {
 	battleUnits = [];
 	for (let i = rescuedUnits.length; i--;) if (rescuedUnits[i] == 1) rescuedUnits.splice(i, 1);
 	const n = rescuedUnits.length;
-	battleParty = n < 3 ? rescuedUnits.slice() : [];
-	pickCursor = 0;
+	battleParty = rescuedUnits.slice().sort((a, b) => upgradeLvl({name: b}) - upgradeLvl({name: a})).slice(0, 2);
+	pickCursor = n ? rescuedUnits.indexOf(battleParty[0]) : 0;
 	if (n) showPick = 1;
 	else {
 		spawnBattleParty();
