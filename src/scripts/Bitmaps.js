@@ -16,7 +16,7 @@ function encodeBitmap(group, dest) {
 			const z = enc.charCodeAt(i);
 			px.push(z & 3, (z >> 2) & 3, (z >> 4) & 3);
 		}
-		const pal = group[k + 1];
+		const pal = group[k + 1] || "";
 		const palW = 3;
 		dest.push(drawPalettedBitmap([px, bank, pal, palW], pal.substr(0, palW)));
 	}
@@ -36,8 +36,8 @@ const unitData = [
 ];
 
 const backgroundsData = [
-	"4a5395385264133022001", // color bank
-	"012456", // grass
+	"4a5395385264133022001758546324", // color bank
+	"012456789", // grass
 	"023", // tile bottom
 	"023", // tile left
 	"023", // tile bottom left
@@ -122,7 +122,7 @@ function drawPalettedBitmap(src, ref) {
 
 function drawPaletted(src, i, dx, dy, dw, dh, ctx) {
 	const w = src[3] || 3;
-	const ref = i.length ? i : src[2].substr((i || 0) * w, w);
+	const ref = typeof i == "string" ? i : src[2].substr((i || 0) * w, w) || "012";
 	const bmp = drawPalettedBitmap(src, ref);
 	ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, dx, dy, dw, dh);
 }

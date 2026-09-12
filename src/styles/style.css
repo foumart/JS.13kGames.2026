@@ -40,6 +40,16 @@ body {
 	position: absolute;
 	align-self: center;
 	padding: 0 0 8vmin;
+	z-index: 0;
+}
+
+#ms > canvas {
+	position: absolute;
+	z-index: -1;
+	top: 40%;
+	left: -13%;
+	width: 125%;
+	translate: 0 -50%;
 }
 
 .css_tiny {

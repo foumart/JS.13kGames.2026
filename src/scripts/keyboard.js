@@ -26,7 +26,7 @@ function onKeyDown(event) {
 		if (d && d[0]) movePickCursor(d[0]);
 		else if (k == 32) pickCursorUnit();
 		else if (k == 13) confirmParty();
-		//else if (k == 82) resetBattle();
+		else if (k == 82) resetBattle();
 		return;
 	}
 	if (showUpgrade) {
@@ -36,12 +36,12 @@ function onKeyDown(event) {
 			pickUpgradeCursor();
 		}
 		else if (k == 13) afterBattleWin();
-		//else if (k == 82) resetBattle();
+		else if (k == 82) resetBattle();
 		return;
 	}
 	if (showObjective) {
 		if (k == 13 || k == 32) dismissObjective();
-		//else if (k == 82) resetHere();
+		else if (k == 82) resetHere();
 		return;
 	}
 	if (menu || showEnd) {
@@ -50,7 +50,7 @@ function onKeyDown(event) {
 			event.preventDefault();
 			activateEndButton();
 		}
-		//else if (k == 82 && !menu) Y.onclick();
+		else if (k == 82 && !menu) Y.onclick();
 		return;
 	}
 	if (battleActive) {
@@ -61,6 +61,6 @@ function onKeyDown(event) {
 
 		battleKey(event);
 	}
-	//else if (k == 82) resetHere();
+	else if (k == 82) resetHere();
 	else if (d) act(d[0], d[1]);
 }
