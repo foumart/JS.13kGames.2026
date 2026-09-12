@@ -42,6 +42,10 @@ body {
 	padding: 0 0 8vmin;
 }
 
+.css_tiny {
+	font-size: 1vmin;
+}
+
 .css_small {
 	font-size: 2vmin;
 }
@@ -60,6 +64,10 @@ body {
 
 .css_display {
 	font-size: 9vmin;
+}
+
+.css_title {
+	font-size: 12vmin;
 }
 
 .css_row {
@@ -106,11 +114,13 @@ button {
 	pointer-events: auto;
 	cursor: pointer;
 	font: inherit;
+	font-size: 6vmin;
 }
 
 #ms button {
 	padding: 1vmin 2vmin;
 	margin: 2vmin 1vmin;
+	font-size: 3vmin;
 }
 
 hr {

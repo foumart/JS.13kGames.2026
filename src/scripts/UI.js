@@ -29,7 +29,7 @@ function createIcon(unit, size) {
 	return createSpriteIcon(size, s => drawUnitIcon(unit, s / 2, s / 2, s))
 }
 
-function createUnitStatsText(unit, size = 4, sep = " \xa0 | \xa0 ") {
+function createUnitStatsText(unit, size = 5, sep = "\n") {
 	const hp = sep == "\n" ? Math.max(0, unit.hp) + "/" : "";
 	const cap = (cur, n) => sep[0] == " " && (n = rayText(n)) && n != cur ? " (" + n + ")" : "";
 	const txt = line(size);
@@ -46,7 +46,7 @@ function appendLine(c, t) {
 
 function line(c = 3, t = "\xa0") {
 	const d = row();
-	d.className = ["css_display", "css_headline", "css_subtitle", "css_body", "css_caption", "css_small"][c];
+	d.className = ["css_title", "css_display", "css_headline", "css_subtitle", "css_body", "css_caption", "css_small", "css_tiny"][c];
 	d.textContent = t;
 	return d;
 }
@@ -69,13 +69,13 @@ function updateUI() {
 	const size = uiSize();
 
 	if (menu == 1) {
-		//L.textContent = "by Noncho Savov";
-		L.textContent = "";
+		//L.textContent = "";
+		L.textContent = "game by Noncho Savov";
 		//L.appendChild(line(4, "FoumartGames presents:"));
 		//L.appendChild(line(3, "js13k game by Noncho Savov"));
 		//L.appendChild(line(3, "by Noncho Savov"));
-		//R.textContent = "v{VERSION}";
-		R.textContent = "";
+		//R.textContent = "";
+		R.textContent = "v{VERSION}";
 		//R.appendChild(line(4, "Arrows - move"));
 		//R.appendChild(line(4, "Space - select"));
 		//R.appendChild(line(4, "Enter - confirm"));
@@ -86,8 +86,8 @@ function updateUI() {
 		if (!puzzleMode) {
 			L.appendChild(document.createElement("hr"));
 			if (!battleActive || battleResult) {
-				L.appendChild(line(4, "\xa0 The Unicorn \xa0"));
-				L.appendChild(line(4, "of Order"));
+				L.appendChild(line(5, "\xa0 The Unicorn \xa0"));
+				L.appendChild(line(5, "of Order"));
 				L.appendChild(playerCard(size));
 			}
 		}
@@ -134,7 +134,7 @@ function unitCard(unit, size, right) {
 	const div = row();
 	if (right) div.style.flexDirection = "row-reverse";
 	div.appendChild(createIcon(unit, size));
-	div.appendChild(createUnitStatsText(unit, 4 + portrait, "\n"));
+	div.appendChild(createUnitStatsText(unit, 4 + portrait));
 	return div;
 }
 
@@ -157,8 +157,8 @@ function enemyCard(size) {
 	const d = row();
 	d.style.display = "block";
 	if (!showPick) {
-		d.appendChild(line(4, "Vail upcoming"));
-		d.appendChild(line(4, "in " + (4-stageNumber()) + " stage" + (4-stageNumber() > 1 ? "s" : "")));
+		d.appendChild(line(5, "Vail upcoming"));
+		d.appendChild(line(5, "in " + (4-stageNumber()) + " stage" + (4-stageNumber() > 1 ? "s" : "")));
 	}
 	// display boss support and leprechauns left in the enemy panel
 	/*const seen = {};
@@ -200,7 +200,7 @@ function fillBrief() {
 		r.className = "css_row";
 		c.className = "css_frame";
 		ms.appendChild(r);
-		appendLine();
+		appendLine(6 - portrait * 3);
 	}
 
 	if (stageItem) {
@@ -209,8 +209,9 @@ function fillBrief() {
 		const c = createSpriteIcon(size, s => blit(objectBitmaps[0], 0, 0, s));
 		//c.className = "css_frame";
 		r.appendChild(c);
+		r.appendChild(line(2, "Jewel"));
 		ms.appendChild(r);
-		appendLine();
+		appendLine(6 - portrait * 5);
 	}
 
 	appendLine(3, (stageCaptive || stageItem ? "and g" : "G") + "et to");
@@ -221,8 +222,9 @@ function fillPick() {
 	const size = Math.min(width, height) / (rescuedUnits.length < 5 ? 6 : rescuedUnits.length + 2) | 0;
 	const need = Math.min(2, rescuedUnits.length);
 	printProgress();
-	appendLine(3, need > 2 ? "Pick 2 allies" : "Your all" + (need == 2 ? "ies" : "y"));
-	appendLine(4);
+	if (portrait) appendLine(4);
+	appendLine(5 - portrait, need > 2 ? "Pick 2 allies" : "Your all" + (need == 2 ? "ies" : "y"));
+	appendLine(6);
 	const pickRow = row();
 	for (let i = 0; i < rescuedUnits.length; i++) {
 		const bmp = rescuedUnits[i];
@@ -237,11 +239,12 @@ function fillPick() {
 	const name = rescuedUnits[pickCursor];
 	if (!name) return;
 	const unit = makeUnit(getUnitDefinition(name), 0, 0);
-	appendLine(4);
-	appendLine(1, unit.name);
-	appendLine(3, "Level: " + (upgradeLvl(unit) + 1));
-	appendLine(4);
-	ms.appendChild(createUnitStatsText(unit, 3 + portrait, " \xa0 "));
+	appendLine(6);
+	appendLine(2, unit.name);
+	appendLine(4, "Level: " + (upgradeLvl(unit) + 1));
+	if (portrait) ms.appendChild(document.createElement("hr"));
+	//appendLine(6);
+	ms.appendChild(createUnitStatsText(unit, 3, portrait ? " \n" : " \xa0 "));
 	//const n = ["Rook", "Bishop", "Queen", "Knight", "Around"];
 	//appendLine(3, "Move: " + n[unit.mv] + " / Attack: " + (unit.around ? n[4] : n[unit.atk]));
 	//appendLine(4);
@@ -252,7 +255,7 @@ function fillPick() {
 function fillUpgrade() {
 	const size = uiSize();
 	appendLine(1, "VICTORY!");
-	appendLine(3);
+	appendLine(6 - portrait * 3);
 	const list = upgradeRows();
 	for (let i = 0; i < list.length; i++) {
 		const unit = list[i].u;
@@ -260,14 +263,14 @@ function fillUpgrade() {
 		const kinds = list[i].kinds;
 		const pick = upgradePicks[id];
 		const upgradeTab = row();
-		const thumb = line(3, "");
-		const name = line(3, unit.name || "Unicorn");
-		const icon = createIcon(unit, size * .7);
+		const thumb = line(4, "");
+		const name = line(5, unit.name || "Unicorn");
+		const icon = createIcon(unit, size * .6);
 		icon.className = "css_frame";
 		thumb.appendChild(name);
 		thumb.appendChild(icon);
-		const col = line(3, "");
-		col.appendChild(createUnitStatsText(unit));
+		const col = line(4, "");
+		col.appendChild(createUnitStatsText(unit, 5, portrait ? " | " : " \xa0 | \xa0 "));
 		const btns = row();
 		const all = upgradeKinds(unit, 1);
 		for (let k = 0; k < all.length; k++) {
@@ -302,15 +305,16 @@ function fillEnd() {
 	}
 	if (state == 2) {
 		const size = uiSize();
-		appendLine(1, "STAGE CLEAR!");
+		appendLine(0, "STAGE CLEAR!");
 
 		if (isPerfect()) {
-			const row1 = row();
-			appendLine(2, "Perfect!");
+			//const row1 = row();
+			appendLine(6 - portrait * 5);
+			appendLine(1, "Perfect!");
 			//appendLine(3, "Bonus: 100");
 			//row1.appendChild(createSparkAnim(size));
 			//row1.appendChild(line(1, "+1"));
-			ms.appendChild(row1);
+			//ms.appendChild(row1);
 		}
 
 		const row3 = line(3, "");
@@ -321,7 +325,7 @@ function fillEnd() {
 			const ic = createIcon(stageCaptive, size);
 			ic.className = "css_frame";
 			row2.appendChild(ic);
-			appendLine();
+			appendLine(6 - portrait * 5);
 			ms.appendChild(row2);
 			row2.appendChild(line(3, stageCaptive + " joined!"));
 		}
@@ -365,7 +369,7 @@ function btn(b, t, fn, on) {
 function updateButtons() {
 	if (menu) {
 		const t = menu == 1;
-		btn(Y, t ? "Story" : "Resume", t ? () => startMode(0) : togglePause);
+		btn(Y, t ? "Campaign" : "Resume", t ? () => startMode(0) : togglePause);
 		btn(N, t ? "Puzzle" : "Quit", t ? () => startMode(1) : restartCampaign);
 	} else if (showPick || showObjective) {
 		btn(Y);
