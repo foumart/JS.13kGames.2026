@@ -35,9 +35,11 @@ class Player {
 		const hopped = collectRescue(this.x, this.y);
 		tween(this, 6, {offsetX: 0, offsetY: 0}, () => {
 			extendPath(ox, oy, this.x, this.y, dx, dy);
+			const coin = collectCoin(this.x, this.y);
 			moveCount ++;
 			const flushed = flushDyingEnemies();
 			if (hopped) flushed.push(hopped);
+			if (coin) flushed.push(coin);
 			checkCaptures(flushed);
 			moveLog.push(flushed);
 			moving = 0;

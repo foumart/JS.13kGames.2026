@@ -34,7 +34,7 @@ function makeRandomLevel(stage) {
 	portrait ? width = Math.min(9, width) : height = Math.min(9, height);
 
 	const area = width * height;
-	let want = progress < 3 ? 1 + progress * 2 : area / 6 + RNG(3) | 0;
+	let want = progress < 3 ? 2 + progress * 2 : area / 6 + RNG(3) | 0;
 
 	if (hasRescue(progress)) want += 2;
 
@@ -146,6 +146,7 @@ function makeRandomLevel(stage) {
 	let trail;
 	let seed;
 	let holes;
+	let path;
 	let best = 0;
 	for (let tries = 9; tries --;) {
 		const s = scatterSeeds();
@@ -180,6 +181,7 @@ function makeRandomLevel(stage) {
 			trail = t;
 			seed = s;
 			holes = p;
+			path = on;
 		}
 		if (spawns >= want && !waste && !cross) break;
 	}
@@ -221,6 +223,18 @@ function makeRandomLevel(stage) {
 	// start / end
 	grid[from / width | 0][from % width] = 2;
 	grid[to / width | 0][to % width] = 8;
+
+	// gold (4) on the trail; silver (5) off-trail, or on the trail if nowhere else
+	const loot = 1 + (progress > 2 && 1 + (progress > 8 && RNG(2)));
+	const pool = [[], []];
+	for (let k = area; k--;) if (!grid[k / width | 0][k % width]) pool[path[k]|0].push(k);
+	for (let kind = 4; kind < 6; kind++) {
+		const list = pool[kind < 5 || !pool[0].length ? 1 : 0];
+		for (let n = loot, i = list.length; n && i; n--) {
+			const k = list.splice(RNG(i--), 1)[0];
+			grid[k / width | 0][k % width] = kind;
+		}
+	}
 
 	if (hasRescue(progress) && progress % 9 != 8 && enemies.length) {
 		const prison = enemies[RNG(enemies.length)];

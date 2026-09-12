@@ -66,7 +66,8 @@ const objectsData = [
 	"012", // right
 	"012", // down
 	"012", // left
-	"`BXIXJhJlNpC@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@"
+	"125345", // coin gold / silver
+	"`BXIXJhJlNpC@BpC^I\\m`C@B@@Lp`IPE`ILpCLBLAHBDCHCLp@|CsLp@p@@@@C@L|?@L@C@@@@p@p@sL|Cp@p@L@?OL@p@@@H@fHkfXzlOp@"
 ];
 
 const pathsData = [

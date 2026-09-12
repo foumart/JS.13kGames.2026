@@ -15,6 +15,7 @@ let scanHPattern;
 
 let enemies = []; // 0 empty, 1 blue, 2 green, 3 red, 4-6 dying
 let obstacles = [];
+let coins = []; // 1 gold, 2 silver
 let exits = [];
 let rescues = []; // 0 empty, else unit bitmap index
 let pathData = [];
@@ -40,6 +41,7 @@ let stageItem = 0; // the jewel of judgement to obtain before the exit opens
 let levelIndex = 0;
 let enemiesTotal = 0;
 let enemiesCleared = 0;
+let coinsCollected = 0;
 let moveCount = 0;
 let levelScore = 0;
 let totalScore = 0;
@@ -189,6 +191,7 @@ function initBoard() {
 	boardWidth = levelData[0].length;
 	enemies = [];
 	obstacles = [];
+	coins = [];
 	exits = [];
 	rescues = [];
 	stageCaptive = 0;
@@ -205,6 +208,7 @@ function initBoard() {
 	hopping = 0;
 	enemiesTotal = 0;
 	enemiesCleared = 0;
+	coinsCollected = 0;
 	moveCount = 0;
 	levelScore = 0;
 	totalScore = scoreStart;
@@ -226,6 +230,7 @@ function initBoard() {
 	for (let y = 0; y < boardHeight; y++) {
 		enemies[y] = [];
 		obstacles[y] = [];
+		coins[y] = [];
 		exits[y] = [];
 		rescues[y] = [];
 		rescueDying[y] = [];
@@ -236,6 +241,7 @@ function initBoard() {
 			const c = levelData[y][x];
 			enemies[y][x] = c == 1 ? 1 + (levelIndex > 3 && RNG(2 + (levelIndex / 18 | 0))) : 0;
 			obstacles[y][x] = c == 3 ? 1 : 0;
+			coins[y][x] = c == 4 ? 1 : c == 5 ? 2 : 0;
 			exits[y][x] = c == 8 ? 1 : 0;
 			rescues[y][x] = 0;
 			if (c == 9 && !puzzleMode) {
@@ -459,11 +465,23 @@ function restoreFlushed(flushed) {
 			rescueDying[y][x] = 0;
 			const k = rescuedUnits.indexOf(bmp);
 			if (k >= 0) rescuedUnits.splice(k, 1);
+		} else if (flushed[i][3] < 0) {
+			coins[y][x] = -flushed[i][3];
+			coinsCollected -= coins[y][x] == 1 ? 5 : 1;
 		} else {
 			enemies[y][x] = flushed[i][3] || 1;
 			enemiesCleared --;
 		}
 	}
+}
+
+function collectCoin(x, y) {
+	const kind = coins[y][x];
+	if (!kind) return 0;
+	coins[y][x] = 0;
+	coinsCollected += kind == 1 ? 5 : 1;
+	sfx("QX");
+	return [x, y, 0, -kind];
 }
 
 function getCurrentContext() {
@@ -565,7 +583,7 @@ function isPerfect() {
 }
 
 function stageScore() {
-	return enemiesCleared * 10 + (state == 2 && isPerfect() ? 100 : 0);
+	return enemiesCleared * 10 + coinsCollected + (state == 2 && isPerfect() ? 100 : 0);
 }
 
 function currentScore() {
@@ -612,7 +630,7 @@ function drawMoveArrows(size) {
 		const nx = player.x + ROOK[i][0];
 		const ny = player.y + ROOK[i][1];
 		if (!puzzleMoveAt(nx, ny) || isPrevPath(nx, ny)) continue;
-		if (exits[ny][nx] && blink) continue;
+		if ((coins[ny][nx] || exits[ny][nx]) && blink) continue;
 		blit(objectBitmaps[4 + i], boardOffsetX + nx * size, boardOffsetY + ny * size, size);
 	}
 }
@@ -751,7 +769,7 @@ function bounce(x, y, dying) {
 
 function fitBoard() {
 	const crtTile = cellSize * 2, dpr = window.devicePixelRatio;
-	const zoom = Math.max(1, Math.min(3 * dpr, Math.min(width / Math.max(boardWidth, 6), height / Math.max(boardHeight, 6)) * dpr / crtTile) | 0);
+	const zoom = Math.max(1, Math.min(6 * dpr, Math.min(width / Math.max(boardWidth, 6), height / Math.max(boardHeight, 6)) * dpr / crtTile) | 0);
 	const canvasW = Math.max(boardWidth + 2, width * dpr / zoom / crtTile + 1 | 0) * crtTile;
 	const canvasH = Math.max(boardHeight + 2, height * dpr / zoom / crtTile + 1 | 0) * crtTile;
 	if (gc.width - canvasW | gc.height - canvasH) {
@@ -815,6 +833,12 @@ function drawBoard() {
 			if (exits[gy][gx]) {
 				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 3) {
 					drawSparkle(px, py, size, (time / 180 | 0) + gx + gy);
+				}
+			} else if (coins[gy][gx]) {
+				if (!puzzleMoveAt(gx, gy) || isPrevPath(gx, gy) || (time / 1000 | 0) % 3) {
+					const cs = size * 2 / 3;
+					drawPaletted(objectBitmaps[8], coins[gy][gx] - 1,
+						px + (size - cs) / 2, py + size - cs, cs, cs, gameContext);
 				}
 			}
 		}
