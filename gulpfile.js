@@ -44,33 +44,181 @@ const raw = argv.raw != undefined ? true : false;
 // --debug: pack but don't compress js files, display service worker logs as well
 const debug = argv.debug != undefined ? true : false;
 
-// --roadroll: use a JS packer for up to 15% compression
+// --roadroll: pack JS with Roadroller (SSE + Zopfli-scored wrapper search)
 const roadroll = argv.roadroll != undefined ? true : false;
 
-const roadrollOptions = {
-	selectors: 32,
-	maxMemoryMB: 640,
-	precision: 16,
-	recipLearningRate: 1500,
-	modelMaxCount: 3,
-	modelRecipBaseCount: 30,
-	numAbbreviations: 64,
-	allowFreeVars: 0
-};
+// --OO: infinite parameter search (Ctrl+C keeps the best result so far)
+// --optimize / -O: 0 (no search), 1 (~30 attempts), 2 (~300). Default 1.
+function parseRoadrollEffort() {
+	if (argv.OO !== undefined) return Infinity;
+	const raw = argv.optimize !== undefined ? argv.optimize : argv.O;
+	if (raw === undefined) return 1;
+	if (raw === 'O' || raw === true) return Infinity;
+	const n = parseInt(raw, 10);
+	if (n !== 0 && n !== 1 && n !== 2) {
+		throw new Error('invalid --optimize (use 0, 1, 2, or O / --OO)');
+	}
+	return n;
+}
+const roadrollEffort = parseRoadrollEffort();
+let didRoadroll = false;
 
-async function packJsWithRoadroller(js) {
+function formatRoadrollParams(opts) {
+	const parts = [];
+	if (opts.sse) parts.push('--sse');
+	if (typeof opts.numAbbreviations === 'number') parts.push('-Zab' + opts.numAbbreviations);
+	if (typeof opts.dynamicModels === 'number') parts.push('-Zdy' + opts.dynamicModels);
+	if (typeof opts.recipLearningRate === 'number') parts.push('-Zlr' + opts.recipLearningRate);
+	if (typeof opts.pairRecipLearningRate === 'number') parts.push('-Zlp' + opts.pairRecipLearningRate);
+	if (typeof opts.modelMaxCount === 'number') parts.push('-Zmc' + opts.modelMaxCount);
+	if (typeof opts.modelRecipBaseCount === 'number') parts.push('-Zmd' + opts.modelRecipBaseCount);
+	if (typeof opts.precision === 'number') parts.push('-Zpr' + opts.precision);
+	if (opts.sparseSelectors) parts.push('-S' + opts.sparseSelectors.join(','));
+	return parts.join(' ');
+}
+
+async function loadZopfliScore() {
+	const path = require('path');
+	const { pathToFileURL } = require('url');
+	const zopfliPath = path.join(path.dirname(require.resolve('roadroller')), 'zopfli.mjs');
+	const { createZopfliPackedScore } = await import(pathToFileURL(zopfliPath).href);
+	return createZopfliPackedScore();
+}
+
+function decodeWithOptions(packer, extra) {
+	const saved = packer.options;
+	packer.options = { ...saved, ...extra };
+	try {
+		const { firstLine, secondLine } = packer.makeDecoder();
+		return firstLine + secondLine;
+	} finally {
+		packer.options = saved;
+	}
+}
+
+function interceptProcessStop(onStop, onForce) {
+	const readline = require('readline');
+	const signals = ['SIGINT', 'SIGTERM', 'SIGBREAK'];
+	const saved = {};
+	for (const sig of signals) {
+		saved[sig] = process.listeners(sig).slice();
+		process.removeAllListeners(sig);
+		process.on(sig, onForce);
+	}
+
+	let rl;
+	if (process.stdin && process.stdin.readable) {
+		rl = readline.createInterface({
+			input: process.stdin,
+			prompt: '',
+			historySize: 0
+		});
+		rl.on('SIGINT', onForce);
+		rl.on('line', onStop);
+	}
+
+	return function restore() {
+		if (rl) rl.close();
+		for (const sig of signals) {
+			process.removeAllListeners(sig);
+			for (const listener of saved[sig]) process.on(sig, listener);
+		}
+	};
+}
+
+async function packJsWithRoadroller(js, wrapper, onPacked) {
 	const { Packer } = await import('roadroller');
-	const packer = new Packer(
-		[{
-			data: js,
-			type: 'js',
-			action: 'eval'
-		}],
-		roadrollOptions
-	);
-	await packer.optimize();
-	const { firstLine, secondLine } = packer.makeDecoder();
-	return firstLine + secondLine;
+	const parts = String(wrapper || '').split('__ROADROLLER__');
+	if (wrapper && parts.length !== 2) {
+		throw new Error('Roadroller wrapper must contain exactly one __ROADROLLER__ marker');
+	}
+	const options = {
+		sse: true,
+		maxMemoryMB: 1000,
+		optimizePrefix: parts[0] || '',
+		optimizeSuffix: parts[1] || '',
+		optimizeScore: await loadZopfliScore()
+	};
+	const inputs = [{ data: js, type: 'js', action: 'eval' }];
+	const packer = new Packer(inputs, options);
+
+	let best = {};
+	let stopping = false;
+	let restoreStop = () => {};
+	const effortLabel = roadrollEffort === Infinity ? 'OO' : String(roadrollEffort);
+	console.log(`        roadroller  --sse --zopfli -M1000 -O${effortLabel}` +
+		(wrapper ? ' --optimize-wrapper' : ''));
+	if (roadrollEffort === Infinity) {
+		console.log('        roadroller  Press Enter to stop and pack the best result (Ctrl+C also works)');
+	}
+
+	const requestStop = () => {
+		if (stopping) return;
+		stopping = true;
+		console.log('\nStopping search and keeping best result...');
+	};
+	const forceStop = () => {
+		if (!stopping) {
+			requestStop();
+			return;
+		}
+		console.log('\nForce exit.');
+		process.exit(130);
+	};
+	if (roadrollEffort === Infinity) {
+		restoreStop = interceptProcessStop(requestStop, forceStop);
+	}
+
+	const checkpoint = packed => {
+		if (typeof onPacked === 'function') onPacked(packed, formatRoadrollParams({ ...packer.options, ...best }));
+	};
+
+	const progress = async info => {
+		await new Promise(resolve => setImmediate(resolve));
+		if (info.best) best = info.best;
+		let size = `${info.currentSize}`;
+		if (info.currentSize100 !== undefined) size += `/${info.currentSize100}`;
+		if (info.currentSize1000 !== undefined) size += `/${info.currentSize1000}`;
+		console.log(
+			`        (${info.pass}` +
+			(typeof info.passRatio === 'number' ? ` ${(info.passRatio * 100).toFixed(1)}%` : '') +
+			`) ${formatRoadrollParams({ ...packer.options, ...info.current })}: ` +
+			`${size}${info.bestUpdated ? ' <-' : info.currentRejected ? ' x' : ''}`
+		);
+		if (info.bestUpdated) {
+			try {
+				checkpoint(decodeWithOptions(packer, info.best));
+			} catch (e) {
+				console.warn('        roadroller  checkpoint failed:', e.message || e);
+			}
+		}
+		if (stopping) return false;
+	};
+
+	try {
+		if (roadrollEffort > 0) {
+			if (roadrollEffort === Infinity) {
+				for (let level = 1; ; level++) {
+					await packer.optimize(level, progress);
+				}
+			} else {
+				await packer.optimize(roadrollEffort, progress);
+			}
+		}
+	} catch (e) {
+		if (!(e instanceof Error && e.message === 'search aborted')) throw e;
+	}
+
+	try {
+		packer.options = { ...packer.options, ...best };
+		const params = formatRoadrollParams(packer.options);
+		console.log(`        roadroller  use \`-M1000 ${params}\` to replicate`);
+		const packed = decodeWithOptions(packer, best);
+		checkpoint(packed);
+		return packed;
+	} finally {
+		restoreStop();
+	}
 }
 
 // --mobile: should html tags for mobile be included. Adds 42 bytes.
@@ -230,7 +378,7 @@ function mf(callback) {
 	}
 }
 
-// Read the temporary JS and CSS files and compress the javascript with Roadroller
+// Read the temporary JS and CSS files and shorten css_* class names
 async function mangle() {
 	if (!raw) {
 		const fs = require('fs');
@@ -254,15 +402,6 @@ async function mangle() {
 			// ["e","d","c","b","a"][i] -> "edcba"[i]
 			js = js.replace(/\[("[a-z]")(,"[a-z]")+\]/g, m => '"' + m.replace(/[^a-z]/g, '') + '"');
 		}
-	}
-
-	if (roadroll && !debug) {
-		js = await packJsWithRoadroller(js);
-	} else {
-		let dummyPromise = new Promise(function(resolve) {
-			setTimeout(resolve, 1);
-		})
-		await dummyPromise;
 	}
 }
 
@@ -327,8 +466,9 @@ function clean(callback) {
 }
 
 // Pack the inline script already in public/index.html (no full rebuild)
-async function roadrollHtml() {
+async function packIndexHtml() {
 	const fs = require('fs');
+	const path = require('path');
 	const htmlPath = dir + '/index.html';
 	if (!fs.existsSync(htmlPath)) {
 		throw new Error(htmlPath + ' not found. Run a build first.');
@@ -340,10 +480,29 @@ async function roadrollHtml() {
 		throw new Error('No inline <script> in ' + htmlPath);
 	}
 	const js = html.slice(open + 8, close);
-	const packed = await packJsWithRoadroller(js);
-	html = html.slice(0, open + 8) + packed + html.slice(close);
-	fs.writeFileSync(htmlPath, html);
+	const wrapper = html.slice(0, open + 8) + '__ROADROLLER__' + html.slice(close);
+	const writePacked = (packed, params) => {
+		fs.writeFileSync(htmlPath, html.slice(0, open + 8) + packed + html.slice(close));
+		didRoadroll = true;
+		if (params) {
+			fs.mkdirSync('zip', { recursive: true });
+			fs.writeFileSync(path.join('zip', 'roadroller-best.txt'), '-M1000 ' + params + '\n');
+		}
+	};
+	const packed = await packJsWithRoadroller(js, wrapper, writePacked);
+	writePacked(packed);
+	didRoadroll = true;
 	console.log(`        roadroller  ${js.length} -> ${packed.length} bytes`);
+}
+
+async function maybeRoadrollHtml() {
+	if (debug || raw || !roadroll) return;
+	await packIndexHtml();
+}
+
+async function roadrollHtml() {
+	if (debug || raw) return;
+	await packIndexHtml();
 }
 
 // Package zip (exclude any fonts that are used locally, like Twemoji.ttf)
@@ -351,10 +510,15 @@ function archive(callback) {
 	if (debug || raw) callback();
 	else {
 		(async () => {
+			const fs = require('fs');
 			zip = (await import('gulp-zip')).default;
-			src([dir + '/**/*', '!' + dir + '/**/*.ttf'], { allowEmpty: true })
+			const packedZip = roadroll || didRoadroll || fs.existsSync('zip/roadroller-best.txt');
+			src([dir + '/**/*', '!' + dir + '/**/*.ttf', '!' + dir + '/tmp/**'], { allowEmpty: true })
 				.pipe(zip(test ? 'game.zip' : 'game_' + timestamp + '.zip'))
-				.pipe(advzip({ optimizationLevel: 4, iterations: 10 }))
+				.pipe(advzip({
+					optimizationLevel: 4,
+					iterations: packedZip ? 1000 : 10
+				}))
 				.pipe(dest('zip/'))
 				.on('end', callback);
 		})();
@@ -412,10 +576,10 @@ function getDateString(shorter) {
 }
 
 // Exports
-exports.default = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
-exports.build = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, watch);
-exports.prod = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, clean, archive, check);
-exports.sync = series(ico, app, cs, mangle, assets, pack, clean, reload);
+exports.default = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, maybeRoadrollHtml, clean, watch);
+exports.build = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, maybeRoadrollHtml, clean, watch);
+exports.prod = series(prep, ico, sw, app, cs, mf, mangle, assets, pack, maybeRoadrollHtml, clean, archive, check);
+exports.sync = series(ico, app, cs, mangle, assets, pack, maybeRoadrollHtml, clean, reload);
 exports.zip = series(archive, check);
 exports.roadroll = series(roadrollHtml, archive, check);
 
