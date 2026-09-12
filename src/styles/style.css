@@ -43,14 +43,14 @@ body {
 	z-index: 0;
 }
 
-#ms > canvas {
+/*#ms > canvas {
 	position: absolute;
 	z-index: -1;
 	top: 40%;
 	left: -13%;
 	width: 125%;
 	translate: 0 -50%;
-}
+}*/
 
 .css_tiny {
 	font-size: 1vmin;
@@ -77,7 +77,7 @@ body {
 }
 
 .css_title {
-	font-size: 12vmin;
+	font-size: 14vmin;
 }
 
 .css_row {

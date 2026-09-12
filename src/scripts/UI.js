@@ -114,17 +114,21 @@ function updateUI() {
 	ms.style.pointerEvents = showPick || showUpgrade ? "auto" : "none";
 	ms.textContent = "";
 	if (menu == 1) {
-		const t = tileWidth, c = document.createElement("canvas"), x = c.getContext("2d");
+		/*const t = tileWidth, c = document.createElement("canvas"), x = c.getContext("2d");
 		c.width = 10 * t;
 		c.height = 5 * t;//                      ..........::::::::::..........::::::::::..........
 		for (let i = 50, n; i--;) (n = parseInt("AA46EC64AA60B0F00D081700E0EF0CA30D00E079AA1BD119AA"[i], 16)) - 10 && drawPaletted(backgroundsBitmaps[n], "789", i % 10 * t, (i / 10 | 0) * t, t, t, x);
-		ms.appendChild(c);
+		ms.appendChild(c);*/
 		const logo = row();
-		logo.appendChild(line(4, "The"));
-		logo.appendChild(line(0, "Confusion \xa0"));
+		const sub = line(6);
+		const the = line(5, "The");
+		the.style.marginBottom = "-1vmin";
+		sub.style.textAlign = "right";
+		sub.appendChild(the);
+		sub.appendChild(line(2, "Foul"));
+		logo.appendChild(sub);
+		logo.appendChild(line(0, "Pattern\xa0"));
 		ms.appendChild(logo);
-		appendLine(1, "Pattern");
-
 	} else if (menu == 2) appendLine(1, "PAUSED");
 	else if (showPick) fillPick();
 	else if (showUpgrade) fillUpgrade();
