@@ -186,7 +186,7 @@ function isMapTile(x, y) {
 }
 
 function initBoard() {
-	const levelData = getLevelData(levelIndex);
+	const levelData = menu == 1 ? makeRandomLevel(40) : getLevelData(levelIndex);
 	boardHeight = levelData.length;
 	boardWidth = levelData[0].length;
 	enemies = [];
@@ -286,6 +286,15 @@ function initBoard() {
 	player = new Player(startX, startY);
 	placeStartPath(startX, startY);
 	buildRainbowBackdrop();
+	if (menu == 1) {
+		for (let y = boardHeight; y--;) {
+			for (let x = boardWidth; x--;) {
+				fillData[y][x] = 1;
+				enemies[y][x] = coins[y][x] = exits[y][x] = rescues[y][x] = 0;
+			}
+		}
+		pathTrail = [];
+	}
 }
 
 function isPassable(x, y, dx, dy) {
@@ -768,10 +777,14 @@ function bounce(x, y, dying) {
 }
 
 function fitBoard() {
-	const crtTile = cellSize * 2, dpr = window.devicePixelRatio;
-	const zoom = Math.max(1, Math.min(6 * dpr, Math.min(width / Math.max(boardWidth, 6), height / Math.max(boardHeight, 6)) * dpr / crtTile) | 0);
-	const canvasW = Math.max(boardWidth + 2, width * dpr / zoom / crtTile + 1 | 0) * crtTile;
-	const canvasH = Math.max(boardHeight + 2, height * dpr / zoom / crtTile + 1 | 0) * crtTile;
+	const crtTile = cellSize * 2, dpr = window.devicePixelRatio, title = menu == 1;
+	const fitW = boardWidth + title * 2, fitH = boardHeight + title * 2;
+	let zoom = Math.min(width / Math.max(fitW, 6), height / Math.max(fitH, 6)) * dpr / crtTile;
+	if (title) zoom = Math.max(.5, Math.min(6 * dpr, zoom));
+	else zoom = Math.max(1, Math.min(6 * dpr, zoom | 0));
+	const pad = 2;
+	const canvasW = Math.max(boardWidth + pad, width * dpr / zoom / crtTile + !title | 0) * crtTile;
+	const canvasH = Math.max(boardHeight + pad, height * dpr / zoom / crtTile + !title | 0) * crtTile;
 	if (gc.width - canvasW | gc.height - canvasH) {
 		gc.width = canvasW;
 		gc.height = canvasH;
@@ -798,7 +811,7 @@ function fitBoard() {
 
 function drawBoard() {
 	if (!battleActive) {
-		rainbowPulse = anyDying() || state == 2;
+		rainbowPulse = anyDying() || state == 2 || menu == 1;
 		scrollRainbow();
 	}
 	const size = fitBoard();
@@ -826,7 +839,7 @@ function drawBoard() {
 					if (pathTrail[i][0] == gx && pathTrail[i][1] == gy) visits ++;
 				}
 				const tip = pathTrail[pathTrail.length - 1];
-				tipOnly = tip[0] == gx && tip[1] == gy && visits <= 1;
+				tipOnly = tip && tip[0] == gx && tip[1] == gy && visits <= 1;
 			}
 			if (fillData[gy][gx] || (pathStep[gy][gx] && !tipOnly)) drawPurifiedTile(gx, gy);
 			else blit(backgroundsBitmaps[0], px, py, size);
@@ -856,9 +869,9 @@ function drawBoard() {
 		if (battleSelect && battleSelect != battleControl && battleSelect.hp > 0) {
 			outlineUnit(battleSelect, size, battleSelect.enemy ? "#f89" : "#fe6", 0.05, 2);
 		}
-	} else drawFlowingPath();
+	} else if (menu != 1) drawFlowingPath();
 
-	for (let y = 0; y < boardHeight; y++) {
+	if (menu != 1) for (let y = 0; y < boardHeight; y++) {
 		if (battleActive) {
 			for (let i = 0; i < battleUnits.length; i++) {
 				const u = battleUnits[i];
@@ -883,7 +896,7 @@ function drawBoard() {
 		}
 	}
 
-	if (!battleActive) {
+	if (!battleActive && menu != 1) {
 		drawMoveArrows(size);
 	}
 	gameContext.save();

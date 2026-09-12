@@ -7,6 +7,11 @@ function hasRescue(stage) {
 	return stage < 9 ? stage % 3 == 2 || stage == 7 : stage % 9 > 6;
 }
 
+function titleWH() {
+	const s = 6, b = 2;
+	return portrait ? [s, Math.max(s, (s + b) * height / width - b + .5 | 0)] : [Math.max(s, (s + b) * width / height - b + .5 | 0), s];
+}
+
 function getLevelData(stage) {
 	return generatedLevels[stage] || (generatedLevels[stage] = makeRandomLevel(stage));
 }
@@ -26,12 +31,18 @@ function makeRandomLevel(stage) {
 	let width = progress < 3 ? 6 : 7 + (progress > 7 ? 1 : 0) + grow / 2 | 0;
 	let height = progress < 7 ? 5 : 5 + grow / 2 | 0;
 
-	if (portrait == width > height) {
-		const swap = width;
-		width = height;
-		height = swap;
+	if (menu == 1) {
+		const s = titleWH();
+		width = s[0];
+		height = s[1];
+	} else {
+		if (portrait == width > height) {
+			const swap = width;
+			width = height;
+			height = swap;
+		}
+		portrait ? width = Math.min(9, width) : height = Math.min(9, height);
 	}
-	portrait ? width = Math.min(9, width) : height = Math.min(9, height);
 
 	const area = width * height;
 	let want = progress < 3 ? 2 + progress * 2 : area / 6 + RNG(3) | 0;
@@ -64,7 +75,7 @@ function makeRandomLevel(stage) {
 		for (let n = want * 30, left = want; n -- && left;) {
 			if (plant(1 + RNG(width - 2), 1 + RNG(height - 2), 1)) left --;
 		}
-		let blockTiles = 2 + RNG(3) + ((area - 56) / 24 | 0) + (progress / 9 | 0);
+		let blockTiles = menu == 1 ? 0 : 2 + RNG(3) + ((area - 56) / 24 | 0) + (progress / 9 | 0);
 		for (let n = blockTiles * 8; n -- && blockTiles;) {
 			const rim = progress < 5 || RNG(2);
 			const e = RNG(4);
@@ -204,7 +215,7 @@ function makeRandomLevel(stage) {
 	const enemies = [];
 	for (let i = holes.length; i --;) {
 		const cells = holes[i];
-		let rock = cells.length > 3 || enemies.length + cells.length > want;
+		let rock = menu != 1 && (cells.length > 3 || enemies.length + cells.length > want);
 		let beside = 0;
 		for (let j = cells.length; j --;) {
 			if (seed[cells[j]] == 2) rock = 1;

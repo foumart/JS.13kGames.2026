@@ -59,6 +59,10 @@ function init() {
 
 function resize() {
 	setLayout();
+	if (menu == 1) {
+		const s = titleWH();
+		if (s[0] - boardWidth | s[1] - boardHeight) return resetLevel();
+	}
 	redraw();
 }
 
